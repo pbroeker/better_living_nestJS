@@ -1,0 +1,55 @@
+version: '3.7'
+services:
+  db:
+    container_name: siegenia-db
+    hostname: dev|siegenia-db
+    image: postgres
+    restart: always
+    environment: 
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+  nestjs:
+    container_name: siegenia-api
+    hostname: dev|siegenia-api
+    image: siegenia-api
+    build: 
+      context: .
+      dockerfile: ./Dockerfile
+    environment: 
+      - DB_TYPE=${DB_TYPE}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - APP_PORT=${APP_PORT}
+    command: yarn run start:dev
+    ports: 
+      - 3000:3000
+    volumes: 
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    container_name: siegenia-pgadmin4
+    environment: 
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports: 
+      - 8080:80
+    volumes: 
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db
+volumes:
+  pgdata:
+  pgadmin-data:
