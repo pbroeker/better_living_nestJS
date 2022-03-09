@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config/dist/config.service';
 export class AuthService {
   constructor(private configService: ConfigService) {}
   getHello(): string {
-    const host = this.configService.get<string>('user');
-    return `Hello, howsewst is: ${host}`;
+    const env = this.configService.get<string>('ENV_NAME');
+    return `Hello, your environment is: ${env}`;
   }
 }
