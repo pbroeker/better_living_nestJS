@@ -20,7 +20,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         ],
         autoLoadEntities: true,
         logging: true,
-        synchronize: true,
+        synchronize: true, //only for dev
       }),
     }),
   ],
