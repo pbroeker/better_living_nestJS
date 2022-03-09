@@ -7,7 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build --watch --webpack",
+    "build": "nest build",
+    "build-watch": "nest build --watch --webpack",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "./scripts/switchEnv.sh dev && nest start --watch",
     "start:staging": "./scripts/switchEnv.sh staging && nest start --debug --watch",
