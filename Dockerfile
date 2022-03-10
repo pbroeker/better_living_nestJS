@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY ./package.json ./yarn.lock /app/
 
+RUN app-get install yarn
 RUN yarn install
 
 COPY . /app/
