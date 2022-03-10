@@ -15,6 +15,8 @@ services:
       - 5432:5432
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - intern
   nestjs:
     container_name: siegenia-api
     hostname: dev|siegenia-api
@@ -36,7 +38,27 @@ services:
     volumes: 
       - .:/app
       - /app/node_modules
+    networks:
+      - intern
+      - extern
     depends_on:
       - db
+    labels:
+      - "traefik.enable=true"
+      - traefik.docker.network=extern
+      - "traefik.http.routers.siegapi.entrypoints=http"
+      - "traefik.http.routers.siegapi.rule=Host(`staging-siegenia-api.mobile-software.ag`)"
+      - "traefik.http.routers.siegapi.middlewares=https-redirect@file"
+      #
+      - "traefik.http.routers.siegapi-sec.entrypoints=https"
+      - "traefik.http.routers.siegapi-sec.rule=Host(`staging-siegenia-api.mobile-software.ag`)"
+      - "traefik.http.routers.siegapi-sec.tls=true"
+      - "traefik.http.routers.siegapi-sec.tls.options=myTLSOptions@file"
+      - "traefik.http.routers.siegapi-sec.tls.certresolver=le"
 volumes:
   pgdata:
+networks:
+  intern:
+    external: true
+  extern:
+    external: true
