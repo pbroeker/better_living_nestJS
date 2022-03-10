@@ -34,7 +34,7 @@ services:
       - APP_PORT=${APP_PORT}
     command: yarn run start:dev
     ports: 
-      - 3000:3000
+      - 3030:3000
     volumes: 
       - .:/app
       - /app/node_modules
