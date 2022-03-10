@@ -38,5 +38,22 @@ services:
       - /app/node_modules
     depends_on:
       - db
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    container_name: siegenia-pgadmin4
+    logging:
+      driver: none
+    environment: 
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports: 
+      - 8080:80
+    volumes: 
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db
 volumes:
   pgdata:
+  pgadmin-data:
