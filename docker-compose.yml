@@ -32,7 +32,7 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - APP_PORT=${APP_PORT}
-    command: yarn run start:dev
+    command: yarn run start:staging
     ports: 
       - 3030:3000
     volumes: 
