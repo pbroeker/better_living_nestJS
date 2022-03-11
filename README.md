@@ -50,7 +50,7 @@ localhost:8080
   - Connection -> Enter the values from your env file
     - Host name/address: POSTGRES_HOST from your env-file
     - Port: 5432
-    - Mainenance database
+    - Maintenance database
     - Username
     - Password
 5. Save
