@@ -15,8 +15,6 @@ services:
       - 5432:5432
     volumes:
       - ./pgdata:/var/lib/postgresql/data
-    networks:
-      - intern
   nestjs:
     container_name: siegenia-api
     hostname: dev|siegenia-api
@@ -32,33 +30,30 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - APP_PORT=${APP_PORT}
-    command: yarn run start:staging
+    command: yarn run start:dev
     ports: 
-      - 3030:3000
+      - 3000:3000
     volumes: 
       - .:/app
       - /app/node_modules
-    networks:
-      - intern
-      - extern
     depends_on:
       - db
-    labels:
-      - "traefik.enable=true"
-      - traefik.docker.network=extern
-      - "traefik.http.routers.siegapi.entrypoints=http"
-      - "traefik.http.routers.siegapi.rule=Host(`staging-siegenia-api.mobile-software.ag`)"
-      - "traefik.http.routers.siegapi.middlewares=https-redirect@file"
-      #
-      - "traefik.http.routers.siegapi-sec.entrypoints=https"
-      - "traefik.http.routers.siegapi-sec.rule=Host(`staging-siegenia-api.mobile-software.ag`)"
-      - "traefik.http.routers.siegapi-sec.tls=true"
-      - "traefik.http.routers.siegapi-sec.tls.options=myTLSOptions@file"
-      - "traefik.http.routers.siegapi-sec.tls.certresolver=le"
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    container_name: siegenia-pgadmin4
+    logging:
+      driver: none
+    environment: 
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports: 
+      - 8080:80
+    volumes: 
+      - ./pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - db
 volumes:
   pgdata:
-networks:
-  intern:
-    external: true
-  extern:
-    external: true
+  pgadmin-data:

@@ -1,4 +1,4 @@
-FROM node:17-bullseye
+FROM node:17-alpine
 
 ENV NODE_ENV=dev
 WORKDIR /app

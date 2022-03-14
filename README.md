@@ -55,3 +55,15 @@ localhost:8080
     - Password
 5. Save
 6. Now you can see your database/tables etc.
+
+## Deployment Staging
+For now the backend will be deployed on our staging server. For this we created a new directory under */projects/siegenia-api*.
+
+There the bitbucket repository together with the docker files is being stored. In order to add the latest code changes just pull from the deployment branch and restart the docker container:
+
+```bash
+$ git checkout main
+$ git pull
+$ docker-compose down
+$ docker-compose up -d
+```
