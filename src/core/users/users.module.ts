@@ -2,8 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { User } from './entity/user.entity';
-import { SharedModule } from 'src/shared/shared.module';
-// import { SharedAuthServiceService } from 'src/shared/shared-auth-service/shared-auth-service.service';
+import { SharedModule } from '../../shared/shared.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), SharedModule],
