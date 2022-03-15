@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
-import { SharedAuthServiceService } from 'src/shared/shared-auth-service/shared-auth-service.service';
+import { SharedAuthServiceService } from '../../shared/shared-auth-service/shared-auth-service.service';
+import { plainToClass } from 'class-transformer';
+import { LoginUserDto } from './dto/login-user.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,16 +19,20 @@ export class AuthService {
         user.user_password,
       );
       if (passwordMatches) {
-        const { user_password, ...result } = user;
-        return result;
+        const userDTO = plainToClass(LoginUserDto, {
+          email: user.user_email,
+        });
+        return userDTO;
       } else {
         // TODO: Returning error with message
         return 'password is not valid';
       }
     } else {
       const createdUser = await this.usersService.createUser(email, password);
-      const { user_password, ...result } = createdUser;
-      return result;
+      const userDTO = plainToClass(LoginUserDto, {
+        email: createdUser.user_email,
+      });
+      return userDTO;
     }
   }
 

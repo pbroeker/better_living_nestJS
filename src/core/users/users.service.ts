@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SharedAuthServiceService } from 'src/shared/shared-auth-service/shared-auth-service.service';
+import { SharedAuthServiceService } from '../../shared/shared-auth-service/shared-auth-service.service';
 
 @Injectable()
 export class UsersService {
