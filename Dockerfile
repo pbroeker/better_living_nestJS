@@ -5,6 +5,8 @@ WORKDIR /app
 
 COPY ./package.json ./yarn.lock /app/
 
+RUN apk update && apk add bash
+
 RUN yarn install
 
 COPY . /app/
