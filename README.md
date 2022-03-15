@@ -67,3 +67,21 @@ $ git pull
 $ docker-compose down
 $ docker-compose up -d
 ```
+
+## Staging DB
+- In order to connect to the staging db you have to open the docker container:
+  ```bash
+  $ docker exec -it siegenia-db bash
+  ```
+- Login with your database user:
+  ```bash
+  $ psql -U postgres
+  ```
+- Connect with your database:
+  ```bash
+  $ \c siegenia-db
+  ```
+- Show all tables:
+  ```bash
+  $ \dt
+  ```
