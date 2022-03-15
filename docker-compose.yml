@@ -13,8 +13,6 @@ services:
       - POSTGRES_DB=${DB_NAME}
     ports:
       - 5432:5432
-    volumes:
-      - ./pgdata:/var/lib/postgresql/data
     networks:
       - intern
   nestjs:
@@ -35,9 +33,6 @@ services:
     command: yarn run start:staging
     ports: 
       - 3030:3000
-    volumes: 
-      - .:/app
-      - /app/node_modules
     networks:
       - intern
       - extern
@@ -55,8 +50,6 @@ services:
       - "traefik.http.routers.siegapi-sec.tls=true"
       - "traefik.http.routers.siegapi-sec.tls.options=myTLSOptions@file"
       - "traefik.http.routers.siegapi-sec.tls.certresolver=le"
-volumes:
-  pgdata:
 networks:
   intern:
     external: true
