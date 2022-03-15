@@ -41,10 +41,7 @@ export class AuthService {
     userPassword: string,
   ): Promise<boolean> {
     const decodedPassword = Buffer.from(loginPassword, 'base64').toString();
-    const pwHash = await this.sharedAuthServiceService.hashPassword(
-      decodedPassword,
-    );
-    const passwordMatches = await bcrypt.compare(userPassword, pwHash);
+    const passwordMatches = await bcrypt.compare(decodedPassword, userPassword);
     return passwordMatches;
   }
 }
