@@ -8,20 +8,20 @@ async function bootstrap() {
     cors: true,
   });
 
+  const globalPrefix = 'api';
+  app.setGlobalPrefix(globalPrefix);
+  const configService = app.get(ConfigService);
+  const port = configService.get('PORT') || 3000;
+
+  // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Siegenia-api')
-    .setDescription('Test description')
+    .setTitle('Siegenia API')
     .setVersion('1.0')
-    .addTag('siegenia')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const configService = app.get(ConfigService);
-  const port = configService.get('PORT') || 3000;
   await app.listen(port);
 }
 bootstrap();
