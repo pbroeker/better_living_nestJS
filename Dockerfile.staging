@@ -1,0 +1,11 @@
+FROM node:17-alpine
+
+ENV NODE_ENV=staging
+WORKDIR /app
+
+
+RUN apk update && apk add bash
+
+COPY ./package.json ./yarn.lock ./dist ./node_modules /app/
+
+CMD ["node", "dist/main"]

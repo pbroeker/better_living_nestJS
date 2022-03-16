@@ -23,7 +23,7 @@ services:
     image: siegenia-api
     build: 
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.staging
     environment: 
       - DB_TYPE=${DB_TYPE}
       - POSTGRES_HOST=${POSTGRES_HOST}
