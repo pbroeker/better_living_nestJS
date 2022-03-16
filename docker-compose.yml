@@ -21,10 +21,6 @@ services:
     container_name: siegenia-api-prod
     hostname: prod|siegenia-api
     image: siegenia-api-prod
-    build: 
-      context: .
-      target: production
-      dockerfile: ./Dockerfile.prod
     environment: 
       - DB_TYPE=${DB_TYPE}
       - POSTGRES_HOST=${POSTGRES_HOST}
@@ -41,6 +37,7 @@ services:
       - extern
     depends_on:
       - db
+    tty: true
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=extern"
