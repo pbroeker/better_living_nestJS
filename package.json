@@ -11,17 +11,19 @@
     "build-watch": "nest build --watch --webpack",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "./scripts/switchEnv.sh dev && nest start --watch",
-    "start:staging": "node dist/main",
-    "start:prod": "./scripts/switchEnv.sh prod && node dist/main",
+    "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
+    "docker-list": "docker ps",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "env:dev": "./scripts/switchEnv.sh dev",
-    "env:staging": "./scripts/switchEnv.sh staging",
-    "env:prod": "./scripts/switchEnv.sh prod"
+    "create-docker-image-prod": "docker build --platform linux/amd64 -t siegenia-api-prod -f Dockerfile.prod .",
+    "compress-docker-image-prod": "docker save -o siegenia-api-prod.tar siegenia-api-prod",
+    "upload-compressed-docker-image-prod": "scp -rp siegenia-api-prod.tar root@staging.mobile-software.ag:/root/projects/siegenia-api/siegenia-prod",
+    "deploy:api": "yarn run create-docker-image-prod && yarn run compress-docker-image-prod && yarn run upload-compressed-docker-image-prod"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

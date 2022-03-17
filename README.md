@@ -57,13 +57,51 @@ localhost:8080
 6. Now you can see your database/tables etc.
 
 ## Deployment Staging
-For now the backend will be deployed on our staging server. For this we created a new directory under */projects/siegenia-api*.
+For now the backend will be deployed on our staging server. For this we created a new directory under */projects/siegenia-api/siegenia-prod*.
+Make sure you have your ssh-key stored on the staging server as you otherwise won't be able to copy the files there.
 
-There the bitbucket repository together with the docker files is being stored. In order to add the latest code changes just pull from the deployment branch and restart the docker container:
-
+1. Create a build from the branch which you want to deploy
 ```bash
-$ git checkout main
-$ git pull
-$ docker-compose down
+$ yarn build
+```
+
+2. Re-build docker image and upload it as compressed file to the server
+```bash
+$ yarn deploy:api
+```
+
+3. Connect with the server
+```bash
+$ ssh root@staging.mobile-software.ag
+```
+
+4. Load the uploaded image into docker
+```bash
+//In projects/siegenia-api/siegenia-prod 
+$ docker load -i siegenia-api-prod.tar
+```
+
+5. Remove old container and create new with latest image
+```bash
+$ docker stop siegenia-api-prod
+$ docker rm siegenia-api-prod
 $ docker-compose up -d
 ```
+
+## Staging DB
+- In order to connect to the staging db you have to open the docker container:
+  ```bash
+  $ docker exec -it siegenia-db bash
+  ```
+- Login with your database user:
+  ```bash
+  $ psql -U postgres
+  ```
+- Connect with your database:
+  ```bash
+  $ \c siegenia-db
+  ```
+- Show all tables:
+  ```bash
+  $ \dt
+  ```
