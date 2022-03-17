@@ -3,7 +3,7 @@ FROM node:17-alpine as builder
 ENV NODE_ENV=dev
 WORKDIR /app
 
-COPY ./package.json ./yarn.lock /app/
+COPY ./package.json /app/
 
 RUN yarn install
 
@@ -22,5 +22,4 @@ RUN apk update && apk add bash
 RUN yarn install --production
 
 COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/.env /app/
 CMD ["node", "dist/main"]
