@@ -1,13 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { SharedAuthServiceService } from '../../shared/shared-auth-service/shared-auth-service.service';
 import { UsersService } from '../users/users.service';
 @Injectable()
 export class AuthService {
-  constructor(
-    private usersService: UsersService,
-    private sharedAuthServiceService: SharedAuthServiceService,
-  ) {}
+  constructor(private usersService: UsersService) {}
 
   async loginUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
