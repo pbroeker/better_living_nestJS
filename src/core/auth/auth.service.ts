@@ -1,15 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
-import { SharedAuthServiceService } from '../../shared/shared-auth-service/shared-auth-service.service';
 import { plainToClass } from 'class-transformer';
 import { LoginUserDto } from './dto/login-user.dto';
 @Injectable()
 export class AuthService {
-  constructor(
-    private usersService: UsersService,
-    private sharedAuthServiceService: SharedAuthServiceService,
-  ) {}
+  constructor(private usersService: UsersService) {}
 
   async loginUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
