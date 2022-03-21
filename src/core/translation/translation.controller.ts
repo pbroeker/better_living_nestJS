@@ -12,7 +12,7 @@ export class TranslationController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: "Locale doesn't exist",
+    description: 'Locale does not exist',
   })
   @ApiQuery({ name: 'locale', enum: ['en', 'de'] })
   async getLanguageJson(@Query('locale') locale: 'en' | 'de') {
