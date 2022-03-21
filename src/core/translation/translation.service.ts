@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { promises as fs } from 'fs';
 
 @Injectable()
@@ -9,8 +9,14 @@ export class TranslationService {
       const rawData = await fs.readFile(path, 'utf8');
       return JSON.parse(rawData);
     } catch (error) {
-      // TODO: Correct errorhandling
-      console.log(` ======= ERROR ====== : ${error}`);
+      throw new HttpException(
+        {
+          title: 'locale_error_title',
+          text: 'non_existent_locale',
+          options: 1,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }
