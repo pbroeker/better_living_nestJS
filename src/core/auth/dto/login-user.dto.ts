@@ -9,10 +9,6 @@ export class LoginUserReqDto {
   @ApiProperty()
   @IsString()
   password: string;
-
-  @ApiProperty()
-  @IsString()
-  token: string;
 }
 
 export class LoginUserResDto {
