@@ -1,5 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { AuthService } from './auth.service';
 import { LoginUserReqDto, LoginUserResDto } from './dto/login-user.dto';
 @Controller('auth')
@@ -9,6 +10,7 @@ export class AuthController {
     private jwtService: JwtService,
   ) {}
 
+  @SkipAuth()
   @Post('/login')
   async login(@Body() loginUserDto: LoginUserReqDto): Promise<LoginUserResDto> {
     const userEntity = await this.authService.loginUser(

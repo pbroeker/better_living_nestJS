@@ -1,12 +1,16 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { UsersService } from '../users/users.service';
+import { SharedUserService } from '../../shared/shared-user.service';
+import { UserService } from '../users/users.service';
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private sharedUserService: SharedUserService,
+    private userService: UserService,
+  ) {}
 
   async loginUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.sharedUserService.findByEmail(email);
     if (user) {
       const passwordMatches = await this.checkPassword(
         password,
@@ -21,7 +25,7 @@ export class AuthService {
         );
       }
     } else {
-      const createdUser = await this.usersService.createUser(email, password);
+      const createdUser = await this.userService.createUser(email, password);
       return createdUser;
     }
   }
