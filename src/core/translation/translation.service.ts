@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 
 @Injectable()
 export class TranslationService {
-  async getLanguageJson(language: string): Promise<JSON> {
+  async getLanguageJson(language: 'en' | 'de'): Promise<JSON> {
     try {
       const path = `${process.cwd()}/src/i18n/${language}.json`;
       const rawData = await fs.readFile(path, 'utf8');
