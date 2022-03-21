@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { TranslationDto } from './dto/translation.dto';
-import { readFileSync } from 'fs';
+import { promises as fs } from 'fs';
 
 @Injectable()
 export class TranslationService {
-  async getLanguageJson(language: TranslationDto): Promise<JSON> {
+  async getLanguageJson(language: string): Promise<JSON> {
     try {
       const path = `${process.cwd()}/src/i18n/${language}.json`;
-      const rawData = readFileSync(path, 'utf8');
+      const rawData = await fs.readFile(path, 'utf8');
       return JSON.parse(rawData);
     } catch (error) {
       // TODO: Correct errorhandling
