@@ -35,7 +35,7 @@ export class UsersService {
       throw new HttpException(
         {
           title: 'error_creating_user',
-          text: 'couldnt_create_user',
+          text: 'could_not_create_user',
           options: 1,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,

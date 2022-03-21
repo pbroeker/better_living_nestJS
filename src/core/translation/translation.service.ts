@@ -10,7 +10,11 @@ export class TranslationService {
       return JSON.parse(rawData);
     } catch (error) {
       throw new HttpException(
-        { title: 'error_locale', text: 'non_existent_locale', options: 1 },
+        {
+          title: 'locale_error_title',
+          text: 'non_existent_locale',
+          options: 1,
+        },
         HttpStatus.BAD_REQUEST,
       );
     }
