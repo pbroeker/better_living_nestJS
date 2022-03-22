@@ -20,7 +20,11 @@ export class AuthService {
         return user;
       } else {
         throw new HttpException(
-          'Authorization failed',
+          {
+            title: 'login.error.wrong_password.title',
+            text: 'login.error.wrong_password.message',
+            options: 1,
+          },
           HttpStatus.UNAUTHORIZED,
         );
       }

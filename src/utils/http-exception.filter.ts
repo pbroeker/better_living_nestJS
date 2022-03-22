@@ -13,6 +13,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const status = exception.getStatus();
 
+    // CATCHES THE GENERIC INVALID TOKEN ERROR FROM JWT STRATEGY
     response.status(status).json({
       title: 'login.error.invalid_token.title',
       text: 'login.error.invalid_token.message',

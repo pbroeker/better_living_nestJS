@@ -20,6 +20,10 @@
       "invalid_token": {
         "title": "Authentification Error",
         "message": "Token is not valid."
+      },
+      "wrong_password": {
+        "title": "Authentification Error",
+        "message": "Wrong password."
       }
     }
   }
