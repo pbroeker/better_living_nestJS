@@ -1,3 +1,4 @@
+import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
 import { ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { TranslationService } from './translation.service';
@@ -5,6 +6,7 @@ import { TranslationService } from './translation.service';
 export class TranslationController {
   constructor(private translationService: TranslationService) {}
 
+  @SkipAuth()
   @Get()
   @ApiResponse({
     status: HttpStatus.OK,

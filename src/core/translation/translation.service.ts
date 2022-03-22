@@ -11,8 +11,8 @@ export class TranslationService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'locale_error_title',
-          text: 'non_existent_locale',
+          title: 'translation.error.locale_error.title',
+          text: 'translation.error.locale_error.message',
           options: 1,
         },
         HttpStatus.BAD_REQUEST,

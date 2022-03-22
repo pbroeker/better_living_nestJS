@@ -5,14 +5,26 @@
   },
   "translation": {
     "error": {
-      "locale_error_title": "Translationfile error",
-      "non_existent_locale": "There are no translations for this language yet."
+      "locale_error": {
+        "title": "Translationfile error",
+        "message": "There are no translations for this language yet."
+      }
     }
   },
   "login": {
     "error": {
-      "creating_user_error_title": "Creating profile failed",
-      "could_not_create_user": "A new profile could not be created, please try again later."
+      "create_user": {
+        "title": "Creating profile failed",
+        "message": "A new profile could not be created, please try again later."
+      },
+      "invalid_token": {
+        "title": "Authentification Error",
+        "message": "Token is not valid."
+      },
+      "wrong_password": {
+        "title": "Authentification Error",
+        "message": "Wrong password."
+      }
     }
   }
 }

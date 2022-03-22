@@ -5,14 +5,26 @@
   },
   "translation": {
     "error": {
-      "locale_error_title": "Übersetzungsdateien",
-      "non_existent_locale": "Für diese Sprache existieren keine Übersetzungen"
+      "locale_error": {
+        "title": "Übersetzungsdateien Fehler",
+        "message": "Für diese Sprache existieren keine Übersetzungen."
+      }
     }
   },
   "login": {
     "error": {
-      "creating_user_error_title": "Profilerstellung fehlgeschlagen",
-      "could_not_create_user": "Ein neues Userprofil konnte nicht erstellt werden, bitte versuchen Sie es später erneut"
+      "create_user": {
+        "title": "Profilerstellung fehlgeschlagen",
+        "message": "Ein neues Userprofil konnte nicht erstellt werden, bitte versuchen Sie es später erneut."
+      },
+      "invalid_token": {
+        "title": "Authentifierzungsfehler",
+        "message": "Token ist ungültig"
+      },
+      "wrong_password": {
+        "title": "Authentifierzungsfehler",
+        "message": "Passwort ist inkorrekt."
+      }
     }
   }
 }
