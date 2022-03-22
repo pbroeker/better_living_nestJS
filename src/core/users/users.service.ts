@@ -26,8 +26,8 @@ export class UserService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'error_creating_user',
-          text: 'could_not_create_user',
+          title: 'login.error.create_user.title',
+          text: 'login.error.create_user.message',
           options: 1,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,

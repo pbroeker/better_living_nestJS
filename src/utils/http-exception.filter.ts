@@ -14,8 +14,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status = exception.getStatus();
 
     response.status(status).json({
-      title: 'error_auth',
-      text: 'token_not_valid',
+      title: 'login.error.invalid_token.title',
+      text: 'login.error.invalid_token.message',
       options: 1,
     });
   }
