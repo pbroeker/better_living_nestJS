@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
-export class SharedAuthServiceService {
+export class SharedAuthService {
   constructor(private configService: ConfigService) {}
 
   async hashPassword(password: string): Promise<string> {

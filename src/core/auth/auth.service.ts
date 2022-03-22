@@ -1,38 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { SharedAuthServiceService } from '../../shared/shared-auth-service/shared-auth-service.service';
-import { plainToClass } from 'class-transformer';
-import { LoginUserDto } from './dto/login-user.dto';
+import { SharedUserService } from '../../shared/shared-user.service';
+import { UserService } from '../users/users.service';
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private sharedAuthServiceService: SharedAuthServiceService,
+    private sharedUserService: SharedUserService,
+    private userService: UserService,
   ) {}
 
   async loginUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.sharedUserService.findByEmail(email);
     if (user) {
       const passwordMatches = await this.checkPassword(
         password,
         user.user_password,
       );
       if (passwordMatches) {
-        const userDTO = plainToClass(LoginUserDto, {
-          email: user.user_email,
-        });
-        return userDTO;
+        return user;
       } else {
-        // TODO: Returning error with message
-        return 'password is not valid';
+        throw new HttpException(
+          {
+            title: 'login.error.wrong_password.title',
+            text: 'login.error.wrong_password.message',
+            options: 1,
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
       }
     } else {
-      const createdUser = await this.usersService.createUser(email, password);
-      const userDTO = plainToClass(LoginUserDto, {
-        email: createdUser.user_email,
-      });
-      return userDTO;
+      const createdUser = await this.userService.createUser(email, password);
+      return createdUser;
     }
   }
 
