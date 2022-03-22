@@ -1,6 +1,18 @@
 {
-    "dashboard": {
-        "title": "Testtitle",
-        "greeting": "Hello"
+  "dashboard": {
+    "title": "Testtitle",
+    "greeting": "Hello"
+  },
+  "translation": {
+    "error": {
+      "locale_error_title": "Translationfile error",
+      "non_existent_locale": "There are no translations for this language yet."
     }
+  },
+  "login": {
+    "error": {
+      "creating_user_error_title": "Creating profile failed",
+      "could_not_create_user": "A new profile could not be created, please try again later."
+    }
+  }
 }

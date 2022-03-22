@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,15 +13,25 @@ export class UserService {
   ) {}
 
   async createUser(userEmail: string, userPassword: string): Promise<User> {
-    const decodedPassword = Buffer.from(userPassword, 'base64').toString();
-    const pwHash = await this.sharedAuthServiceService.hashPassword(
-      decodedPassword,
-    );
-    const userEntity = this.userRepository.create({
-      user_email: userEmail,
-      user_password: pwHash,
-    });
-
-    return await this.userRepository.save(userEntity);
+    try {
+      const decodedPassword = Buffer.from(userPassword, 'base64').toString();
+      const pwHash = await this.sharedAuthServiceService.hashPassword(
+        decodedPassword,
+      );
+      const userEntity = this.userRepository.create({
+        user_email: userEmail,
+        user_password: pwHash,
+      });
+      return await this.userRepository.save(userEntity);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'error_creating_user',
+          text: 'could_not_create_user',
+          options: 1,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
