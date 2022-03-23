@@ -1,11 +1,8 @@
 import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { SkipAuth } from 'src/utils/customDecorators/skipAuth.decorator';
 import { CreateRoomReqDto, CreateRoomResDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 
-// TODO: Remove SkipAuth after Tokens work
-@SkipAuth()
 @Controller('personal-rooms')
 export class PersonalRoomController {
   constructor(private personalRoomService: PersonalRoomService) {}
