@@ -35,4 +35,32 @@ export class PersonalRoomService {
       );
     }
   }
+
+  async editPersonalRoomTitle(
+    newTitle: string,
+    roomId: number,
+    user: CoreUserDto,
+  ): Promise<any> {
+    try {
+      const personalRoomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: ['user'],
+      });
+      if (personalRoomEntity && personalRoomEntity.user.id === user.userId) {
+        return this.personalRoomRepository.save({
+          ...personalRoomEntity,
+          title: newTitle,
+        });
+      }
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'personal_rooms.error.edit_personal_room.title',
+          text: 'personal_rooms.error.edit_personal_room.message',
+          options: 2,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
