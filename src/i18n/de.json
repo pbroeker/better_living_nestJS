@@ -1,7 +1,11 @@
 {
-  "dashboard": {
-    "title": "Testtitel",
-    "greeting": "Hallo"
+  "core": {
+    "error": {
+      "no_internet_error": {
+        "title": "Keine Internetverbindung",
+        "message": "Der Aufruf konnte nicht durchgeführt werden, da keine Verbindung zum Internet besteht. Bitte versuchen Sie es später noch einmal."
+      }
+    }
   },
   "translation": {
     "error": {
@@ -24,6 +28,14 @@
       "wrong_password": {
         "title": "Authentifierzungsfehler",
         "message": "Passwort ist inkorrekt."
+      }
+    }
+  },
+  "personal_rooms": {
+    "error": {
+      "create_personal_room": {
+        "title": "Fehler beim Speichern",
+        "message": "Beim Speichern der Räume ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
       }
     }
   }
