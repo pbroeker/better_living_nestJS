@@ -1,7 +1,11 @@
 {
-  "dashboard": {
-    "title": "Testtitle",
-    "greeting": "Hello"
+  "core": {
+    "error": {
+      "no_internet_error": {
+        "title": "No internet connection",
+        "message": "The call could not be made because there is no connection to the Internet. Please try again later."
+      }
+    }
   },
   "translation": {
     "error": {
@@ -14,7 +18,7 @@
   "login": {
     "error": {
       "create_user": {
-        "title": "Creating profile failed",
+        "title": "Profile creation failed",
         "message": "A new profile could not be created, please try again later."
       },
       "invalid_token": {
@@ -24,6 +28,14 @@
       "wrong_password": {
         "title": "Authentification Error",
         "message": "Wrong password."
+      }
+    }
+  },
+  "personal_rooms": {
+    "error": {
+      "create_personal_room": {
+        "title": "Room creation failed",
+        "message": "A new room could not be created, please try again later."
       }
     }
   }
