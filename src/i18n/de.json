@@ -30,8 +30,8 @@
   "personal_rooms": {
     "error": {
       "create_personal_room": {
-        "title": "Raumerstellung fehlgeschlagen",
-        "message": "Ein neuer Raum konnte nicht erstellt werden, bitte versuchen Sie es später erneut."
+        "title": "Fehler beim Speichern",
+        "message": "Beim Speichern der Räume ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
       }
     }
   }
