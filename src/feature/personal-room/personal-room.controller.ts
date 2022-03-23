@@ -3,7 +3,6 @@ import { ApiResponse } from '@nestjs/swagger';
 import { CreateRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { CoreUser } from 'src/core/users/entity/user.entity';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 
 @Controller('personal-rooms')
