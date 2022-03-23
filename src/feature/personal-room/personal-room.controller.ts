@@ -16,7 +16,7 @@ export class PersonalRoomController {
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: "Personal Room couln't be created",
+    description: 'Personal Room could not be created',
   })
   @Post()
   async createRoom(@Body() createRoomDto: CreateRoomReqDto): Promise<any> {

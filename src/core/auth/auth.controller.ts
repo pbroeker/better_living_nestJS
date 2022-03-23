@@ -26,7 +26,7 @@ export class AuthController {
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: "User couln't be created",
+    description: 'User could not be created',
   })
   @Post('/login')
   async login(@Body() loginUserDto: LoginUserReqDto): Promise<LoginUserResDto> {
