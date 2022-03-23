@@ -36,6 +36,10 @@
       "create_personal_room": {
         "title": "Room creation failed",
         "message": "A new room could not be created, please try again later."
+      },
+      "edit_personal_room": {
+        "title": "Error while changing the name",
+        "message": "Changing the name has failed. Please try again later."
       }
     }
   }
