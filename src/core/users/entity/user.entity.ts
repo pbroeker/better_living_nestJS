@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 @Entity({ name: 'core-user' })
-export class User {
+export class CoreUser {
   @PrimaryGeneratedColumn()
   id: number;
 
