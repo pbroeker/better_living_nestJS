@@ -13,7 +13,10 @@ export class PersonalRoomService {
     private userRepository: Repository<CoreUser>,
   ) {}
 
-  async createPersonalRoom(title: string, user: CoreUserDto): Promise<any> {
+  async createPersonalRoom(
+    title: string,
+    user: CoreUserDto,
+  ): Promise<PersonalRoom> {
     try {
       const activeCoreUser = await this.userRepository.findOne(user.userId);
       const personalRoomEntity = this.personalRoomRepository.create({
