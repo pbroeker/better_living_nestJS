@@ -9,6 +9,8 @@ export class PersonalRoom {
   @Column({ default: '' })
   title: string;
 
-  @ManyToOne(() => CoreUser, (user) => user.personalRooms)
+  @ManyToOne(() => CoreUser, (user) => user.personalRooms, {
+    onDelete: 'CASCADE',
+  })
   user: CoreUser;
 }
