@@ -1,7 +1,11 @@
 {
-  "dashboard": {
-    "title": "Testtitel",
-    "greeting": "Hallo"
+  "core": {
+    "error": {
+      "no_internet_error": {
+        "title": "Keine Internetverbindung",
+        "message": "Der Aufruf konnte nicht durchgeführt werden, da keine Verbindung zum Internet besteht. Bitte versuchen Sie es später noch einmal."
+      }
+    }
   },
   "translation": {
     "error": {
