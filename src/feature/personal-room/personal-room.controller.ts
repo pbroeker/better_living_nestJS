@@ -2,6 +2,9 @@ import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { CreateRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
+import { User } from '../../utils/customDecorators/user.decorator';
+import { CoreUser } from 'src/core/users/entity/user.entity';
+import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 
 @Controller('personal-rooms')
 export class PersonalRoomController {
@@ -21,9 +24,13 @@ export class PersonalRoomController {
   @Post()
   async createRoom(
     @Body() createRoomDto: CreateRoomDto,
+    @User() user: CoreUserDto,
   ): Promise<CreateRoomDto> {
     const personalRoomEntity =
-      await this.personalRoomService.createPersonalRoom(createRoomDto.title);
+      await this.personalRoomService.createPersonalRoom(
+        createRoomDto.title,
+        user,
+      );
     return {
       title: personalRoomEntity.title,
       id: personalRoomEntity.id,

@@ -2,17 +2,22 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
-
+import { CoreUser } from 'src/core/users/entity/user.entity';
+import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 @Injectable()
 export class PersonalRoomService {
   constructor(
     @InjectRepository(PersonalRoom)
     private personalRoomRepository: Repository<PersonalRoom>,
+    @InjectRepository(CoreUser)
+    private userRepository: Repository<CoreUser>,
   ) {}
 
-  async createPersonalRoom(title: string): Promise<PersonalRoom> {
+  async createPersonalRoom(title: string, user: CoreUserDto): Promise<any> {
     try {
+      const activeCoreUser = await this.userRepository.findOne(user.userId);
       const personalRoomEntity = this.personalRoomRepository.create({
+        user: activeCoreUser,
         title: title,
       });
       return await this.personalRoomRepository.save(personalRoomEntity);
