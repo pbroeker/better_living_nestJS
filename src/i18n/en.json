@@ -14,7 +14,7 @@
   "login": {
     "error": {
       "create_user": {
-        "title": "Creating profile failed",
+        "title": "Profile creation failed",
         "message": "A new profile could not be created, please try again later."
       },
       "invalid_token": {
@@ -24,6 +24,14 @@
       "wrong_password": {
         "title": "Authentification Error",
         "message": "Wrong password."
+      }
+    }
+  },
+  "personal_rooms": {
+    "error": {
+      "create_personal_room": {
+        "title": "Room creation failed",
+        "message": "A new room could not be created, please try again later."
       }
     }
   }

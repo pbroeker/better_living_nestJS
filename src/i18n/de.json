@@ -26,5 +26,13 @@
         "message": "Passwort ist inkorrekt."
       }
     }
+  },
+  "personal_rooms": {
+    "error": {
+      "create_personal_room": {
+        "title": "Raumerstellung fehlgeschlagen",
+        "message": "Ein neuer Raum konnte nicht erstellt werden, bitte versuchen Sie es später erneut."
+      }
+    }
   }
 }
