@@ -1,6 +1,6 @@
 import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { CreateRoomReqDto, CreateRoomResDto } from './dto/personal-room.dto';
+import { CreateRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 
 @Controller('personal-rooms')
@@ -19,12 +19,14 @@ export class PersonalRoomController {
     description: 'Personal Room could not be created',
   })
   @Post()
-  async createRoom(@Body() createRoomDto: CreateRoomReqDto): Promise<any> {
+  async createRoom(
+    @Body() createRoomDto: CreateRoomDto,
+  ): Promise<CreateRoomDto> {
     const personalRoomEntity =
       await this.personalRoomService.createPersonalRoom(createRoomDto.title);
     return {
       title: personalRoomEntity.title,
       id: personalRoomEntity.id,
-    } as CreateRoomResDto;
+    } as CreateRoomDto;
   }
 }
