@@ -1,4 +1,12 @@
-import { Body, Controller, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
@@ -8,6 +16,19 @@ import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 @Controller('personal-rooms')
 export class PersonalRoomController {
   constructor(private personalRoomService: PersonalRoomService) {}
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returning personal rooms',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Wrong user credentials',
+  })
+  @Get()
+  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomDto[]> {
+    return await this.personalRoomService.getAllRooms(user);
+  }
 
   @ApiResponse({
     status: HttpStatus.CREATED,

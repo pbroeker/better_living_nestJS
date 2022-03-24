@@ -14,6 +14,26 @@ export class PersonalRoomService {
     private userRepository: Repository<CoreUser>,
   ) {}
 
+  async getAllRooms(user: CoreUserDto): Promise<PersonalRoomDto[]> {
+    try {
+      const personalRoomEntities = await this.personalRoomRepository.find({
+        relations: ['user'],
+        where: {
+          user: {
+            id: user.userId,
+          },
+        },
+      });
+
+      const personalRoomDtos = personalRoomEntities.map((entity) => {
+        return { title: entity.title, id: entity.id };
+      });
+      return personalRoomDtos as PersonalRoomDto[];
+    } catch (error) {
+      return [];
+    }
+  }
+
   async createPersonalRoom(
     title: string,
     user: CoreUserDto,
