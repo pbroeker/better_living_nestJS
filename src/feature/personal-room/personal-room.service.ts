@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
 import { CoreUser } from 'src/core/users/entity/user.entity';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
+import { PersonalRoomDto } from './dto/personal-room.dto';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -16,14 +17,20 @@ export class PersonalRoomService {
   async createPersonalRoom(
     title: string,
     user: CoreUserDto,
-  ): Promise<PersonalRoom> {
+  ): Promise<PersonalRoomDto> {
     try {
       const activeCoreUser = await this.userRepository.findOne(user.userId);
       const personalRoomEntity = this.personalRoomRepository.create({
         user: activeCoreUser,
         title: title,
       });
-      return await this.personalRoomRepository.save(personalRoomEntity);
+      const savedPersonalRoomEntity = await this.personalRoomRepository.save(
+        personalRoomEntity,
+      );
+      return {
+        title: savedPersonalRoomEntity.title,
+        id: savedPersonalRoomEntity.id,
+      } as PersonalRoomDto;
     } catch (error) {
       throw new HttpException(
         {
@@ -40,17 +47,30 @@ export class PersonalRoomService {
     newTitle: string,
     roomId: number,
     user: CoreUserDto,
-  ): Promise<any> {
+  ): Promise<PersonalRoomDto> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne({
         where: { id: roomId },
         relations: ['user'],
       });
       if (personalRoomEntity && personalRoomEntity.user.id === user.userId) {
-        return this.personalRoomRepository.save({
+        const savedPersonalRoomEntity = await this.personalRoomRepository.save({
           ...personalRoomEntity,
           title: newTitle,
         });
+        return {
+          title: savedPersonalRoomEntity.title,
+          id: savedPersonalRoomEntity.id,
+        } as PersonalRoomDto;
+      } else {
+        throw new HttpException(
+          {
+            title: 'personal_rooms.error.edit_personal_room.title',
+            text: 'personal_rooms.error.edit_personal_room.message',
+            options: 2,
+          },
+          HttpStatus.BAD_REQUEST,
+        );
       }
     } catch (error) {
       throw new HttpException(

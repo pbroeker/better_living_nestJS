@@ -1,11 +1,9 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CoreUser } from 'src/core/users/entity/user.entity';
+import { IdentifiableEntity } from 'src/shared/generic.entity';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'personal-room' })
-export class PersonalRoom {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class PersonalRoom extends IdentifiableEntity {
   @Column({ default: '' })
   title: string;
 
