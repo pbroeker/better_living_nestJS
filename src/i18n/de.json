@@ -36,6 +36,10 @@
       "create_personal_room": {
         "title": "Fehler beim Speichern",
         "message": "Beim Speichern der Räume ist ein Fehler aufgetreten. Bitte versuchen Sie es später noch einmal."
+      },
+      "edit_personal_room": {
+        "title": "Fehler beim Ändern des Namens",
+        "message": "Das Ändern des Namens ist fehlgeschlagen. Bitte versuchen Sie es später erneut."
       }
     }
   }
