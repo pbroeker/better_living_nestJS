@@ -51,7 +51,6 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.create_personal_room.title',
           text: 'personal_rooms.error.create_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -86,7 +85,6 @@ export class PersonalRoomService {
           {
             title: 'personal_rooms.error.edit_personal_room.title',
             text: 'personal_rooms.error.edit_personal_room.message',
-            options: 2,
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -96,7 +94,6 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.edit_personal_room.title',
           text: 'personal_rooms.error.edit_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -125,7 +122,6 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.delete_personal_room.title',
           text: 'personal_rooms.error.delete_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
