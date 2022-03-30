@@ -64,13 +64,17 @@ export class PersonalRoomService {
     user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne({
-        where: { id: roomId },
-        relations: ['user'],
+      const userEntity = await this.userRepository.findOne({
+        where: { id: user.userId },
+        relations: ['personalRooms'],
       });
-      if (personalRoomEntity && personalRoomEntity.user.id === user.userId) {
+      const foundRoom = userEntity.personalRooms.find((room) => {
+        return room.id === roomId;
+      });
+
+      if (foundRoom) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
-          ...personalRoomEntity,
+          ...foundRoom,
           title: newTitle,
         });
         return {
@@ -92,6 +96,35 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.edit_personal_room.title',
           text: 'personal_rooms.error.edit_personal_room.message',
+          options: 2,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteRoom(
+    user: CoreUserDto,
+    roomId: number,
+  ): Promise<PersonalRoomDto> {
+    try {
+      const userEntity = await this.userRepository.findOne({
+        where: { id: user.userId },
+        relations: ['personalRooms'],
+      });
+      const foundRoom = userEntity.personalRooms.find((room) => {
+        return room.id === roomId;
+      });
+      await this.personalRoomRepository.delete(foundRoom.id);
+      return {
+        title: foundRoom.title,
+        id: foundRoom.id,
+      } as PersonalRoomDto;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'personal_rooms.error.delete_personal_room.title',
+          text: 'personal_rooms.error.delete_personal_room.message',
           options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,

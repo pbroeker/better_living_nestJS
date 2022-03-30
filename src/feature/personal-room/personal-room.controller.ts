@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -68,7 +70,7 @@ export class PersonalRoomController {
   })
   @Put('/:roomId')
   async editPersonalRoom(
-    @Param('roomId') roomId: number,
+    @Param('roomId', ParseIntPipe) roomId: number,
     @Body() editRoomDto: PersonalRoomDto,
     @User() user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
@@ -77,5 +79,25 @@ export class PersonalRoomController {
       roomId,
       user,
     );
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Room deleted',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Wrong user credentials',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Could not be deleted',
+  })
+  @Delete('/:roomId')
+  async deleteRoom(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @User() user: CoreUserDto,
+  ): Promise<PersonalRoomDto> {
+    return await this.personalRoomService.deleteRoom(user, roomId);
   }
 }
