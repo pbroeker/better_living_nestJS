@@ -42,8 +42,10 @@ export class TranslationService {
   }
 
   async downloadTranslationFiles() {
+    const dirPath = path.resolve(__dirname, '../../i18n');
     const enJSON = await lastValueFrom(this.downloadTranslationFile('en'));
     const deJSON = await lastValueFrom(this.downloadTranslationFile('de'));
+    await fs.mkdir(dirPath);
     await this.createFile('en', enJSON);
     await this.createFile('de', deJSON);
   }
