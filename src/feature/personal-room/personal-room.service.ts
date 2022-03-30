@@ -43,10 +43,10 @@ export class PersonalRoomService {
         });
       });
 
-      const savedPersonalRoomEntity = await this.personalRoomRepository.save(
+      const savedPersonalRoomEntities = await this.personalRoomRepository.save(
         personalRoomEntities,
       );
-      savedPersonalRoomDtos = savedPersonalRoomEntity.map(
+      savedPersonalRoomDtos = savedPersonalRoomEntities.map(
         (personalRoomEntitiy) => {
           return {
             title: personalRoomEntitiy.title,
