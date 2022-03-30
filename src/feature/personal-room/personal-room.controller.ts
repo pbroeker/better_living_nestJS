@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
@@ -44,6 +44,10 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Personal Rooms could not be created',
+  })
+  @ApiBody({
+    type: PersonalRoomDto,
+    isArray: true,
   })
   @Post()
   async savePersonalRooms(
