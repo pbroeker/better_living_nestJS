@@ -35,7 +35,7 @@ export class PersonalRoomController {
 
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Personal Room created',
+    description: 'Personal Rooms created',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -43,15 +43,15 @@ export class PersonalRoomController {
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Personal Room could not be created',
+    description: 'Personal Rooms could not be created',
   })
   @Post()
-  async createPersonalRoom(
-    @Body() personalRoomDto: PersonalRoomDto,
+  async savePersonalRooms(
+    @Body() personalRoomDtos: PersonalRoomDto[],
     @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
-    return await this.personalRoomService.createPersonalRoom(
-      personalRoomDto.title,
+  ): Promise<PersonalRoomDto[]> {
+    return await this.personalRoomService.savePersonalRooms(
+      personalRoomDtos,
       user,
     );
   }
