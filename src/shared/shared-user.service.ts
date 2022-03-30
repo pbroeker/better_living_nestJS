@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/users/entity/user.entity';
 
 @Injectable()
 export class SharedUserService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    @InjectRepository(CoreUser)
+    private userRepository: Repository<CoreUser>,
   ) {}
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<CoreUser[]> {
     return await this.userRepository.find();
   }
 
-  async findByEmail(email: string): Promise<User> {
+  async findByEmail(email: string): Promise<CoreUser> {
     return await this.userRepository.findOne({ user_email: email });
   }
 }

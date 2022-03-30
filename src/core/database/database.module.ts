@@ -19,8 +19,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           __dirname + '/**/*.entity.js',
         ],
         autoLoadEntities: true,
+        synchronize: true,
         logging: true,
-        synchronize: true, //only for dev
       }),
     }),
   ],
