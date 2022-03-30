@@ -115,7 +115,7 @@ export class PersonalRoomService {
       const foundRoom = userEntity.personalRooms.find((room) => {
         return room.id === roomId;
       });
-      this.personalRoomRepository.delete(foundRoom.id);
+      await this.personalRoomRepository.delete(foundRoom.id);
       return {
         title: foundRoom.title,
         id: foundRoom.id,
