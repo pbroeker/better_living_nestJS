@@ -1,5 +1,5 @@
 import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
-import { ApiExcludeEndpoint, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { TranslationService } from './translation.service';
 @Controller('translation')
@@ -19,12 +19,5 @@ export class TranslationController {
   @ApiQuery({ name: 'locale', enum: ['en', 'de'] })
   async getLanguageJson(@Query('locale') locale: 'en' | 'de') {
     return await this.translationService.getLanguageJson(locale);
-  }
-
-  @SkipAuth()
-  @ApiExcludeEndpoint()
-  @Get('/download')
-  async downloadTranslationFiles() {
-    return await this.translationService.downloadTranslationFiles();
   }
 }
