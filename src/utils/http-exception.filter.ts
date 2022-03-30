@@ -18,7 +18,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     response.status(status).json({
       title: 'login.error.invalid_token.title',
       text: 'login.error.invalid_token.message',
-      options: 1,
     });
   }
 }

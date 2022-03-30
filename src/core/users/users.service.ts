@@ -28,7 +28,6 @@ export class UserService {
         {
           title: 'login.error.create_user.title',
           text: 'login.error.create_user.message',
-          options: 1,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
