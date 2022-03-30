@@ -103,7 +103,10 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(user: CoreUserDto, roomId: number): Promise<any> {
+  async deleteRoom(
+    user: CoreUserDto,
+    roomId: number,
+  ): Promise<PersonalRoomDto> {
     try {
       const userEntity = await this.userRepository.findOne({
         where: { id: user.userId },
