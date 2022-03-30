@@ -20,4 +20,10 @@ export class TranslationController {
   async getLanguageJson(@Query('locale') locale: 'en' | 'de') {
     return await this.translationService.getLanguageJson(locale);
   }
+
+  @SkipAuth()
+  @Get('/download')
+  async downloadTranslationFiles() {
+    return await this.translationService.downloadTranslationFiles();
+  }
 }
