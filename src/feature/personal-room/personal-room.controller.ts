@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
@@ -35,7 +35,7 @@ export class PersonalRoomController {
 
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Personal Room created',
+    description: 'Personal Rooms created',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -43,15 +43,19 @@ export class PersonalRoomController {
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'Personal Room could not be created',
+    description: 'Personal Rooms could not be created',
+  })
+  @ApiBody({
+    type: PersonalRoomDto,
+    isArray: true,
   })
   @Post()
-  async createPersonalRoom(
-    @Body() personalRoomDto: PersonalRoomDto,
+  async savePersonalRooms(
+    @Body() personalRoomDtos: PersonalRoomDto[],
     @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
-    return await this.personalRoomService.createPersonalRoom(
-      personalRoomDto.title,
+  ): Promise<PersonalRoomDto[]> {
+    return await this.personalRoomService.savePersonalRooms(
+      personalRoomDtos,
       user,
     );
   }

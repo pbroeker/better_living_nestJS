@@ -35,7 +35,6 @@ export class TranslationService {
         {
           title: 'translation.error.locale_error.title',
           text: 'translation.error.locale_error.message',
-          options: 1,
         },
         HttpStatus.BAD_REQUEST,
       );

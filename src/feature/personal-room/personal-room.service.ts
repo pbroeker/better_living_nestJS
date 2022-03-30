@@ -29,29 +29,37 @@ export class PersonalRoomService {
     }
   }
 
-  async createPersonalRoom(
-    title: string,
+  async savePersonalRooms(
+    personalRoomDtos: PersonalRoomDto[],
     user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
+  ): Promise<PersonalRoomDto[]> {
     try {
       const activeCoreUser = await this.userRepository.findOne(user.userId);
-      const personalRoomEntity = this.personalRoomRepository.create({
-        user: activeCoreUser,
-        title: title,
+      let savedPersonalRoomDtos = [];
+      const personalRoomEntities = personalRoomDtos.map((personalRoom) => {
+        return this.personalRoomRepository.create({
+          user: activeCoreUser,
+          title: personalRoom.title,
+        });
       });
-      const savedPersonalRoomEntity = await this.personalRoomRepository.save(
-        personalRoomEntity,
+
+      const savedPersonalRoomEntities = await this.personalRoomRepository.save(
+        personalRoomEntities,
       );
-      return {
-        title: savedPersonalRoomEntity.title,
-        id: savedPersonalRoomEntity.id,
-      } as PersonalRoomDto;
+      savedPersonalRoomDtos = savedPersonalRoomEntities.map(
+        (personalRoomEntitiy) => {
+          return {
+            title: personalRoomEntitiy.title,
+            id: personalRoomEntitiy.id,
+          } as PersonalRoomDto;
+        },
+      );
+      return savedPersonalRoomDtos;
     } catch (error) {
       throw new HttpException(
         {
           title: 'personal_rooms.error.create_personal_room.title',
           text: 'personal_rooms.error.create_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -86,7 +94,6 @@ export class PersonalRoomService {
           {
             title: 'personal_rooms.error.edit_personal_room.title',
             text: 'personal_rooms.error.edit_personal_room.message',
-            options: 2,
           },
           HttpStatus.BAD_REQUEST,
         );
@@ -96,7 +103,6 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.edit_personal_room.title',
           text: 'personal_rooms.error.edit_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -125,7 +131,6 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.delete_personal_room.title',
           text: 'personal_rooms.error.delete_personal_room.message',
-          options: 2,
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
