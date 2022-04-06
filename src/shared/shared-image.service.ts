@@ -1,4 +1,10 @@
-import { Injectable, Req, Res } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 import * as multer from 'multer';
@@ -17,7 +23,7 @@ export class SharedImageService {
         cb(null, `${Date.now().toString()} - ${file.originalname}`);
       },
     }),
-  }).array('images', 1);
+  }).array('image', 1);
 
   constructor(private configService: ConfigService) {
     AWS.config.update({
@@ -28,17 +34,28 @@ export class SharedImageService {
 
   async imageUpload(@Req() req: any, @Res() res: any) {
     try {
-      console.log(AWS.config);
       this.upload(req, res, function (error) {
         if (error) {
           console.log(error);
-          return res.status(404).json(`Failed to upload image file: ${error}`);
+          throw new HttpException(
+            {
+              title: 'images.error.upload_image.title',
+              text: 'images.error.upload_image.message',
+            },
+            HttpStatus.INTERNAL_SERVER_ERROR,
+          );
         }
+
         return res.status(201).json(req.files[0].location);
       });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json(`Failed to upload image file: ${error}`);
+      throw new HttpException(
+        {
+          title: 'images.error.upload_image.title',
+          text: 'images.error.upload_image.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
