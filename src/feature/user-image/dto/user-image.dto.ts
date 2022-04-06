@@ -15,6 +15,7 @@ export class UserImageDto {
   @IsString()
   @IsDateString()
   createdAt: Date;
+
   @ApiProperty()
   @IsString()
   @IsDateString()
