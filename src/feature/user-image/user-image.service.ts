@@ -37,6 +37,24 @@ export class UserImageSevice {
     });
   }
 
+  async getUserImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
+    const activeCoreUser = await this.sharedUserService.findByEmail(
+      currentUser.email,
+    );
+    const allUserImages = await this.userImageRepository.find({
+      where: { user: activeCoreUser },
+    });
+    if (allUserImages) {
+      const allUserImageDtos = allUserImages.map((userImageEntity) => {
+        const { user, ...imageEntityNoUser } = userImageEntity;
+        return imageEntityNoUser as UserImageDto;
+      });
+      return allUserImageDtos;
+    } else {
+      return [];
+    }
+  }
+
   async saveUserImage(imagePath: string, currentUser: CoreUserDto) {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
@@ -46,8 +64,8 @@ export class UserImageSevice {
       user: activeCoreUser,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
-    const { user, ...imagEntityNoUser } = savedImageEntity;
-    return imagEntityNoUser as UserImageDto;
+    const { user, ...imageEntityNoUser } = savedImageEntity;
+    return imageEntityNoUser as UserImageDto;
   }
 
   async imageUpload(req: any, res: any, user: CoreUserDto) {

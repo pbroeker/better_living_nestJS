@@ -9,12 +9,10 @@ import { UserImageSevice } from './user-image.service';
 export class UserImageController {
   constructor(private imageService: UserImageSevice) {}
 
-  /*   @Get('/all')
-  async getImages(
-    @User() user: CoreUserDto,
-    @Req() request: Express.Request,
-    @Res() response: Express.Response,
-  ) {} */
+  @Get('/all')
+  async getImages(@User() user: CoreUserDto) {
+    return await this.imageService.getUserImages(user);
+  }
 
   @Post('/upload')
   async uploadImage(
