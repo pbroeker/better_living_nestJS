@@ -38,20 +38,30 @@ export class UserImageSevice {
   }
 
   async getUserImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
-    const activeCoreUser = await this.sharedUserService.findByEmail(
-      currentUser.email,
-    );
-    const allUserImages = await this.userImageRepository.find({
-      where: { user: activeCoreUser },
-    });
-    if (allUserImages) {
-      const allUserImageDtos = allUserImages.map((userImageEntity) => {
-        const { user, ...imageEntityNoUser } = userImageEntity;
-        return imageEntityNoUser as UserImageDto;
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+      const allUserImages = await this.userImageRepository.find({
+        where: { user: activeCoreUser },
       });
-      return allUserImageDtos;
-    } else {
-      return [];
+      if (allUserImages) {
+        const allUserImageDtos = allUserImages.map((userImageEntity) => {
+          const { user, ...imageEntityNoUser } = userImageEntity;
+          return imageEntityNoUser as UserImageDto;
+        });
+        return allUserImageDtos;
+      } else {
+        return [];
+      }
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'images.error.load_images.title',
+          text: 'images.error.load_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
