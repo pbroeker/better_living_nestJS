@@ -40,6 +40,8 @@ export class PersonalRoomService {
     personalRoomDtos: PersonalRoomDto[],
     user: CoreUserDto,
   ): Promise<PersonalRoomDto[]> {
+    // using queryRunner to ensure transaction https://docs.nestjs.com/techniques/database#transactions
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();

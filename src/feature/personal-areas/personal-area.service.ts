@@ -54,7 +54,7 @@ export class PersonalAreaService {
     personalAreaReqDto: PersonalAreaReqDto,
     user: CoreUserDto,
   ): Promise<PersonalAreaResDto> {
-    // using queryRunner to ensure transaction
+    // using queryRunner to ensure transaction https://docs.nestjs.com/techniques/database#transactions
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
