@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SharedModule } from '../../shared/shared.module';
+import { PersonalRoom } from './entity/personalRoom.entity';
 import { PersonalRoomController } from './personal-room.controller';
 import { PersonalRoomService } from './personal-room.service';
-import { PersonalRoom } from './entity/personalRoom.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { CoreUser } from 'src/core/users/entity/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PersonalRoom, CoreUser])],
+  imports: [SharedModule, TypeOrmModule.forFeature([PersonalRoom])],
   controllers: [PersonalRoomController],
   providers: [PersonalRoomService],
 })
