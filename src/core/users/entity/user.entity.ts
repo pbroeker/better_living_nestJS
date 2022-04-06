@@ -1,3 +1,4 @@
+import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 import { IdentifiableEntity } from 'src/shared/generic.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
@@ -11,4 +12,7 @@ export class CoreUser extends IdentifiableEntity {
 
   @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.user)
   personalRooms: PersonalRoom[];
+
+  @OneToMany(() => PersonalArea, (personalArea) => personalArea.user)
+  personalAreas: PersonalArea[];
 }
