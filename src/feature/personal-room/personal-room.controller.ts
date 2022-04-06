@@ -50,11 +50,11 @@ export class PersonalRoomController {
     isArray: true,
   })
   @Post()
-  async savePersonalRooms(
+  async createPersonalRooms(
     @Body() personalRoomDtos: PersonalRoomDto[],
     @User() user: CoreUserDto,
   ): Promise<PersonalRoomDto[]> {
-    return await this.personalRoomService.savePersonalRooms(
+    return await this.personalRoomService.createPersonalRooms(
       personalRoomDtos,
       user,
     );

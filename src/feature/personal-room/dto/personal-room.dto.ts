@@ -10,4 +10,9 @@ export class PersonalRoomDto {
   @IsOptional()
   @IsString()
   id: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  personalAreaId: number;
 }
