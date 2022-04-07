@@ -2,6 +2,7 @@ import { Controller, Get, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
+import { UserImageDto } from './dto/user-image.dto';
 import { UserImageSevice } from './user-image.service';
 
 @ApiBearerAuth()
@@ -18,7 +19,7 @@ export class UserImageController {
     description: 'Returning all user images',
   })
   @Get('/all')
-  async getImages(@User() user: CoreUserDto) {
+  async getImages(@User() user: CoreUserDto): Promise<UserImageDto[]> {
     return await this.imageService.getUserImages(user);
   }
 
