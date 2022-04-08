@@ -2,23 +2,22 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { PersonalRoomDto } from './dto/personal-room.dto';
+import { SharedUserService } from '../../shared/shared-user.service';
 @Injectable()
 export class PersonalRoomService {
   constructor(
     @InjectRepository(PersonalRoom)
     private personalRoomRepository: Repository<PersonalRoom>,
-    @InjectRepository(CoreUser)
-    private userRepository: Repository<CoreUser>,
+    private sharedUserService: SharedUserService,
   ) {}
 
   async getAllRooms(user: CoreUserDto): Promise<PersonalRoomDto[]> {
     try {
-      const userEntity = await this.userRepository.findOne(user.userId, {
-        relations: ['personalRooms'],
-      });
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
 
       const personalRoomDtos = userEntity.personalRooms.map((entity) => {
         return { title: entity.title, id: entity.id };
@@ -34,7 +33,9 @@ export class PersonalRoomService {
     user: CoreUserDto,
   ): Promise<PersonalRoomDto[]> {
     try {
-      const activeCoreUser = await this.userRepository.findOne(user.userId);
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
       let savedPersonalRoomDtos = [];
       const personalRoomEntities = personalRoomDtos.map((personalRoom) => {
         return this.personalRoomRepository.create({
@@ -72,10 +73,9 @@ export class PersonalRoomService {
     user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
       const foundRoom = userEntity.personalRooms.find((room) => {
         return room.id === roomId;
       });
@@ -114,10 +114,9 @@ export class PersonalRoomService {
     roomId: number,
   ): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
       const foundRoom = userEntity.personalRooms.find((room) => {
         return room.id === roomId;
       });

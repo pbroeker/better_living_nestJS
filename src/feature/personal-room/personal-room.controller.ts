@@ -13,7 +13,7 @@ import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 
 @ApiBearerAuth()
 @Controller('personal-rooms')
