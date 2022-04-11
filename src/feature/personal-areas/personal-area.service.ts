@@ -1,109 +1,104 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { Repository, Connection } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import {
   PersonalAreaReqDto,
   PersonalAreaResDto,
 } from './dto/personal-area.dto';
 import { PersonalArea } from './entity/personalArea.entity';
-import { getUserWithQueryRunner } from 'src/utils/features/userFunctions';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
+import { SharedUserService } from '../../shared/shared-user.service';
 
 @Injectable()
 export class PersonalAreaService {
   constructor(
-    private connection: Connection,
     @InjectRepository(PersonalArea)
     private personalAreaRepository: Repository<PersonalArea>,
-    @InjectRepository(CoreUser)
-    private userRepository: Repository<CoreUser>,
+    @InjectRepository(PersonalRoom)
+    private personalRoomRepository: Repository<PersonalRoom>,
+    private sharedUserService: SharedUserService,
   ) {}
 
-  async getAllAreas(user: CoreUserDto): Promise<any[]> {
+  async getAllAreas(coreUserDto: CoreUserDto): Promise<PersonalAreaResDto[]> {
     try {
-      const activeCoreUser = await this.userRepository.findOne(user.userId);
-      const personalAreas = await this.personalAreaRepository.find({
-        relations: ['personalRooms', 'user'],
-        where: {
-          user: activeCoreUser,
-        },
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        coreUserDto.email,
+      );
+
+      const personalAreaEntities = await this.personalAreaRepository.find({
+        where: { user: activeCoreUser },
+        relations: ['personalRooms'],
       });
 
-      const personalAreaDtos = personalAreas.map((personalArea) => {
+      const personalAreaDtos = personalAreaEntities.map((personalArea) => {
         const personalRoomDtos = personalRoomEntityToDto(
           personalArea.personalRooms,
           personalArea.id,
         );
-
+        const { user, ...personalAreaNoUser } = personalArea;
         return {
-          title: personalArea.title,
-          id: personalArea.id,
+          ...personalAreaNoUser,
           personalRooms: personalRoomDtos,
         };
       });
       return personalAreaDtos;
     } catch (error) {
-      return [];
+      throw new HttpException(
+        {
+          title: 'Personal areas could not be loaded',
+          error: error,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async createPersonalArea(
     personalAreaReqDto: PersonalAreaReqDto,
-    user: CoreUserDto,
+    coreUserDto: CoreUserDto,
   ): Promise<PersonalAreaResDto> {
-    // using queryRunner to ensure transaction https://docs.nestjs.com/techniques/database#transactions
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
-      const activeCoreUser = await getUserWithQueryRunner(
-        queryRunner,
-        user,
-        'personalRooms',
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        coreUserDto.email,
       );
 
-      const roomEntitiesToEdit = activeCoreUser.personalRooms.filter(
-        (personalRoom) => {
-          return personalAreaReqDto.personalRoomIds.includes(personalRoom.id);
-        },
-      );
-
-      const newPersonalAreaEntity = queryRunner.manager.create(PersonalArea, {
-        user: activeCoreUser,
-        title: personalAreaReqDto.title,
-        personalRooms: roomEntitiesToEdit,
+      const personalRooms = await this.personalRoomRepository.find({
+        where: { user: activeCoreUser },
       });
 
-      const savedPersonalAreaEntity = await queryRunner.manager.save(
-        PersonalArea,
-        newPersonalAreaEntity,
+      const roomsToEdit = personalRooms.filter((personalRoom) =>
+        personalAreaReqDto.personalRoomIds.includes(personalRoom.id),
       );
 
-      // Updating roomEntities to be related to this new area
-      await Promise.all(
-        roomEntitiesToEdit.map(async (roomEntity) => {
-          return await queryRunner.manager.update(PersonalRoom, roomEntity.id, {
-            ...roomEntity,
-            personalArea: savedPersonalAreaEntity,
-          });
-        }),
+      let newAreaEntity: PersonalArea;
+      if (personalAreaReqDto.title) {
+        newAreaEntity = this.personalAreaRepository.create({
+          user: activeCoreUser,
+          title: personalAreaReqDto.title,
+          personalRooms: roomsToEdit,
+        });
+      } else {
+        newAreaEntity = this.personalAreaRepository.create({
+          user: activeCoreUser,
+          title: 'Unassigned',
+          personalRooms: roomsToEdit,
+        });
+      }
+      const savedPersonalAreaEntity = await this.personalAreaRepository.save(
+        newAreaEntity,
       );
-
-      await queryRunner.commitTransaction();
+      const { user, ...areaEntityNoUser } = savedPersonalAreaEntity;
 
       return {
-        title: savedPersonalAreaEntity.title,
-        id: savedPersonalAreaEntity.id,
+        ...areaEntityNoUser,
         personalRooms: personalRoomEntityToDto(
-          savedPersonalAreaEntity.personalRooms,
-          savedPersonalAreaEntity.id,
+          roomsToEdit,
+          areaEntityNoUser.id,
         ),
-      };
+      } as PersonalAreaResDto;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw new HttpException(
         {
           title: 'personal_areas.error.create_personal_area.title',
@@ -111,8 +106,6 @@ export class PersonalAreaService {
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    } finally {
-      await queryRunner.release();
     }
   }
 }

@@ -1,75 +1,98 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
-import { getUserWithQueryRunner } from 'src/utils/features/userFunctions';
-import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
+import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 @Injectable()
 export class PersonalRoomService {
   constructor(
-    private connection: Connection,
     @InjectRepository(PersonalRoom)
     private personalRoomRepository: Repository<PersonalRoom>,
+    @InjectRepository(PersonalArea)
+    private personalAreaRepository: Repository<PersonalArea>,
     private sharedUserService: SharedUserService,
   ) {}
 
   async getAllRooms(user: CoreUserDto): Promise<PersonalRoomDto[]> {
     try {
-
-      const userEntity = await this.sharedUserService.findByEmail(user.email, [
-        'personalRooms',
-      ]);
-      const personalRoomDtos = userEntity.personalRooms.map((entity) => {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+      const personalRoomEntities = await this.personalRoomRepository.find({
+        where: { user: activeCoreUser },
+        relations: ['personalArea'],
+      });
+      const personalRoomDtos = personalRoomEntities.map((personalRoom) => {
+        const { user, personalArea, ...personalRoomNoUser } = personalRoom;
         return {
-          title: entity.title,
-          id: entity.id,
+          ...personalRoomNoUser,
+          personalAreaId: personalRoom.personalArea.id,
         };
       });
       return personalRoomDtos as PersonalRoomDto[];
     } catch (error) {
-      return [];
+      throw new HttpException(
+        {
+          title: 'Rooms could not be loaded',
+          error: error,
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   async createPersonalRooms(
     personalRoomDtos: PersonalRoomDto[],
-    user: CoreUserDto,
+    coreUserDto: CoreUserDto,
   ): Promise<PersonalRoomDto[]> {
-    // using queryRunner to ensure transaction https://docs.nestjs.com/techniques/database#transactions
-
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
-        user.email,
+        coreUserDto.email,
       );
-      let savedPersonalRoomDtos = [];
-      const personalRoomEntities = personalRoomDtos.map((personalRoom) => {
-        return queryRunner.manager.create(PersonalRoom, {
-          user: activeCoreUser,
-          title: personalRoom.title,
-          personalArea: unassignedArea,
-        });
+
+      const personalUnassignedArea = await this.personalAreaRepository.findOne({
+        where: { user: activeCoreUser, title: 'Unassigned' },
       });
 
-      const savedPersonalRoomEntities = await queryRunner.manager.save(
-        PersonalRoom,
-        personalRoomEntities,
+      let newPersonalRoomEntities: PersonalRoom[];
+      if (personalUnassignedArea) {
+        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+          return this.personalRoomRepository.create({
+            user: activeCoreUser,
+            title: personalRoom.title,
+            personalArea: personalUnassignedArea,
+          });
+        });
+      } else {
+        const newPersonalArea = this.personalAreaRepository.create({
+          user: activeCoreUser,
+          title: 'Unassigned',
+        });
+        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+          return this.personalRoomRepository.create({
+            user: activeCoreUser,
+            title: personalRoom.title,
+            personalArea: newPersonalArea,
+          });
+        });
+      }
+      const savedPersonalRoomEntities = await this.personalRoomRepository.save(
+        newPersonalRoomEntities,
       );
 
-      await queryRunner.commitTransaction();
+      const newUnassignedArea = await this.personalAreaRepository.findOne({
+        where: { user: activeCoreUser, title: 'Unassigned' },
+      });
 
       return personalRoomEntityToDto(
         savedPersonalRoomEntities,
-        unassignedArea.id,
+        newUnassignedArea.id,
       );
     } catch (error) {
-      await queryRunner.rollbackTransaction();
       throw new HttpException(
         {
           title: 'personal_rooms.error.create_personal_room.title',
@@ -77,8 +100,6 @@ export class PersonalRoomService {
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    } finally {
-      await queryRunner.release();
     }
   }
 
