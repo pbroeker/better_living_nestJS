@@ -9,6 +9,10 @@ import {
 import { PersonalAreaService } from './personal-area.service';
 
 @ApiBearerAuth()
+@ApiResponse({
+  status: HttpStatus.UNAUTHORIZED,
+  description: 'Wrong user credentials',
+})
 @Controller('personal-areas')
 export class PersonalAreaController {
   constructor(private personalAreaService: PersonalAreaService) {}
@@ -18,8 +22,8 @@ export class PersonalAreaController {
     description: 'Returning personal areas',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Personal areas could not be loaded',
   })
   @Get()
   async getAllAreas(@User() user: CoreUserDto): Promise<PersonalAreaResDto[]> {
@@ -29,10 +33,6 @@ export class PersonalAreaController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Personal area created',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,

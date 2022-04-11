@@ -16,6 +16,10 @@ import { User } from '../../utils/customDecorators/user.decorator';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 
 @ApiBearerAuth()
+@ApiResponse({
+  status: HttpStatus.UNAUTHORIZED,
+  description: 'Wrong user credentials',
+})
 @Controller('personal-rooms')
 export class PersonalRoomController {
   constructor(private personalRoomService: PersonalRoomService) {}
@@ -25,8 +29,8 @@ export class PersonalRoomController {
     description: 'Returning personal rooms',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Rooms could not be loaded',
   })
   @Get()
   async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomDto[]> {
@@ -36,10 +40,6 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Personal Rooms created',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -63,10 +63,6 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Name edited',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,

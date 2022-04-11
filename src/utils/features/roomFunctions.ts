@@ -6,9 +6,9 @@ export const personalRoomEntityToDto = (
   id: number,
 ): PersonalRoomDto[] => {
   return personalRooms.map((personalRoom) => {
+    const { user, personalArea, ...roomNoUser } = personalRoom;
     return {
-      title: personalRoom.title,
-      id: personalRoom.id,
+      ...roomNoUser,
       personalAreaId: id,
     };
   });
