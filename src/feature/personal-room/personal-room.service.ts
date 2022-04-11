@@ -2,28 +2,27 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
-import { CoreUser } from 'src/core/users/entity/user.entity';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { PersonalRoomDto } from './dto/personal-room.dto';
 import { getUserWithQueryRunner } from 'src/utils/features/userFunctions';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
-
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { PersonalRoomDto } from './dto/personal-room.dto';
+import { SharedUserService } from '../../shared/shared-user.service';
 @Injectable()
 export class PersonalRoomService {
   constructor(
     private connection: Connection,
     @InjectRepository(PersonalRoom)
     private personalRoomRepository: Repository<PersonalRoom>,
-    @InjectRepository(CoreUser)
-    private userRepository: Repository<CoreUser>,
+    private sharedUserService: SharedUserService,
   ) {}
 
   async getAllRooms(user: CoreUserDto): Promise<PersonalRoomDto[]> {
     try {
-      const userEntity = await this.userRepository.findOne(user.userId, {
-        relations: ['personalRooms'],
-      });
+
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
       const personalRoomDtos = userEntity.personalRooms.map((entity) => {
         return {
           title: entity.title,
@@ -46,17 +45,10 @@ export class PersonalRoomService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const activeCoreUser = await getUserWithQueryRunner(queryRunner, user);
-
-      // get unassigned personalArea to assign the new rooms to them
-      const unassignedArea = await queryRunner.manager.findOne(PersonalArea, {
-        where: {
-          title: 'Unassigned',
-          user: activeCoreUser,
-        },
-        relations: ['personalRooms'],
-      });
-
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+      let savedPersonalRoomDtos = [];
       const personalRoomEntities = personalRoomDtos.map((personalRoom) => {
         return queryRunner.manager.create(PersonalRoom, {
           user: activeCoreUser,
@@ -96,10 +88,9 @@ export class PersonalRoomService {
     user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
       const foundRoom = userEntity.personalRooms.find((room) => {
         return room.id === roomId;
       });
@@ -138,10 +129,9 @@ export class PersonalRoomService {
     roomId: number,
   ): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
+      const userEntity = await this.sharedUserService.findByEmail(user.email, [
+        'personalRooms',
+      ]);
       const foundRoom = userEntity.personalRooms.find((room) => {
         return room.id === roomId;
       });
