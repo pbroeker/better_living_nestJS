@@ -2,7 +2,6 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 import { Repository } from 'typeorm';
-import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import {
   PersonalAreaReqDto,
   PersonalAreaResDto,
@@ -10,14 +9,12 @@ import {
 import { PersonalArea } from './entity/personalArea.entity';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { SharedUserService } from '../../shared/shared-user.service';
-
+import { flattenRoomsFromAreas } from 'src/utils/features/roomFunctions';
 @Injectable()
 export class PersonalAreaService {
   constructor(
     @InjectRepository(PersonalArea)
     private personalAreaRepository: Repository<PersonalArea>,
-    @InjectRepository(PersonalRoom)
-    private personalRoomRepository: Repository<PersonalRoom>,
     private sharedUserService: SharedUserService,
   ) {}
 
@@ -64,9 +61,12 @@ export class PersonalAreaService {
         coreUserDto.email,
       );
 
-      const personalRooms = await this.personalRoomRepository.find({
+      const personalAreas = await this.personalAreaRepository.find({
         where: { user: activeCoreUser },
+        relations: ['personalRooms'],
       });
+
+      const personalRooms = flattenRoomsFromAreas(personalAreas);
 
       const roomsToEdit = personalRooms.filter((personalRoom) =>
         personalAreaReqDto.personalRoomIds.includes(personalRoom.id),

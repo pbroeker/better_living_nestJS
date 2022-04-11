@@ -8,7 +8,9 @@ export class PersonalArea extends IdentifiableEntity {
   @Column({ default: '' })
   title: string;
 
-  @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.personalArea)
+  @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.personalArea, {
+    cascade: true,
+  })
   personalRooms: PersonalRoom[];
 
   @ManyToOne(() => CoreUser, (user) => user.personalAreas, {

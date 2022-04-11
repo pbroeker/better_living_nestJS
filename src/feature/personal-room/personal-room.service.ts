@@ -7,6 +7,7 @@ import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { PersonalRoomDto } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
+import { flattenRoomsFromAreas } from 'src/utils/features/roomFunctions';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -22,18 +23,20 @@ export class PersonalRoomService {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
       );
-      const personalRoomEntities = await this.personalRoomRepository.find({
+
+      const personalAreaEntities = await this.personalAreaRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalArea'],
       });
-      const personalRoomDtos = personalRoomEntities.map((personalRoom) => {
-        const { user, personalArea, ...personalRoomNoUser } = personalRoom;
-        return {
-          ...personalRoomNoUser,
-          personalAreaId: personalRoom.personalArea.id,
-        };
-      });
-      return personalRoomDtos as PersonalRoomDto[];
+
+      const personalRoomDtoArray = await Promise.all(
+        personalAreaEntities.map(async (personalArea) => {
+          const personalRooms = await this.personalRoomRepository.find({
+            where: { personalArea: personalArea },
+          });
+          return personalRoomEntityToDto(personalRooms, personalArea.id);
+        }),
+      );
+      return personalRoomDtoArray.flat(1);
     } catch (error) {
       throw new HttpException(
         {
@@ -58,31 +61,31 @@ export class PersonalRoomService {
         where: { user: activeCoreUser, title: 'Unassigned' },
       });
 
-      let newPersonalRoomEntities: PersonalRoom[];
+      let savedPersonalRoomEntities: PersonalRoom[];
       if (personalUnassignedArea) {
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+        const newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
           return this.personalRoomRepository.create({
-            user: activeCoreUser,
             title: personalRoom.title,
             personalArea: personalUnassignedArea,
           });
         });
+        savedPersonalRoomEntities = await this.personalRoomRepository.save(
+          newPersonalRoomEntities,
+        );
       } else {
+        const newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+          return this.personalRoomRepository.create({
+            title: personalRoom.title,
+          });
+        });
         const newPersonalArea = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: 'Unassigned',
+          personalRooms: newPersonalRoomEntities,
         });
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
-          return this.personalRoomRepository.create({
-            user: activeCoreUser,
-            title: personalRoom.title,
-            personalArea: newPersonalArea,
-          });
-        });
+        await this.personalAreaRepository.save(newPersonalArea);
+        savedPersonalRoomEntities = newPersonalRoomEntities;
       }
-      const savedPersonalRoomEntities = await this.personalRoomRepository.save(
-        newPersonalRoomEntities,
-      );
 
       const newUnassignedArea = await this.personalAreaRepository.findOne({
         where: { user: activeCoreUser, title: 'Unassigned' },
@@ -106,25 +109,25 @@ export class PersonalRoomService {
   async editPersonalRoomTitle(
     newTitle: string,
     roomId: number,
-    user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.sharedUserService.findByEmail(user.email, [
-        'personalRooms',
-      ]);
-      const foundRoom = userEntity.personalRooms.find((room) => {
-        return room.id === roomId;
-      });
+      const personalRoomEntity = await this.personalRoomRepository.findOne(
+        roomId,
+        { relations: ['personalArea'] },
+      );
 
-      if (foundRoom) {
+      if (personalRoomEntity) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
-          ...foundRoom,
+          ...personalRoomEntity,
           title: newTitle,
         });
+
+        const { personalArea, ...roomWithoutArea } = savedPersonalRoomEntity;
+
         return {
-          title: savedPersonalRoomEntity.title,
-          id: savedPersonalRoomEntity.id,
-        } as PersonalRoomDto;
+          ...roomWithoutArea,
+          personalAreaId: personalArea.id,
+        };
       } else {
         throw new HttpException(
           {
@@ -145,22 +148,20 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(
-    user: CoreUserDto,
-    roomId: number,
-  ): Promise<PersonalRoomDto> {
+  async deleteRoom(roomId: number): Promise<PersonalRoomDto> {
     try {
-      const userEntity = await this.sharedUserService.findByEmail(user.email, [
-        'personalRooms',
-      ]);
-      const foundRoom = userEntity.personalRooms.find((room) => {
-        return room.id === roomId;
-      });
-      await this.personalRoomRepository.delete(foundRoom.id);
+      const personalRoomEntity = await this.personalRoomRepository.findOne(
+        roomId,
+        { relations: ['personalArea'] },
+      );
+
+      await this.personalRoomRepository.delete(personalRoomEntity.id);
+
+      const { personalArea, ...roomWithoutArea } = personalRoomEntity;
       return {
-        title: foundRoom.title,
-        id: foundRoom.id,
-      } as PersonalRoomDto;
+        ...roomWithoutArea,
+        personalAreaId: personalArea.id,
+      };
     } catch (error) {
       throw new HttpException(
         {

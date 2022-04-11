@@ -72,12 +72,10 @@ export class PersonalRoomController {
   async editPersonalRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Body() editRoomDto: PersonalRoomDto,
-    @User() user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
     return await this.personalRoomService.editPersonalRoomTitle(
       editRoomDto.title,
       roomId,
-      user,
     );
   }
 
@@ -96,8 +94,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @User() user: CoreUserDto,
   ): Promise<PersonalRoomDto> {
-    return await this.personalRoomService.deleteRoom(user, roomId);
+    return await this.personalRoomService.deleteRoom(roomId);
   }
 }
