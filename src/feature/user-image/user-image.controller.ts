@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { UserImageDto } from './dto/user-image.dto';
-import { UserImageSevice } from './user-image.service';
+import { UserImageService } from './user-image.service';
 
 @ApiBearerAuth()
 @ApiResponse({
@@ -12,7 +12,7 @@ import { UserImageSevice } from './user-image.service';
 })
 @Controller('user-image')
 export class UserImageController {
-  constructor(private imageService: UserImageSevice) {}
+  constructor(private imageService: UserImageService) {}
 
   @ApiResponse({
     status: HttpStatus.OK,
