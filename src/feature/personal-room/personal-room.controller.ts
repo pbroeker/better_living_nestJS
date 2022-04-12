@@ -10,7 +10,10 @@ import {
   Put,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
-import { PersonalRoomDto } from './dto/personal-room.dto';
+import {
+  PersonalAreaReqDto,
+  PersonalAreaResDto,
+} from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
@@ -33,7 +36,7 @@ export class PersonalRoomController {
     description: 'Rooms could not be loaded',
   })
   @Get()
-  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomDto[]> {
+  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalAreaResDto[]> {
     return await this.personalRoomService.getAllRooms(user);
   }
 
@@ -46,14 +49,14 @@ export class PersonalRoomController {
     description: 'Personal Rooms could not be created',
   })
   @ApiBody({
-    type: PersonalRoomDto,
+    type: PersonalAreaReqDto,
     isArray: true,
   })
   @Post()
   async createPersonalRooms(
-    @Body() personalRoomDtos: PersonalRoomDto[],
+    @Body() personalRoomDtos: PersonalAreaReqDto[],
     @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto[]> {
+  ): Promise<PersonalAreaResDto[]> {
     return await this.personalRoomService.createPersonalRooms(
       personalRoomDtos,
       user,
@@ -71,8 +74,8 @@ export class PersonalRoomController {
   @Put('/:roomId')
   async editPersonalRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() editRoomDto: PersonalRoomDto,
-  ): Promise<PersonalRoomDto> {
+    @Body() editRoomDto: PersonalAreaReqDto,
+  ): Promise<PersonalAreaResDto> {
     return await this.personalRoomService.editPersonalRoomTitle(
       editRoomDto.title,
       roomId,
@@ -94,7 +97,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-  ): Promise<PersonalRoomDto> {
+  ): Promise<PersonalAreaResDto> {
     return await this.personalRoomService.deleteRoom(roomId);
   }
 }
