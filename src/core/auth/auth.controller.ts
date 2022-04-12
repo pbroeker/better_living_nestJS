@@ -35,7 +35,7 @@ export class AuthController {
       loginUserDto.password,
     );
     if (userEntity) {
-      const payload = { username: userEntity.user_email, sub: userEntity.id };
+      const payload = { username: userEntity.email, sub: userEntity.userId };
       return {
         email: loginUserDto.email,
         token: this.jwtService.sign(payload),

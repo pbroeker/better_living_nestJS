@@ -1,11 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
+import { PersonalRoomDto } from 'src/feature/personal-room/dto/personal-room.dto';
 
 export class PersonalAreaReqDto {
   @ApiProperty()
+  @IsOptional()
   @IsString()
   title: string;
+
+  @ApiProperty()
+  @IsArray()
+  personalRoomIds: number[];
 }
+
 export class PersonalAreaResDto {
   @ApiProperty()
   @IsString()
@@ -27,7 +34,6 @@ export class PersonalAreaResDto {
   id: number;
 
   @ApiProperty()
-  @IsOptional()
-  @IsString()
-  personalAreaId: number;
+  @IsArray()
+  personalRooms: PersonalRoomDto[];
 }

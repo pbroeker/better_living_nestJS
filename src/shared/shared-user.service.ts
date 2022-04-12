@@ -15,7 +15,7 @@ export class SharedUserService {
   }
 
   async findByEmail(email: string, relations?: string[]): Promise<CoreUser> {
-    if (relations) {
+    if (!relations) {
       return await this.userRepository.findOne({ user_email: email });
     } else {
       return await this.userRepository.findOne(

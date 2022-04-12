@@ -1,9 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PersonalRoomsModule } from './personal-room/personal-room.module';
 import { DatabaseModule } from '../core/database/database.module';
+import { PersonalAreaModule } from './personal-areas/personal-area.module';
 import { UserImageModule } from './user-image/user-image.module';
-
 @Module({
-  imports: [PersonalRoomsModule, DatabaseModule, UserImageModule],
+  imports: [
+    PersonalRoomsModule,
+    DatabaseModule,
+    UserImageModule,
+    PersonalAreaModule,
+  ],
 })
 export class FeatureModule {}
