@@ -9,7 +9,7 @@ export class PersonalArea extends IdentifiableEntity {
   title: string;
 
   @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.personalArea, {
-    cascade: true,
+    cascade: ['insert', 'update'],
   })
   personalRooms: PersonalRoom[];
 

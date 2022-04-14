@@ -1,11 +1,11 @@
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
-import { PersonalRoomDto } from 'src/feature/personal-room/dto/personal-room.dto';
+import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 
 export const personalRoomEntityToDto = (
   personalRooms: PersonalRoom[],
   id: number,
-): PersonalRoomDto[] => {
+): PersonalRoomResDto[] => {
   return personalRooms.map((personalRoom) => {
     const { personalArea, ...roomNoUser } = personalRoom;
     return {
