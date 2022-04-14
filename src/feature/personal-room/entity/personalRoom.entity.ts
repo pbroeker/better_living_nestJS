@@ -7,6 +7,6 @@ export class PersonalRoom extends IdentifiableEntity {
   @Column({ default: '' })
   title: string;
 
-  @ManyToOne(() => PersonalArea, (personalArea) => personalArea)
+  @ManyToOne(() => PersonalArea, (personalArea) => personalArea.personalRooms)
   personalArea: PersonalArea;
 }
