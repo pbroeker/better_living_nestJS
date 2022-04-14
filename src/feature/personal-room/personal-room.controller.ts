@@ -11,8 +11,8 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
 import {
-  PersonalAreaReqDto,
-  PersonalAreaResDto,
+  PersonalRoomReqDto,
+  PersonalRoomResDto,
 } from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
@@ -36,7 +36,7 @@ export class PersonalRoomController {
     description: 'Rooms could not be loaded',
   })
   @Get()
-  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalAreaResDto[]> {
+  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomResDto[]> {
     return await this.personalRoomService.getAllRooms(user);
   }
 
@@ -49,14 +49,14 @@ export class PersonalRoomController {
     description: 'Personal Rooms could not be created',
   })
   @ApiBody({
-    type: PersonalAreaReqDto,
+    type: PersonalRoomReqDto,
     isArray: true,
   })
   @Post()
   async createPersonalRooms(
-    @Body() personalRoomDtos: PersonalAreaReqDto[],
+    @Body() personalRoomDtos: PersonalRoomReqDto[],
     @User() user: CoreUserDto,
-  ): Promise<PersonalAreaResDto[]> {
+  ): Promise<PersonalRoomResDto[]> {
     return await this.personalRoomService.createPersonalRooms(
       personalRoomDtos,
       user,
@@ -74,8 +74,8 @@ export class PersonalRoomController {
   @Put('/:roomId')
   async editPersonalRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() editRoomDto: PersonalAreaReqDto,
-  ): Promise<PersonalAreaResDto> {
+    @Body() editRoomDto: PersonalRoomReqDto,
+  ): Promise<PersonalRoomResDto> {
     return await this.personalRoomService.editPersonalRoomTitle(
       editRoomDto.title,
       roomId,
@@ -97,7 +97,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-  ): Promise<PersonalAreaResDto> {
+  ): Promise<PersonalRoomResDto> {
     return await this.personalRoomService.deleteRoom(roomId);
   }
 }

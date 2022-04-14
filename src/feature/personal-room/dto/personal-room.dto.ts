@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsString } from 'class-validator';
 
-export class PersonalAreaReqDto {
+export class PersonalRoomReqDto {
   @ApiProperty()
   @IsString()
   title: string;
 }
-export class PersonalAreaResDto {
+export class PersonalRoomResDto {
   @ApiProperty()
   @IsString()
   title: string;
