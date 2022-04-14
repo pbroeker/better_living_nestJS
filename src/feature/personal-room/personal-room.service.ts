@@ -5,8 +5,8 @@ import { PersonalRoom } from './entity/personalRoom.entity';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import {
-  PersonalAreaReqDto,
-  PersonalAreaResDto,
+  PersonalRoomReqDto,
+  PersonalRoomResDto,
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
@@ -20,7 +20,7 @@ export class PersonalRoomService {
     private sharedUserService: SharedUserService,
   ) {}
 
-  async getAllRooms(user: CoreUserDto): Promise<PersonalAreaResDto[]> {
+  async getAllRooms(user: CoreUserDto): Promise<PersonalRoomResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
@@ -51,9 +51,9 @@ export class PersonalRoomService {
   }
 
   async createPersonalRooms(
-    personalRoomDtos: PersonalAreaReqDto[],
+    personalRoomDtos: PersonalRoomReqDto[],
     coreUserDto: CoreUserDto,
-  ): Promise<PersonalAreaResDto[]> {
+  ): Promise<PersonalRoomResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         coreUserDto.email,
@@ -111,7 +111,7 @@ export class PersonalRoomService {
   async editPersonalRoomTitle(
     newTitle: string,
     roomId: number,
-  ): Promise<PersonalAreaResDto> {
+  ): Promise<PersonalRoomResDto> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne(
         roomId,
@@ -150,7 +150,7 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(roomId: number): Promise<PersonalAreaResDto> {
+  async deleteRoom(roomId: number): Promise<PersonalRoomResDto> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne(
         roomId,
