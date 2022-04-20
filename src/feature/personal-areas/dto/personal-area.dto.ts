@@ -8,8 +8,7 @@ export class PersonalAreaReqDto {
   @IsString()
   title: string;
 
-  @ApiProperty()
-  @IsArray()
+  @ApiProperty({ type: [Number] })
   personalRoomIds: number[];
 }
 

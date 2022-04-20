@@ -42,8 +42,8 @@ export class PersonalRoomService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'Rooms could not be loaded',
-          error: error,
+          title: 'personal_rooms.error.get_personal_room.title',
+          text: 'personal_rooms.error.get_personal_room.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

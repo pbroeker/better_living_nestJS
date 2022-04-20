@@ -9,12 +9,17 @@ import {
 import { PersonalArea } from './entity/personalArea.entity';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { flattenRoomsFromAreas } from 'src/utils/features/roomFunctions';
+import { flattenRoomsFromAreas } from '../../utils/features/roomFunctions';
+import { createIdFindOptions } from '../../utils/features/areaFunctions';
+import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
+import * as _ from 'lodash';
 @Injectable()
 export class PersonalAreaService {
   constructor(
     @InjectRepository(PersonalArea)
     private personalAreaRepository: Repository<PersonalArea>,
+    @InjectRepository(PersonalRoom)
+    private personalRoomRepository: Repository<PersonalRoom>,
     private sharedUserService: SharedUserService,
   ) {}
 
@@ -103,6 +108,76 @@ export class PersonalAreaService {
         {
           title: 'personal_areas.error.create_personal_area.title',
           text: 'personal_areas.error.create_personal_area.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async editPersonalArea(
+    areaId: number,
+    personalAreaReqDto: PersonalAreaReqDto,
+    coreUserDto: CoreUserDto,
+  ): Promise<PersonalAreaResDto> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        coreUserDto.email,
+      );
+
+      const personalAreaEntity = await this.personalAreaRepository.findOne({
+        where: { user: activeCoreUser, id: areaId },
+        relations: ['personalRooms'],
+      });
+
+      const personalAreaRoomIds = personalAreaEntity.personalRooms.map(
+        (personalRoom) => personalRoom.id,
+      );
+
+      const unassignedRoomIds = _.difference(
+        personalAreaRoomIds,
+        personalAreaReqDto.personalRoomIds,
+      );
+
+      // move removed rooms to unassigned personalArea
+      if (unassignedRoomIds.length) {
+        const roomsToRemove = await this.personalRoomRepository.find({
+          where: createIdFindOptions(unassignedRoomIds),
+        });
+
+        const unassignedArea = await this.personalAreaRepository.findOne({
+          where: { title: 'Unassigned' },
+          relations: ['personalRooms'],
+        });
+
+        unassignedArea.personalRooms = [
+          ...unassignedArea.personalRooms,
+          ...roomsToRemove,
+        ];
+
+        await this.personalAreaRepository.save(unassignedArea);
+      }
+
+      // update personalArea with new list of rooms
+      const roomsToAdd = await this.personalRoomRepository.find({
+        where: createIdFindOptions(personalAreaReqDto.personalRoomIds),
+      });
+      personalAreaEntity.personalRooms = roomsToAdd;
+      personalAreaEntity.title = personalAreaReqDto.title;
+
+      const savedPersonalAreaEntity = await this.personalAreaRepository.save(
+        personalAreaEntity,
+      );
+      const { user, ...areaEntityNoUser } = savedPersonalAreaEntity;
+
+      return {
+        ...areaEntityNoUser,
+        personalRooms: personalRoomEntityToDto(roomsToAdd, areaEntityNoUser.id),
+      } as PersonalAreaResDto;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'personal_rooms.error.get_personal_area.title',
+          text: 'personal_rooms.error.get_personal_area.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
