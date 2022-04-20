@@ -3,8 +3,14 @@ import { IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class PersonalRoomReqDto {
   @ApiProperty()
+  @IsOptional()
   @IsString()
   title: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  iconId: string;
 }
 export class PersonalRoomResDto {
   @ApiProperty()
