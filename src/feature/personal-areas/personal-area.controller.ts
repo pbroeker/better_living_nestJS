@@ -59,7 +59,7 @@ export class PersonalAreaController {
   }
 
   @ApiResponse({
-    status: HttpStatus.CREATED,
+    status: HttpStatus.OK,
     description: 'Personal area edited',
   })
   @ApiResponse({

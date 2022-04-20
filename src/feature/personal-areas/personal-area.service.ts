@@ -9,8 +9,8 @@ import {
 import { PersonalArea } from './entity/personalArea.entity';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { flattenRoomsFromAreas } from 'src/utils/features/roomFunctions';
-import { createIdFindOptions } from 'src/utils/features/areaFunctions';
+import { flattenRoomsFromAreas } from '../../utils/features/roomFunctions';
+import { createIdFindOptions } from '../../utils/features/areaFunctions';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import * as _ from 'lodash';
 @Injectable()
@@ -161,8 +161,6 @@ export class PersonalAreaService {
       const roomsToAdd = await this.personalRoomRepository.find({
         where: createIdFindOptions(personalAreaReqDto.personalRoomIds),
       });
-      console.log('========= roomsToAdd =========== ', roomsToAdd);
-
       personalAreaEntity.personalRooms = roomsToAdd;
       personalAreaEntity.title = personalAreaReqDto.title;
 
@@ -178,8 +176,8 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'Personal areas could not be loaded',
-          error: error,
+          title: 'personal_rooms.error.get_personal_area.title',
+          text: 'personal_rooms.error.get_personal_area.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
