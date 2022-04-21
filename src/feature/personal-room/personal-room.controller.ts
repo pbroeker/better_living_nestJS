@@ -9,7 +9,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   PersonalRoomReqDto,
   PersonalRoomResDto,
@@ -19,6 +19,7 @@ import { User } from '../../utils/customDecorators/user.decorator';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 
 @ApiBearerAuth()
+@ApiTags('personal-room')
 @ApiResponse({
   status: HttpStatus.UNAUTHORIZED,
   description: 'Wrong user credentials',

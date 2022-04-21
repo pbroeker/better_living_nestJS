@@ -1,11 +1,12 @@
 import { Controller, Get, HttpStatus, Post, Req, Res } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { UserImageDto } from './dto/user-image.dto';
 import { UserImageService } from './user-image.service';
 
 @ApiBearerAuth()
+@ApiTags('user-images')
 @ApiResponse({
   status: HttpStatus.UNAUTHORIZED,
   description: 'Wrong user credentials',
