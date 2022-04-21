@@ -76,10 +76,7 @@ export class PersonalRoomController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @Body() editRoomDto: PersonalRoomReqDto,
   ): Promise<PersonalRoomResDto> {
-    return await this.personalRoomService.editPersonalRoomTitle(
-      editRoomDto.title,
-      roomId,
-    );
+    return await this.personalRoomService.editPersonalRoom(roomId, editRoomDto);
   }
 
   @ApiResponse({

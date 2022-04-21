@@ -69,6 +69,7 @@ export class PersonalRoomService {
           return this.personalRoomRepository.create({
             title: personalRoom.title,
             personalArea: personalUnassignedArea,
+            iconId: personalRoom.iconId,
           });
         });
         savedPersonalRoomEntities = await this.personalRoomRepository.save(
@@ -78,6 +79,7 @@ export class PersonalRoomService {
         const newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
           return this.personalRoomRepository.create({
             title: personalRoom.title,
+            iconId: personalRoom.iconId,
           });
         });
         const newPersonalArea = this.personalAreaRepository.create({
@@ -108,9 +110,9 @@ export class PersonalRoomService {
     }
   }
 
-  async editPersonalRoomTitle(
-    newTitle: string,
+  async editPersonalRoom(
     roomId: number,
+    editData: PersonalRoomReqDto,
   ): Promise<PersonalRoomResDto> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne(
@@ -121,7 +123,7 @@ export class PersonalRoomService {
       if (personalRoomEntity) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
           ...personalRoomEntity,
-          title: newTitle,
+          ...editData,
         });
 
         const { personalArea, ...roomWithoutArea } = savedPersonalRoomEntity;
