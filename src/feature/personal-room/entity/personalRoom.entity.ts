@@ -8,8 +8,8 @@ export class PersonalRoom extends IdentifiableEntity {
   @Column({ default: '' })
   title: string;
 
-  @Column({ default: '' })
-  iconId: string;
+  @Column({ default: 0 })
+  iconId: number;
 
   @ManyToOne(() => PersonalArea, (personalArea) => personalArea.personalRooms)
   personalArea: PersonalArea;

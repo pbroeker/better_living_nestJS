@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class PersonalRoomReqDto {
   @ApiProperty()
@@ -9,13 +9,17 @@ export class PersonalRoomReqDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsString()
-  iconId: string;
+  @IsNumber()
+  iconId: number;
 }
 export class PersonalRoomResDto {
   @ApiProperty()
   @IsString()
   title: string;
+
+  @ApiProperty()
+  @IsNumber()
+  iconId: number;
 
   @ApiProperty()
   @IsString()
