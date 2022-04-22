@@ -23,16 +23,6 @@ export class PersonalRoomResDto {
   iconId: number;
 
   @ApiProperty()
-  @IsString()
-  @IsDateString()
-  createdAt: Date;
-
-  @ApiProperty()
-  @IsString()
-  @IsDateString()
-  updatedAt: Date;
-
-  @ApiProperty()
   @IsOptional()
   @IsNumber()
   id: number;
