@@ -7,7 +7,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [SharedModule, TypeOrmModule.forFeature([PersonalRoom])],
-
   controllers: [PersonalRoomController],
   providers: [PersonalRoomService],
 })
