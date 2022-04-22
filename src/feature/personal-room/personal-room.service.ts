@@ -27,7 +27,6 @@ export class PersonalRoomService {
 
       const personalRoomEntities = await this.personalRoomRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalArea'],
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {

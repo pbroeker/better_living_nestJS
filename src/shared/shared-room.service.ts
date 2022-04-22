@@ -14,11 +14,11 @@ export class SharedRoomService {
 
   async findAll(
     currentUser: CoreUser,
-    relations = [''],
+    relations = [],
   ): Promise<PersonalRoom[]> {
     return await this.personalRoomRepository.find({
       where: { user: currentUser },
-      relations: relations,
+      relations,
     });
   }
 
