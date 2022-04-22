@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { PersonalAreaResDto } from 'src/feature/personal-areas/dto/personal-area.dto';
+import { UserImage } from 'src/feature/user-image/entity/user-image.entity';
 
 export class PersonalRoomReqDto {
   @ApiProperty()
@@ -30,4 +37,9 @@ export class PersonalRoomResDto {
   @ApiProperty({ type: PersonalAreaResDto })
   @IsOptional()
   personalArea?: PersonalAreaResDto;
+
+  @ApiProperty({ type: [UserImage] })
+  @IsOptional()
+  @IsArray()
+  userImages?: UserImage[];
 }

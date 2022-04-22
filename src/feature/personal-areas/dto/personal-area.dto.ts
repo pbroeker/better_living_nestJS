@@ -7,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
+import { UserImage } from 'src/feature/user-image/entity/user-image.entity';
 
 export class PersonalAreaReqDto {
   @ApiProperty()

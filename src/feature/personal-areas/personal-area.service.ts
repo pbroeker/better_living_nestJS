@@ -38,7 +38,7 @@ export class PersonalAreaService {
 
       const personalRoomEntities = await this.sharedRoomService.findAll(
         activeCoreUser,
-        ['personalArea'],
+        ['personalArea', 'userImages'],
       );
 
       const personalAreas = personalRoomEntities.reduce<PersonalAreaResDto[]>(
@@ -172,15 +172,20 @@ export class PersonalAreaService {
   }
 
   private reduceRoomToAreas(
-    areaObject: PersonalAreaResDto[],
+    personalAreaArray: PersonalAreaResDto[],
     currentRoom: PersonalRoom,
   ) {
-    const index = areaObject.findIndex((object) => {
+    const index = personalAreaArray.findIndex((object) => {
       return object.id === currentRoom.personalArea.id;
     });
     const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
     const { personalArea, ...currentRoomDto } = currentRoomNoUser;
-    areaObject[index].personalRooms.push(currentRoomDto);
-    return areaObject;
+    const userImagesSlice = currentRoomNoUser.userImages.slice(4);
+
+    personalAreaArray[index].personalRooms.push({
+      ...currentRoomDto,
+      userImages: userImagesSlice,
+    });
+    return personalAreaArray;
   }
 }

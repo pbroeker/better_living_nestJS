@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class UserImageDto {
   @ApiProperty()
@@ -20,4 +20,15 @@ export class UserImageDto {
   @IsString()
   @IsDateString()
   updatedAt: Date;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsArray()
+  personalRoomIds?: number[];
+}
+
+export class EditImageRoomDto {
+  @ApiProperty()
+  @IsArray()
+  personalRoomIds: number[];
 }

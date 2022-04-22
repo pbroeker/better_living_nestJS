@@ -27,11 +27,12 @@ export class PersonalRoomService {
 
       const personalRoomEntities = await this.personalRoomRepository.find({
         where: { user: activeCoreUser },
+        relations: ['userImages'],
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
         const roomNoUser = removeUser(roomEntity);
-        return roomNoUser;
+        return { ...roomNoUser, userImages: roomNoUser.userImages.slice(4) };
       });
       return personalRoomDtos;
     } catch (error) {
