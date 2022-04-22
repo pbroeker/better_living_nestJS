@@ -11,7 +11,7 @@ import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedRoomService } from 'src/shared/shared-room.service';
 import * as _ from 'lodash';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
-import { removeUser } from 'src/utils/features/helpers';
+import { removeUser, removeDateStrings } from '../../utils/features/helpers';
 @Injectable()
 export class PersonalAreaService {
   constructor(
@@ -32,7 +32,8 @@ export class PersonalAreaService {
           where: { user: activeCoreUser },
         })
       ).map((areaEntity) => {
-        return { ...areaEntity, personalRooms: [] };
+        const areaWithoutDates = removeUser(removeDateStrings(areaEntity));
+        return { ...areaWithoutDates, personalRooms: [] };
       });
 
       const personalRoomEntities = await this.sharedRoomService.findAll(
@@ -48,8 +49,8 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'Personal areas could not be loaded',
-          error: error,
+          title: 'personal_areas.error.get_all.title',
+          text: 'personal_areas.error.get_all.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -162,8 +163,8 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'personal_rooms.error.get_personal_area.title',
-          text: 'personal_rooms.error.get_personal_area.message',
+          title: 'personal_areas.error.edit_personal_area.title',
+          text: 'personal_areas.error.edit_personal_area.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -171,14 +172,15 @@ export class PersonalAreaService {
   }
 
   private reduceRoomToAreas(
-    previous: PersonalAreaResDto[],
-    current: PersonalRoom,
+    areaObject: PersonalAreaResDto[],
+    currentRoom: PersonalRoom,
   ) {
-    const index = previous.findIndex((object) => {
-      return object.title === current.personalArea.title;
+    const index = areaObject.findIndex((object) => {
+      return object.id === currentRoom.personalArea.id;
     });
-    const { personalArea, ...currentRoomNoArea } = current;
-    previous[index].personalRooms.push(currentRoomNoArea);
-    return previous;
+    const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
+    const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+    areaObject[index].personalRooms.push(currentRoomDto);
+    return areaObject;
   }
 }
