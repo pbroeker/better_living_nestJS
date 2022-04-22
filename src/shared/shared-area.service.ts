@@ -26,8 +26,14 @@ export class SharedAreaService {
     return savedPersonalArea;
   }
 
-  async findAll(currentUser: CoreUser): Promise<PersonalArea[]> {
-    return this.personalAreaRepository.find({ where: { user: currentUser } });
+  async findAll(
+    currentUser: CoreUser,
+    relations = [''],
+  ): Promise<PersonalArea[]> {
+    return this.personalAreaRepository.find({
+      where: { user: currentUser },
+      relations: relations,
+    });
   }
 
   async findByTitle(

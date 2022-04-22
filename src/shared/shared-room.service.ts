@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
-import { createIdFindOptions } from '../utils/features/areaFunctions';
+import { createIdFindOptions } from '../utils/features/helpers';
 
 @Injectable()
 export class SharedRoomService {
@@ -12,9 +12,13 @@ export class SharedRoomService {
     private personalRoomRepository: Repository<PersonalRoom>,
   ) {}
 
-  async findAll(currentUser: CoreUser): Promise<PersonalRoom[]> {
+  async findAll(
+    currentUser: CoreUser,
+    relations = [''],
+  ): Promise<PersonalRoom[]> {
     return await this.personalRoomRepository.find({
       where: { user: currentUser },
+      relations: relations,
     });
   }
 
@@ -22,10 +26,12 @@ export class SharedRoomService {
     currentUser: CoreUser,
     ids: number[],
   ): Promise<PersonalRoom[]> {
-    const findIdOptions = createIdFindOptions(ids);
+    const findIdOptions = createIdFindOptions(ids).map((idObject) => {
+      return { ...idObject, user: currentUser };
+    });
 
     return await this.personalRoomRepository.find({
-      where: [{ user: currentUser }, ...findIdOptions],
+      where: findIdOptions,
     });
   }
 }
