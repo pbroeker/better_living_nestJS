@@ -88,7 +88,9 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
       );
-      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
+      const areaEntityNoUser = removeUser(
+        removeDateStrings(savedPersonalAreaEntity),
+      );
 
       return areaEntityNoUser;
     } catch (error) {
@@ -157,7 +159,9 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         personalAreaEntity,
       );
-      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
+      const areaEntityNoUser = removeUser(
+        removeDateStrings(savedPersonalAreaEntity),
+      );
 
       return areaEntityNoUser;
     } catch (error) {
@@ -180,11 +184,12 @@ export class PersonalAreaService {
     });
     const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
     const { personalArea, ...currentRoomDto } = currentRoomNoUser;
-    const userImagesSlice = currentRoomNoUser.userImages.slice(4);
+    const userImagesSlice = currentRoomNoUser.userImages.slice(0, 5);
 
     personalAreaArray[index].personalRooms.push({
       ...currentRoomDto,
       userImages: userImagesSlice,
+      imageCount: currentRoomNoUser.userImages.length,
     });
     return personalAreaArray;
   }

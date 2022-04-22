@@ -9,7 +9,7 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from 'src/shared/shared-area.service';
-import { removeUser } from 'src/utils/features/helpers';
+import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -31,8 +31,12 @@ export class PersonalRoomService {
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoUser = removeUser(roomEntity);
-        return { ...roomNoUser, userImages: roomNoUser.userImages.slice(4) };
+        const roomNoUser = removeUser(removeDateStrings(roomEntity));
+        return {
+          ...roomNoUser,
+          userImages: roomNoUser.userImages.slice(0, 5),
+          imageCount: roomNoUser.userImages.length,
+        };
       });
       return personalRoomDtos;
     } catch (error) {
@@ -94,8 +98,10 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomWithoutUser = removeUser(newRoomEntity);
-        const areaWithoutUser = removeUser(roomWithoutUser.personalArea);
+        const roomWithoutUser = removeUser(removeDateStrings(newRoomEntity));
+        const areaWithoutUser = removeUser(
+          removeDateStrings(roomWithoutUser.personalArea),
+        );
         return {
           ...roomWithoutUser,
           personalArea: areaWithoutUser,
@@ -130,7 +136,9 @@ export class PersonalRoomService {
           ...editData,
         });
 
-        const roomWithoutUser = removeUser(savedPersonalRoomEntity);
+        const roomWithoutUser = removeUser(
+          removeDateStrings(savedPersonalRoomEntity),
+        );
 
         return roomWithoutUser;
       } else {
@@ -162,7 +170,7 @@ export class PersonalRoomService {
 
       await this.personalRoomRepository.delete(personalRoomEntity.id);
 
-      const roomWithoutUser = removeUser(personalRoomEntity);
+      const roomWithoutUser = removeUser(removeDateStrings(personalRoomEntity));
       return roomWithoutUser;
     } catch (error) {
       throw new HttpException(

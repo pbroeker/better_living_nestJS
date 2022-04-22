@@ -42,4 +42,8 @@ export class PersonalRoomResDto {
   @IsOptional()
   @IsArray()
   userImages?: UserImage[];
+
+  @ApiProperty()
+  @IsOptional()
+  imageCount?: number;
 }
