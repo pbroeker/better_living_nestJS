@@ -7,20 +7,18 @@ import {
   PersonalAreaResDto,
 } from './dto/personal-area.dto';
 import { PersonalArea } from './entity/personalArea.entity';
-import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { flattenRoomsFromAreas } from '../../utils/features/roomFunctions';
-import { createIdFindOptions } from '../../utils/features/areaFunctions';
-import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
+import { SharedRoomService } from 'src/shared/shared-room.service';
 import * as _ from 'lodash';
+import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
+import { removeUser, removeDateStrings } from '../../utils/features/helpers';
 @Injectable()
 export class PersonalAreaService {
   constructor(
     @InjectRepository(PersonalArea)
     private personalAreaRepository: Repository<PersonalArea>,
-    @InjectRepository(PersonalRoom)
-    private personalRoomRepository: Repository<PersonalRoom>,
     private sharedUserService: SharedUserService,
+    private sharedRoomService: SharedRoomService,
   ) {}
 
   async getAllAreas(coreUserDto: CoreUserDto): Promise<PersonalAreaResDto[]> {
@@ -29,28 +27,30 @@ export class PersonalAreaService {
         coreUserDto.email,
       );
 
-      const personalAreaEntities = await this.personalAreaRepository.find({
-        where: { user: activeCoreUser },
-        relations: ['personalRooms'],
+      const areaEntities = (
+        await this.personalAreaRepository.find({
+          where: { user: activeCoreUser },
+        })
+      ).map((areaEntity) => {
+        const areaWithoutDates = removeUser(removeDateStrings(areaEntity));
+        return { ...areaWithoutDates, personalRooms: [] };
       });
 
-      const personalAreaDtos = personalAreaEntities.map((personalArea) => {
-        const personalRoomDtos = personalRoomEntityToDto(
-          personalArea.personalRooms,
-          personalArea.id,
-        );
-        const { user, ...personalAreaNoUser } = personalArea;
-        return {
-          ...personalAreaNoUser,
-          personalRooms: personalRoomDtos,
-        };
-      });
-      return personalAreaDtos;
+      const personalRoomEntities = await this.sharedRoomService.findAll(
+        activeCoreUser,
+        ['personalArea'],
+      );
+
+      const personalAreas = personalRoomEntities.reduce<PersonalAreaResDto[]>(
+        this.reduceRoomToAreas,
+        areaEntities,
+      );
+      return personalAreas;
     } catch (error) {
       throw new HttpException(
         {
-          title: 'Personal areas could not be loaded',
-          error: error,
+          title: 'personal_areas.error.get_all.title',
+          text: 'personal_areas.error.get_all.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -66,15 +66,9 @@ export class PersonalAreaService {
         coreUserDto.email,
       );
 
-      const personalAreas = await this.personalAreaRepository.find({
-        where: { user: activeCoreUser },
-        relations: ['personalRooms'],
-      });
-
-      const personalRooms = flattenRoomsFromAreas(personalAreas);
-
-      const roomsToEdit = personalRooms.filter((personalRoom) =>
-        personalAreaReqDto.personalRoomIds.includes(personalRoom.id),
+      const roomEntities = await this.sharedRoomService.findByIds(
+        activeCoreUser,
+        personalAreaReqDto.personalRoomIds,
       );
 
       let newAreaEntity: PersonalArea;
@@ -82,27 +76,21 @@ export class PersonalAreaService {
         newAreaEntity = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: personalAreaReqDto.title,
-          personalRooms: roomsToEdit,
+          personalRooms: roomEntities,
         });
       } else {
         newAreaEntity = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: 'Unassigned',
-          personalRooms: roomsToEdit,
+          personalRooms: roomEntities,
         });
       }
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
       );
-      const { user, ...areaEntityNoUser } = savedPersonalAreaEntity;
+      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
 
-      return {
-        ...areaEntityNoUser,
-        personalRooms: personalRoomEntityToDto(
-          roomsToEdit,
-          areaEntityNoUser.id,
-        ),
-      } as PersonalAreaResDto;
+      return areaEntityNoUser;
     } catch (error) {
       throw new HttpException(
         {
@@ -140,12 +128,13 @@ export class PersonalAreaService {
 
       // move removed rooms to unassigned personalArea
       if (unassignedRoomIds.length) {
-        const roomsToRemove = await this.personalRoomRepository.find({
-          where: createIdFindOptions(unassignedRoomIds),
-        });
+        const roomsToRemove = await this.sharedRoomService.findByIds(
+          activeCoreUser,
+          unassignedRoomIds,
+        );
 
         const unassignedArea = await this.personalAreaRepository.findOne({
-          where: { title: 'Unassigned' },
+          where: { title: 'Unassigned', user: activeCoreUser },
           relations: ['personalRooms'],
         });
 
@@ -153,34 +142,45 @@ export class PersonalAreaService {
           ...unassignedArea.personalRooms,
           ...roomsToRemove,
         ];
-
         await this.personalAreaRepository.save(unassignedArea);
       }
 
       // update personalArea with new list of rooms
-      const roomsToAdd = await this.personalRoomRepository.find({
-        where: createIdFindOptions(personalAreaReqDto.personalRoomIds),
-      });
+      const roomsToAdd = await this.sharedRoomService.findByIds(
+        activeCoreUser,
+        personalAreaReqDto.personalRoomIds,
+      );
+
       personalAreaEntity.personalRooms = roomsToAdd;
       personalAreaEntity.title = personalAreaReqDto.title;
 
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         personalAreaEntity,
       );
-      const { user, ...areaEntityNoUser } = savedPersonalAreaEntity;
+      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
 
-      return {
-        ...areaEntityNoUser,
-        personalRooms: personalRoomEntityToDto(roomsToAdd, areaEntityNoUser.id),
-      } as PersonalAreaResDto;
+      return areaEntityNoUser;
     } catch (error) {
       throw new HttpException(
         {
-          title: 'personal_rooms.error.get_personal_area.title',
-          text: 'personal_rooms.error.get_personal_area.message',
+          title: 'personal_areas.error.edit_personal_area.title',
+          text: 'personal_areas.error.edit_personal_area.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  private reduceRoomToAreas(
+    areaObject: PersonalAreaResDto[],
+    currentRoom: PersonalRoom,
+  ) {
+    const index = areaObject.findIndex((object) => {
+      return object.id === currentRoom.personalArea.id;
+    });
+    const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
+    const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+    areaObject[index].personalRooms.push(currentRoomDto);
+    return areaObject;
   }
 }

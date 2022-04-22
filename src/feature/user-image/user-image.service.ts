@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as AWS from 'aws-sdk';
 import * as multer from 'multer';
 import * as multerS3 from 'multer-s3';
+import { removeUser } from 'src/utils/features/helpers';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
@@ -47,7 +48,7 @@ export class UserImageService {
       });
       if (allUserImages) {
         const allUserImageDtos = allUserImages.map((userImageEntity) => {
-          const { user, ...imageEntityNoUser } = userImageEntity;
+          const imageEntityNoUser = removeUser(userImageEntity);
           return imageEntityNoUser as UserImageDto;
         });
         return allUserImageDtos;
@@ -74,7 +75,7 @@ export class UserImageService {
       user: activeCoreUser,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
-    const { user, ...imageEntityNoUser } = savedImageEntity;
+    const imageEntityNoUser = removeUser(savedImageEntity);
     return imageEntityNoUser as UserImageDto;
   }
 
