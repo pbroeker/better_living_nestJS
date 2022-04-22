@@ -144,7 +144,7 @@ export class PersonalAreaService {
         );
 
         const unassignedArea = await this.personalAreaRepository.findOne({
-          where: { title: 'Unassigned' },
+          where: { title: 'Unassigned', user: activeCoreUser },
           relations: ['personalRooms'],
         });
 
