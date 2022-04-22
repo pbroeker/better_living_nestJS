@@ -9,18 +9,16 @@ import {
 import { PersonalArea } from './entity/personalArea.entity';
 import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
 import { SharedUserService } from '../../shared/shared-user.service';
+import { SharedRoomService } from 'src/shared/shared-room.service';
 import { flattenRoomsFromAreas } from '../../utils/features/roomFunctions';
-import { createIdFindOptions } from '../../utils/features/areaFunctions';
-import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import * as _ from 'lodash';
 @Injectable()
 export class PersonalAreaService {
   constructor(
     @InjectRepository(PersonalArea)
     private personalAreaRepository: Repository<PersonalArea>,
-    @InjectRepository(PersonalRoom)
-    private personalRoomRepository: Repository<PersonalRoom>,
     private sharedUserService: SharedUserService,
+    private sharedRoomService: SharedRoomService,
   ) {}
 
   async getAllAreas(coreUserDto: CoreUserDto): Promise<PersonalAreaResDto[]> {
@@ -140,9 +138,10 @@ export class PersonalAreaService {
 
       // move removed rooms to unassigned personalArea
       if (unassignedRoomIds.length) {
-        const roomsToRemove = await this.personalRoomRepository.find({
-          where: createIdFindOptions(unassignedRoomIds),
-        });
+        const roomsToRemove = await this.sharedRoomService.findByIds(
+          activeCoreUser,
+          unassignedRoomIds,
+        );
 
         const unassignedArea = await this.personalAreaRepository.findOne({
           where: { title: 'Unassigned', user: activeCoreUser },
@@ -158,9 +157,10 @@ export class PersonalAreaService {
       }
 
       // update personalArea with new list of rooms
-      const roomsToAdd = await this.personalRoomRepository.find({
-        where: createIdFindOptions(personalAreaReqDto.personalRoomIds),
-      });
+      const roomsToAdd = await this.sharedRoomService.findByIds(
+        activeCoreUser,
+        unassignedRoomIds,
+      );
       personalAreaEntity.personalRooms = roomsToAdd;
       personalAreaEntity.title = personalAreaReqDto.title;
 

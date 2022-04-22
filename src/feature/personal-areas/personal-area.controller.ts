@@ -8,7 +8,7 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 import { User } from 'src/utils/customDecorators/user.decorator';
 import {
@@ -18,6 +18,7 @@ import {
 import { PersonalAreaService } from './personal-area.service';
 
 @ApiBearerAuth()
+@ApiTags('living-area')
 @ApiResponse({
   status: HttpStatus.UNAUTHORIZED,
   description: 'Wrong user credentials',

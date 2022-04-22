@@ -1,9 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
 import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginUserReqDto, LoginUserResDto } from './dto/login-user.dto';
+@ApiTags('login')
 @Controller('auth')
 export class AuthController {
   constructor(
