@@ -9,7 +9,7 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from 'src/shared/shared-area.service';
-import { personalRoomEntityToDto } from 'src/utils/features/roomFunctions';
+import { removeUser } from 'src/utils/features/helpers';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -25,19 +25,16 @@ export class PersonalRoomService {
         user.email,
       );
 
-      const personalAreaEntities = await this.sharedAreaService.findAll(
-        activeCoreUser,
-      );
+      const personalRoomEntities = await this.personalRoomRepository.find({
+        where: { user: activeCoreUser },
+        relations: ['personalArea'],
+      });
 
-      const personalRoomDtoArray = await Promise.all(
-        personalAreaEntities.map(async (personalArea) => {
-          const personalRooms = await this.personalRoomRepository.find({
-            where: { personalArea: personalArea },
-          });
-          return personalRoomEntityToDto(personalRooms, personalArea.id);
-        }),
-      );
-      return personalRoomDtoArray.flat(1);
+      const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
+        const roomNoUser = removeUser(roomEntity);
+        return roomNoUser;
+      });
+      return personalRoomDtos;
     } catch (error) {
       throw new HttpException(
         {
@@ -97,9 +94,12 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const { user, ...roomWithoutUser } = newRoomEntity;
-
-        return { ...roomWithoutUser };
+        const roomWithoutUser = removeUser(newRoomEntity);
+        const areaWithoutUser = removeUser(roomWithoutUser.personalArea);
+        return {
+          ...roomWithoutUser,
+          personalArea: areaWithoutUser,
+        };
       });
 
       return newRoomDtos;
@@ -130,7 +130,7 @@ export class PersonalRoomService {
           ...editData,
         });
 
-        const { user, ...roomWithoutUser } = savedPersonalRoomEntity;
+        const roomWithoutUser = removeUser(savedPersonalRoomEntity);
 
         return roomWithoutUser;
       } else {
@@ -162,7 +162,7 @@ export class PersonalRoomService {
 
       await this.personalRoomRepository.delete(personalRoomEntity.id);
 
-      const { user, ...roomWithoutUser } = personalRoomEntity;
+      const roomWithoutUser = removeUser(personalRoomEntity);
       return roomWithoutUser;
     } catch (error) {
       throw new HttpException(
