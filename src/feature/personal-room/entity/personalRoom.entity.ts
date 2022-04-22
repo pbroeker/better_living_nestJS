@@ -12,9 +12,6 @@ export class PersonalRoom extends IdentifiableEntity {
   @Column({ default: 0 })
   iconId: number;
 
-  @Column({ default: 0 })
-  userImageCount: number;
-
   @ManyToOne(() => PersonalArea, (personalArea) => personalArea.personalRooms)
   personalArea: PersonalArea;
 
