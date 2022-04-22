@@ -1,7 +1,8 @@
 import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
-import { ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { TranslationService } from './translation.service';
+@ApiTags('translation-files')
 @Controller('translation')
 export class TranslationController {
   constructor(private translationService: TranslationService) {}
