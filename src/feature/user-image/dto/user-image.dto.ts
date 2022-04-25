@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UserImageDto {
   @ApiProperty()
@@ -31,4 +37,30 @@ export class EditImageRoomDto {
   @ApiProperty()
   @IsArray()
   personalRoomIds: number[];
+}
+
+export class PaginatedImagesResDto {
+  @ApiProperty({ type: [UserImageDto] })
+  @IsArray()
+  images: UserImageDto[];
+
+  @ApiProperty()
+  @IsNumber()
+  total: number;
+
+  @ApiProperty()
+  @IsNumber()
+  currentPage: number;
+
+  @ApiProperty()
+  @IsNumber()
+  lastPage: number;
+
+  @ApiProperty()
+  @IsNumber()
+  nextPage?: number;
+
+  @ApiProperty()
+  @IsNumber()
+  prevPage?: number;
 }
