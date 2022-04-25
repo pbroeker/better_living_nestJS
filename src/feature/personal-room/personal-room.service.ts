@@ -31,7 +31,8 @@ export class PersonalRoomService {
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoUser = removeUser(removeDateStrings(roomEntity));
+        const roomNoDates = removeDateStrings(roomEntity);
+        const roomNoUser = removeUser(roomNoDates);
         return {
           ...roomNoUser,
           userImages: roomNoUser.userImages.slice(0, 5),
@@ -98,13 +99,13 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomWithoutUser = removeUser(removeDateStrings(newRoomEntity));
-        const areaWithoutUser = removeUser(
-          removeDateStrings(roomWithoutUser.personalArea),
-        );
+        const roomNoDates = removeDateStrings(newRoomEntity);
+        const roomNoUser = removeUser(roomNoDates);
+        const areaNoDates = removeDateStrings(roomNoUser.personalArea);
+        const areaNoUser = removeUser(areaNoDates);
         return {
-          ...roomWithoutUser,
-          personalArea: areaWithoutUser,
+          ...roomNoUser,
+          personalArea: areaNoUser,
         };
       });
 
@@ -136,11 +137,10 @@ export class PersonalRoomService {
           ...editData,
         });
 
-        const roomWithoutUser = removeUser(
-          removeDateStrings(savedPersonalRoomEntity),
-        );
+        const roomNoDates = removeDateStrings(savedPersonalRoomEntity);
+        const roomNoUser = removeUser(roomNoDates);
 
-        return roomWithoutUser;
+        return roomNoUser;
       } else {
         throw new HttpException(
           {
@@ -170,8 +170,9 @@ export class PersonalRoomService {
 
       await this.personalRoomRepository.delete(personalRoomEntity.id);
 
-      const roomWithoutUser = removeUser(removeDateStrings(personalRoomEntity));
-      return roomWithoutUser;
+      const roomNoDates = removeDateStrings(personalRoomEntity);
+      const roomNoUser = removeUser(roomNoDates);
+      return roomNoUser;
     } catch (error) {
       throw new HttpException(
         {

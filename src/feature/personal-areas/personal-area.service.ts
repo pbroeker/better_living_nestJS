@@ -32,8 +32,9 @@ export class PersonalAreaService {
           where: { user: activeCoreUser },
         })
       ).map((areaEntity) => {
-        const areaWithoutDates = removeUser(removeDateStrings(areaEntity));
-        return { ...areaWithoutDates, personalRooms: [] };
+        const areaWithoutDates = removeDateStrings(areaEntity);
+        const areaWithoutUser = removeUser(areaWithoutDates);
+        return { ...areaWithoutUser, personalRooms: [] };
       });
 
       const personalRoomEntities = await this.sharedRoomService.findAll(
@@ -88,11 +89,10 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
       );
-      const areaEntityNoUser = removeUser(
-        removeDateStrings(savedPersonalAreaEntity),
-      );
+      const areaWithoutDates = removeDateStrings(savedPersonalAreaEntity);
+      const areaWithoutUser = removeUser(areaWithoutDates);
 
-      return areaEntityNoUser;
+      return areaWithoutUser;
     } catch (error) {
       throw new HttpException(
         {
@@ -159,11 +159,10 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         personalAreaEntity,
       );
-      const areaEntityNoUser = removeUser(
-        removeDateStrings(savedPersonalAreaEntity),
-      );
+      const areaWithoutDates = removeDateStrings(savedPersonalAreaEntity);
+      const areaWithoutUser = removeUser(areaWithoutDates);
 
-      return areaEntityNoUser;
+      return areaWithoutUser;
     } catch (error) {
       throw new HttpException(
         {
@@ -182,7 +181,8 @@ export class PersonalAreaService {
     const index = personalAreaArray.findIndex((object) => {
       return object.id === currentRoom.personalArea.id;
     });
-    const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
+    const currentRoomNoDates = removeDateStrings(currentRoom);
+    const currentRoomNoUser = removeUser(currentRoomNoDates);
     const { personalArea, ...currentRoomDto } = currentRoomNoUser;
     const userImagesSlice = currentRoomNoUser.userImages.slice(0, 5);
 

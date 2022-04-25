@@ -1,7 +1,7 @@
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm';
-import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
+import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 
 @Entity({ name: 'user-image' })
 export class UserImage extends IdentifiableEntity {

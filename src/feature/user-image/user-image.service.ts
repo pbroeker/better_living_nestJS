@@ -5,7 +5,7 @@ import * as AWS from 'aws-sdk';
 import * as multer from 'multer';
 import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from 'src/shared/shared-room.service';
-import { removeUser } from 'src/utils/features/helpers';
+import { removeUser } from '../../utils/features/helpers';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
