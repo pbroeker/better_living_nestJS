@@ -13,7 +13,11 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { EditImageRoomDto, UserImageDto } from './dto/user-image.dto';
+import {
+  EditImageRoomDto,
+  PaginatedImagesResDto,
+  UserImageDto,
+} from './dto/user-image.dto';
 import { UserImageService } from './user-image.service';
 
 @ApiBearerAuth()
@@ -33,6 +37,18 @@ export class UserImageController {
   @Get('/all')
   async getImages(@User() user: CoreUserDto): Promise<UserImageDto[]> {
     return await this.imageService.getUserImages(user);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returning paginated user images',
+  })
+  @Get('/:page')
+  async getImagesCount(
+    @User() user: CoreUserDto,
+    @Param('page', ParseIntPipe) page: number,
+  ): Promise<PaginatedImagesResDto> {
+    return await this.imageService.getUserImagesCount(user, page);
   }
 
   @ApiResponse({
