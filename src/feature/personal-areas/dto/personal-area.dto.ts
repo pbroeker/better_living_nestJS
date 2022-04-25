@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsDateString,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
 
 export class PersonalAreaReqDto {

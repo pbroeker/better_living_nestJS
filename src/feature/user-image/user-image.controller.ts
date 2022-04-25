@@ -1,8 +1,19 @@
-import { Controller, Get, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { UserImageDto } from './dto/user-image.dto';
+import { EditImageRoomDto, UserImageDto } from './dto/user-image.dto';
 import { UserImageService } from './user-image.service';
 
 @ApiBearerAuth()
@@ -35,5 +46,18 @@ export class UserImageController {
     @Res() response: Express.Response,
   ) {
     await this.imageService.imageUpload(request, response, user);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Edited room relations',
+  })
+  @Patch('/:imageId/edit-rooms')
+  async editRoomRelations(
+    @User() user: CoreUserDto,
+    @Param('imageId', ParseIntPipe) imageId: number,
+    @Body() editImage: EditImageRoomDto,
+  ): Promise<UserImageDto> {
+    return await this.imageService.editRoomRelations(user, imageId, editImage);
   }
 }

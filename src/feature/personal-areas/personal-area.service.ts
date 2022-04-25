@@ -21,7 +21,10 @@ export class PersonalAreaService {
     private sharedRoomService: SharedRoomService,
   ) {}
 
-  async getAllAreas(coreUserDto: CoreUserDto): Promise<PersonalAreaResDto[]> {
+  async getAllAreas(
+    coreUserDto: CoreUserDto,
+    imageCount?: number,
+  ): Promise<PersonalAreaResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         coreUserDto.email,
@@ -32,17 +35,18 @@ export class PersonalAreaService {
           where: { user: activeCoreUser },
         })
       ).map((areaEntity) => {
-        const areaWithoutDates = removeUser(removeDateStrings(areaEntity));
-        return { ...areaWithoutDates, personalRooms: [] };
+        const areaWithoutDates = removeDateStrings(areaEntity);
+        const areaWithoutUser = removeUser(areaWithoutDates);
+        return { ...areaWithoutUser, personalRooms: [] };
       });
 
       const personalRoomEntities = await this.sharedRoomService.findAll(
         activeCoreUser,
-        ['personalArea'],
+        ['personalArea', 'userImages'],
       );
 
       const personalAreas = personalRoomEntities.reduce<PersonalAreaResDto[]>(
-        this.reduceRoomToAreas,
+        this.reduceRoomToAreas(imageCount),
         areaEntities,
       );
       return personalAreas;
@@ -88,9 +92,10 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
       );
-      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
+      const areaWithoutDates = removeDateStrings(savedPersonalAreaEntity);
+      const areaWithoutUser = removeUser(areaWithoutDates);
 
-      return areaEntityNoUser;
+      return areaWithoutUser;
     } catch (error) {
       throw new HttpException(
         {
@@ -157,9 +162,10 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         personalAreaEntity,
       );
-      const areaEntityNoUser = removeUser(savedPersonalAreaEntity);
+      const areaWithoutDates = removeDateStrings(savedPersonalAreaEntity);
+      const areaWithoutUser = removeUser(areaWithoutDates);
 
-      return areaEntityNoUser;
+      return areaWithoutUser;
     } catch (error) {
       throw new HttpException(
         {
@@ -171,16 +177,29 @@ export class PersonalAreaService {
     }
   }
 
-  private reduceRoomToAreas(
-    areaObject: PersonalAreaResDto[],
-    currentRoom: PersonalRoom,
-  ) {
-    const index = areaObject.findIndex((object) => {
-      return object.id === currentRoom.personalArea.id;
-    });
-    const currentRoomNoUser = removeUser(removeDateStrings(currentRoom));
-    const { personalArea, ...currentRoomDto } = currentRoomNoUser;
-    areaObject[index].personalRooms.push(currentRoomDto);
-    return areaObject;
+  private reduceRoomToAreas(imageCount?: number) {
+    function reducer(
+      personalAreaArray: PersonalAreaResDto[],
+      currentRoom: PersonalRoom,
+    ) {
+      const index = personalAreaArray.findIndex((object) => {
+        return object.id === currentRoom.personalArea.id;
+      });
+      const currentRoomNoDates = removeDateStrings(currentRoom);
+      const currentRoomNoUser = removeUser(currentRoomNoDates);
+      const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+      // reducing amount of images included in room depending on queryParam
+      const userImagesSlice = imageCount
+        ? currentRoomNoUser.userImages.slice(0, imageCount)
+        : currentRoomNoUser.userImages;
+
+      personalAreaArray[index].personalRooms.push({
+        ...currentRoomDto,
+        userImages: userImagesSlice,
+        totalImages: currentRoomNoUser.userImages.length,
+      });
+      return personalAreaArray;
+    }
+    return reducer;
   }
 }
