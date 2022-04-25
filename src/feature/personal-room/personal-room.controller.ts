@@ -8,8 +8,15 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   PersonalRoomReqDto,
   PersonalRoomResDto,
@@ -36,9 +43,18 @@ export class PersonalRoomController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Rooms could not be loaded',
   })
+  @ApiQuery({
+    name: 'imageCount',
+    type: Number,
+    description: 'Amount of images to be included in rooms',
+    required: false,
+  })
   @Get()
-  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomResDto[]> {
-    return await this.personalRoomService.getAllRooms(user);
+  async getAllRooms(
+    @User() user: CoreUserDto,
+    @Query('imageCount') imageCount?: number,
+  ): Promise<PersonalRoomResDto[]> {
+    return await this.personalRoomService.getAllRooms(user, imageCount);
   }
 
   @ApiResponse({

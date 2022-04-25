@@ -7,8 +7,15 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
 import { User } from 'src/utils/customDecorators/user.decorator';
 import {
@@ -35,9 +42,18 @@ export class PersonalAreaController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Personal areas could not be loaded',
   })
+  @ApiQuery({
+    name: 'numberOfImages',
+    type: Number,
+    description: 'Amount of images to be included in rooms',
+    required: false,
+  })
   @Get()
-  async getAllAreas(@User() user: CoreUserDto): Promise<PersonalAreaResDto[]> {
-    return await this.personalAreaService.getAllAreas(user);
+  async getAllAreas(
+    @User() user: CoreUserDto,
+    @Query('imageCount') imageCount?: number,
+  ): Promise<PersonalAreaResDto[]> {
+    return await this.personalAreaService.getAllAreas(user, imageCount);
   }
 
   @ApiResponse({

@@ -21,7 +21,10 @@ export class PersonalAreaService {
     private sharedRoomService: SharedRoomService,
   ) {}
 
-  async getAllAreas(coreUserDto: CoreUserDto): Promise<PersonalAreaResDto[]> {
+  async getAllAreas(
+    coreUserDto: CoreUserDto,
+    imageCount?: number,
+  ): Promise<PersonalAreaResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         coreUserDto.email,
@@ -43,7 +46,7 @@ export class PersonalAreaService {
       );
 
       const personalAreas = personalRoomEntities.reduce<PersonalAreaResDto[]>(
-        this.reduceRoomToAreas,
+        this.reduceRoomToAreas(imageCount),
         areaEntities,
       );
       return personalAreas;
@@ -174,23 +177,29 @@ export class PersonalAreaService {
     }
   }
 
-  private reduceRoomToAreas(
-    personalAreaArray: PersonalAreaResDto[],
-    currentRoom: PersonalRoom,
-  ) {
-    const index = personalAreaArray.findIndex((object) => {
-      return object.id === currentRoom.personalArea.id;
-    });
-    const currentRoomNoDates = removeDateStrings(currentRoom);
-    const currentRoomNoUser = removeUser(currentRoomNoDates);
-    const { personalArea, ...currentRoomDto } = currentRoomNoUser;
-    const userImagesSlice = currentRoomNoUser.userImages.slice(0, 5);
+  private reduceRoomToAreas(imageCount?: number) {
+    function reducer(
+      personalAreaArray: PersonalAreaResDto[],
+      currentRoom: PersonalRoom,
+    ) {
+      const index = personalAreaArray.findIndex((object) => {
+        return object.id === currentRoom.personalArea.id;
+      });
+      const currentRoomNoDates = removeDateStrings(currentRoom);
+      const currentRoomNoUser = removeUser(currentRoomNoDates);
+      const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+      // reducing amount of images included in room depending on queryParam
+      const userImagesSlice = imageCount
+        ? currentRoomNoUser.userImages.slice(0, imageCount)
+        : currentRoomNoUser.userImages;
 
-    personalAreaArray[index].personalRooms.push({
-      ...currentRoomDto,
-      userImages: userImagesSlice,
-      imageCount: currentRoomNoUser.userImages.length,
-    });
-    return personalAreaArray;
+      personalAreaArray[index].personalRooms.push({
+        ...currentRoomDto,
+        userImages: userImagesSlice,
+        totalImages: currentRoomNoUser.userImages.length,
+      });
+      return personalAreaArray;
+    }
+    return reducer;
   }
 }
