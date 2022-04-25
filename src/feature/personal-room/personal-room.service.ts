@@ -19,7 +19,10 @@ export class PersonalRoomService {
     private sharedUserService: SharedUserService,
   ) {}
 
-  async getAllRooms(user: CoreUserDto): Promise<PersonalRoomResDto[]> {
+  async getAllRooms(
+    user: CoreUserDto,
+    imageCount?: number,
+  ): Promise<PersonalRoomResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
@@ -33,10 +36,13 @@ export class PersonalRoomService {
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
         const roomNoDates = removeDateStrings(roomEntity);
         const roomNoUser = removeUser(roomNoDates);
+        const imagesSlices = imageCount
+          ? roomNoUser.userImages.slice(0, imageCount)
+          : roomNoUser.userImages;
         return {
           ...roomNoUser,
-          userImages: roomNoUser.userImages.slice(0, 5),
-          imageCount: roomNoUser.userImages.length,
+          userImages: imagesSlices,
+          totalImages: roomNoUser.userImages.length,
         };
       });
       return personalRoomDtos;
