@@ -39,5 +39,5 @@ export class PersonalRoomResDto {
 
   @ApiProperty()
   @IsOptional()
-  imageCount?: number;
+  totalImages?: number;
 }
