@@ -188,6 +188,7 @@ export class PersonalAreaService {
       const currentRoomNoDates = removeDateStrings(currentRoom);
       const currentRoomNoUser = removeUser(currentRoomNoDates);
       const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+      // reducing amount of images included in room depending on queryParam
       const userImagesSlice = imageCount
         ? currentRoomNoUser.userImages.slice(0, imageCount)
         : currentRoomNoUser.userImages;

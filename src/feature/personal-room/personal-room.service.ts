@@ -36,6 +36,7 @@ export class PersonalRoomService {
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
         const roomNoDates = removeDateStrings(roomEntity);
         const roomNoUser = removeUser(roomNoDates);
+        // reducing amount of images included in room depending on queryParam
         const imagesSlices = imageCount
           ? roomNoUser.userImages.slice(0, imageCount)
           : roomNoUser.userImages;
