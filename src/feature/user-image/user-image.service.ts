@@ -9,7 +9,11 @@ import { removeUser } from '../../utils/features/helpers';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { EditImageRoomDto, UserImageDto } from './dto/user-image.dto';
+import {
+  EditImageRoomDto,
+  PaginatedImagesResDto,
+  UserImageDto,
+} from './dto/user-image.dto';
 import { UserImage } from './entity/user-image.entity';
 
 @Injectable()
@@ -63,6 +67,63 @@ export class UserImageService {
         return allUserImageDtos;
       } else {
         return [];
+      }
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'images.error.load_images.title',
+          text: 'images.error.load_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getUserImagesCount(
+    currentUser: CoreUserDto,
+    page: number,
+  ): Promise<PaginatedImagesResDto> {
+    const imageCount = 10;
+    const skip = (page - 1) * imageCount;
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+      const countedUserImages = await this.userImageRepository.findAndCount({
+        where: { user: activeCoreUser },
+        order: { createdAt: 'DESC' },
+        take: imageCount,
+        skip: skip,
+        relations: ['personalRooms'],
+      });
+
+      if (countedUserImages) {
+        const total = countedUserImages[1];
+        const lastPage = Math.ceil(total / imageCount);
+        const nextPage = page + 1 > lastPage ? null : page + 1;
+        const prevPage = page - 1 < 1 ? null : page - 1;
+        const countedUserImageDtos = countedUserImages[0].map(
+          (userImageEntity) => {
+            const imageEntityNoUser = removeUser(userImageEntity);
+
+            return {
+              ...imageEntityNoUser,
+              personalRooms: imageEntityNoUser.personalRooms.map(
+                (personalRoom) => personalRoom.id,
+              ),
+            };
+          },
+        );
+        return {
+          currentPage: page,
+          total: total,
+          lastPage: lastPage,
+          nextPage: nextPage,
+          prevPage: prevPage,
+          images: countedUserImageDtos,
+        };
+      } else {
+        return {} as PaginatedImagesResDto;
       }
     } catch (error) {
       throw new HttpException(
