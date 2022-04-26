@@ -2,59 +2,121 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { PersonalRoomDto } from './dto/personal-room.dto';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import {
+  PersonalRoomReqDto,
+  PersonalRoomResDto,
+} from './dto/personal-room.dto';
+import { SharedUserService } from '../../shared/shared-user.service';
+import { SharedAreaService } from 'src/shared/shared-area.service';
+import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
 @Injectable()
 export class PersonalRoomService {
   constructor(
     @InjectRepository(PersonalRoom)
     private personalRoomRepository: Repository<PersonalRoom>,
-    @InjectRepository(CoreUser)
-    private userRepository: Repository<CoreUser>,
+    private sharedAreaService: SharedAreaService,
+    private sharedUserService: SharedUserService,
   ) {}
 
-  async getAllRooms(user: CoreUserDto): Promise<PersonalRoomDto[]> {
+  async getAllRooms(
+    user: CoreUserDto,
+    imageCount?: number,
+  ): Promise<PersonalRoomResDto[]> {
     try {
-      const userEntity = await this.userRepository.findOne(user.userId, {
-        relations: ['personalRooms'],
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+
+      const personalRoomEntities = await this.personalRoomRepository.find({
+        where: { user: activeCoreUser },
+        relations: ['userImages'],
       });
 
-      const personalRoomDtos = userEntity.personalRooms.map((entity) => {
-        return { title: entity.title, id: entity.id };
+      const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
+        const roomNoDates = removeDateStrings(roomEntity);
+        const roomNoUser = removeUser(roomNoDates);
+        // reducing amount of images included in room depending on queryParam
+        const imagesSlices = imageCount
+          ? roomNoUser.userImages.slice(0, imageCount)
+          : roomNoUser.userImages;
+        return {
+          ...roomNoUser,
+          userImages: imagesSlices,
+          totalImages: roomNoUser.userImages.length,
+        };
       });
-      return personalRoomDtos as PersonalRoomDto[];
+      return personalRoomDtos;
     } catch (error) {
-      return [];
+      throw new HttpException(
+        {
+          title: 'personal_rooms.error.get_personal_room.title',
+          text: 'personal_rooms.error.get_personal_room.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-  async savePersonalRooms(
-    personalRoomDtos: PersonalRoomDto[],
-    user: CoreUserDto,
-  ): Promise<PersonalRoomDto[]> {
+  async createPersonalRooms(
+    personalRoomDtos: PersonalRoomReqDto[],
+    coreUserDto: CoreUserDto,
+  ): Promise<PersonalRoomResDto[]> {
     try {
-      const activeCoreUser = await this.userRepository.findOne(user.userId);
-      let savedPersonalRoomDtos = [];
-      const personalRoomEntities = personalRoomDtos.map((personalRoom) => {
-        return this.personalRoomRepository.create({
-          user: activeCoreUser,
-          title: personalRoom.title,
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        coreUserDto.email,
+      );
+
+      // Check if unassignedArea exists
+      const existingPersonalArea = await this.sharedAreaService.findByTitle(
+        activeCoreUser,
+        'Unassigned',
+      );
+
+      let newPersonalRoomEntities: PersonalRoom[];
+      if (existingPersonalArea) {
+        // Adding to existing area
+        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+          return this.personalRoomRepository.create({
+            user: activeCoreUser,
+            title: personalRoom.title,
+            personalArea: existingPersonalArea,
+            iconId: personalRoom.iconId,
+          });
         });
+      } else {
+        // Creating new unassigned area
+        const newPersonalArea = await this.sharedAreaService.createNewArea(
+          activeCoreUser,
+        );
+
+        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
+          return this.personalRoomRepository.create({
+            user: activeCoreUser,
+            title: personalRoom.title,
+            iconId: personalRoom.iconId,
+            personalArea: newPersonalArea,
+          });
+        });
+      }
+
+      // Saving to existing or new area
+      const savedPersonalRooms = await this.personalRoomRepository.save(
+        newPersonalRoomEntities,
+      );
+
+      const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
+        const roomNoDates = removeDateStrings(newRoomEntity);
+        const roomNoUser = removeUser(roomNoDates);
+        const areaNoDates = removeDateStrings(roomNoUser.personalArea);
+        const areaNoUser = removeUser(areaNoDates);
+        return {
+          ...roomNoUser,
+          personalArea: areaNoUser,
+        };
       });
 
-      const savedPersonalRoomEntities = await this.personalRoomRepository.save(
-        personalRoomEntities,
-      );
-      savedPersonalRoomDtos = savedPersonalRoomEntities.map(
-        (personalRoomEntitiy) => {
-          return {
-            title: personalRoomEntitiy.title,
-            id: personalRoomEntitiy.id,
-          } as PersonalRoomDto;
-        },
-      );
-      return savedPersonalRoomDtos;
+      return newRoomDtos;
     } catch (error) {
       throw new HttpException(
         {
@@ -66,29 +128,26 @@ export class PersonalRoomService {
     }
   }
 
-  async editPersonalRoomTitle(
-    newTitle: string,
+  async editPersonalRoom(
     roomId: number,
-    user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
+    editData: PersonalRoomReqDto,
+  ): Promise<PersonalRoomResDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
-      const foundRoom = userEntity.personalRooms.find((room) => {
-        return room.id === roomId;
-      });
+      const personalRoomEntity = await this.personalRoomRepository.findOne(
+        roomId,
+        { relations: ['personalArea'] },
+      );
 
-      if (foundRoom) {
+      if (personalRoomEntity) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
-          ...foundRoom,
-          title: newTitle,
+          ...personalRoomEntity,
+          ...editData,
         });
-        return {
-          title: savedPersonalRoomEntity.title,
-          id: savedPersonalRoomEntity.id,
-        } as PersonalRoomDto;
+
+        const roomNoDates = removeDateStrings(savedPersonalRoomEntity);
+        const roomNoUser = removeUser(roomNoDates);
+
+        return roomNoUser;
       } else {
         throw new HttpException(
           {
@@ -109,23 +168,18 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(
-    user: CoreUserDto,
-    roomId: number,
-  ): Promise<PersonalRoomDto> {
+  async deleteRoom(roomId: number): Promise<PersonalRoomResDto> {
     try {
-      const userEntity = await this.userRepository.findOne({
-        where: { id: user.userId },
-        relations: ['personalRooms'],
-      });
-      const foundRoom = userEntity.personalRooms.find((room) => {
-        return room.id === roomId;
-      });
-      await this.personalRoomRepository.delete(foundRoom.id);
-      return {
-        title: foundRoom.title,
-        id: foundRoom.id,
-      } as PersonalRoomDto;
+      const personalRoomEntity = await this.personalRoomRepository.findOne(
+        roomId,
+        { relations: ['personalArea'] },
+      );
+
+      await this.personalRoomRepository.delete(personalRoomEntity.id);
+
+      const roomNoDates = removeDateStrings(personalRoomEntity);
+      const roomNoUser = removeUser(roomNoDates);
+      return roomNoUser;
     } catch (error) {
       throw new HttpException(
         {

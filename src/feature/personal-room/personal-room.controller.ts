@@ -8,14 +8,29 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiResponse } from '@nestjs/swagger';
-import { PersonalRoomDto } from './dto/personal-room.dto';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  PersonalRoomReqDto,
+  PersonalRoomResDto,
+} from './dto/personal-room.dto';
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 
 @ApiBearerAuth()
+@ApiTags('personal-room')
+@ApiResponse({
+  status: HttpStatus.UNAUTHORIZED,
+  description: 'Wrong user credentials',
+})
 @Controller('personal-rooms')
 export class PersonalRoomController {
   constructor(private personalRoomService: PersonalRoomService) {}
@@ -25,12 +40,21 @@ export class PersonalRoomController {
     description: 'Returning personal rooms',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Rooms could not be loaded',
+  })
+  @ApiQuery({
+    name: 'imageCount',
+    type: Number,
+    description: 'Amount of images to be included in rooms',
+    required: false,
   })
   @Get()
-  async getAllRooms(@User() user: CoreUserDto): Promise<PersonalRoomDto[]> {
-    return await this.personalRoomService.getAllRooms(user);
+  async getAllRooms(
+    @User() user: CoreUserDto,
+    @Query('imageCount') imageCount?: number,
+  ): Promise<PersonalRoomResDto[]> {
+    return await this.personalRoomService.getAllRooms(user, imageCount);
   }
 
   @ApiResponse({
@@ -38,23 +62,19 @@ export class PersonalRoomController {
     description: 'Personal Rooms created',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
-  })
-  @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Personal Rooms could not be created',
   })
   @ApiBody({
-    type: PersonalRoomDto,
+    type: PersonalRoomReqDto,
     isArray: true,
   })
   @Post()
-  async savePersonalRooms(
-    @Body() personalRoomDtos: PersonalRoomDto[],
+  async createPersonalRooms(
+    @Body() personalRoomDtos: PersonalRoomReqDto[],
     @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto[]> {
-    return await this.personalRoomService.savePersonalRooms(
+  ): Promise<PersonalRoomResDto[]> {
+    return await this.personalRoomService.createPersonalRooms(
       personalRoomDtos,
       user,
     );
@@ -65,24 +85,15 @@ export class PersonalRoomController {
     description: 'Name edited',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
-  })
-  @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Name could not be edited',
   })
   @Put('/:roomId')
   async editPersonalRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() editRoomDto: PersonalRoomDto,
-    @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
-    return await this.personalRoomService.editPersonalRoomTitle(
-      editRoomDto.title,
-      roomId,
-      user,
-    );
+    @Body() editRoomDto: PersonalRoomReqDto,
+  ): Promise<PersonalRoomResDto> {
+    return await this.personalRoomService.editPersonalRoom(roomId, editRoomDto);
   }
 
   @ApiResponse({
@@ -100,8 +111,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @User() user: CoreUserDto,
-  ): Promise<PersonalRoomDto> {
-    return await this.personalRoomService.deleteRoom(user, roomId);
+  ): Promise<PersonalRoomResDto> {
+    return await this.personalRoomService.deleteRoom(roomId);
   }
 }

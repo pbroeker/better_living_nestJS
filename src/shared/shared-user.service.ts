@@ -14,7 +14,14 @@ export class SharedUserService {
     return await this.userRepository.find();
   }
 
-  async findByEmail(email: string): Promise<CoreUser> {
-    return await this.userRepository.findOne({ user_email: email });
+  async findByEmail(email: string, relations?: string[]): Promise<CoreUser> {
+    if (!relations) {
+      return await this.userRepository.findOne({ user_email: email });
+    } else {
+      return await this.userRepository.findOne(
+        { user_email: email },
+        { relations },
+      );
+    }
   }
 }

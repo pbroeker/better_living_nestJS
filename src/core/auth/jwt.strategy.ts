@@ -32,7 +32,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (userEntity) {
       return plainToClass(CoreUserDto, {
         userId: userEntity.id,
-        userEmail: userEntity.user_email,
+        email: userEntity.user_email,
       });
     }
   }

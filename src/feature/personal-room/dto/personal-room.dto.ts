@@ -1,13 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { PersonalAreaResDto } from 'src/feature/personal-areas/dto/personal-area.dto';
+import { UserImageDto } from 'src/feature/user-image/dto/user-image.dto';
 
-export class PersonalRoomDto {
+export class PersonalRoomReqDto {
   @ApiProperty()
+  @IsOptional()
   @IsString()
   title: string;
 
   @ApiProperty()
   @IsOptional()
+  @IsNumber()
+  iconId: number;
+}
+export class PersonalRoomResDto {
+  @ApiProperty()
   @IsString()
+  title: string;
+
+  @ApiProperty()
+  @IsNumber()
+  iconId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
   id: number;
+
+  @ApiProperty({ type: PersonalAreaResDto })
+  @IsOptional()
+  personalArea?: PersonalAreaResDto;
+
+  @ApiProperty({ type: [UserImageDto] })
+  @IsOptional()
+  @IsArray()
+  userImages?: UserImageDto[];
+
+  @ApiProperty()
+  @IsOptional()
+  totalImages?: number;
 }

@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { SharedUserService } from '../../shared/shared-user.service';
+import { CoreUserDto } from '../users/dto/core-user.dto';
 import { UserService } from '../users/users.service';
 @Injectable()
 export class AuthService {
@@ -9,7 +10,7 @@ export class AuthService {
     private userService: UserService,
   ) {}
 
-  async loginUser(email: string, password: string) {
+  async loginUser(email: string, password: string): Promise<CoreUserDto> {
     const user = await this.sharedUserService.findByEmail(email);
     if (user) {
       const passwordMatches = await this.checkPassword(
@@ -17,7 +18,7 @@ export class AuthService {
         user.user_password,
       );
       if (passwordMatches) {
-        return user;
+        return { userId: user.id, email: user.user_email };
       } else {
         throw new HttpException(
           {
