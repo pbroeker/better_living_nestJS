@@ -177,6 +177,69 @@ export class PersonalAreaService {
     }
   }
 
+  async deleteArea(
+    coreUserDto: CoreUserDto,
+    areaId: number,
+  ): Promise<PersonalAreaResDto> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        coreUserDto.email,
+      );
+
+      const areaEntity = await this.personalAreaRepository.findOne({
+        where: { user: activeCoreUser, id: areaId },
+        relations: ['personalRooms'],
+      });
+
+      // prevent deletion of unassigned area
+      if (areaEntity.title === 'Unassigned') {
+        throw new HttpException(
+          {
+            title: 'personal_areas.error.delete_personal_area.title',
+            text: 'personal_areas.error.delete_personal_area.message',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      // move rooms of area to "Unassigned"-area
+      if (areaEntity.personalRooms.length) {
+        const roomsOfArea =
+          await this.sharedRoomService.findWhere<PersonalRoom>({
+            user: activeCoreUser,
+            personalArea: areaEntity,
+          });
+
+        const unassignedArea = await this.personalAreaRepository.findOne({
+          where: { user: activeCoreUser, title: 'Unassigned' },
+          relations: ['personalRooms'],
+        });
+
+        unassignedArea.personalRooms = [
+          ...unassignedArea.personalRooms,
+          ...roomsOfArea,
+        ];
+
+        await this.personalAreaRepository.save(unassignedArea);
+      }
+
+      await this.personalAreaRepository.delete(areaId);
+
+      const areaWithoutDates = removeDateStrings(areaEntity);
+      const areaWithoutUser = removeUser(areaWithoutDates);
+
+      return areaWithoutUser;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'personal_areas.error.delete_personal_area.title',
+          text: 'personal_areas.error.delete_personal_area.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   private reduceRoomToAreas(imageCount?: number) {
     function reducer(
       personalAreaArray: PersonalAreaResDto[],

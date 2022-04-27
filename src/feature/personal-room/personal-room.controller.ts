@@ -101,10 +101,6 @@ export class PersonalRoomController {
     description: 'Room deleted',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Wrong user credentials',
-  })
-  @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Could not be deleted',
   })
