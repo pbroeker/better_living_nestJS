@@ -153,26 +153,30 @@ export class UserImageService {
     try {
       this.upload(req, res, async (error: any) => {
         if (error) {
-          throw new HttpException(
-            {
-              title: 'images.error.upload_image.title',
-              text: 'images.error.upload_image.message',
-            },
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            title: 'images.error.upload_image.title',
+            text: 'images.error.upload_image.message',
+          });
         }
-        const imagePath = req.files[0].location as string;
-        const savedUserImageEntity = await this.saveUserImage(imagePath, user);
-        return res.status(201).json(savedUserImageEntity);
+        if (req.files.length) {
+          const imagePath = req.files[0].location as string;
+          const savedUserImageEntity = await this.saveUserImage(
+            imagePath,
+            user,
+          );
+          res.status(201).json(savedUserImageEntity);
+        } else {
+          res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            title: 'images.error.upload_image.title',
+            text: 'images.error.upload_image.message',
+          });
+        }
       });
     } catch (error) {
-      throw new HttpException(
-        {
-          title: 'images.error.upload_image.title',
-          text: 'images.error.upload_image.message',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        title: 'images.error.upload_image.title',
+        text: 'images.error.upload_image.message',
+      });
     }
   }
 
