@@ -27,8 +27,8 @@ export class SharedRoomService {
     relations = [],
   ): Promise<PersonalRoom[]> {
     return await this.personalRoomRepository.find({
-      where: where,
-      relations: relations,
+      where,
+      relations,
     });
   }
 
