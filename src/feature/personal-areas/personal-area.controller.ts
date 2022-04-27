@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -97,5 +98,21 @@ export class PersonalAreaController {
       personalAreaReqDto,
       user,
     );
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Area deleted',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Area could not be deleted',
+  })
+  @Delete('/:areaId')
+  async deleteRoom(
+    @User() user: CoreUserDto,
+    @Param('areaId', ParseIntPipe) areaId: number,
+  ): Promise<PersonalAreaResDto> {
+    return await this.personalAreaService.deleteArea(user, areaId);
   }
 }
