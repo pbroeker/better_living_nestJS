@@ -166,7 +166,7 @@ export class UserImageService {
           );
           return res.status(201).json(savedUserImageEntity);
         } else {
-          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          return res.status(HttpStatus.BAD_REQUEST).json({
             title: 'my_pictures.error.upload_image.title',
             text: 'my_pictures.error.upload_image.message',
           });
