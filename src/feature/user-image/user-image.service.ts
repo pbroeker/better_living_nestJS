@@ -71,8 +71,8 @@ export class UserImageService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'images.error.load_images.title',
-          text: 'images.error.load_images.message',
+          title: 'my_pictures.error.load_images.title',
+          text: 'my_pictures.error.load_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -128,8 +128,8 @@ export class UserImageService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'images.error.load_images.title',
-          text: 'images.error.load_images.message',
+          title: 'my_pictures.error.load_images.title',
+          text: 'my_pictures.error.load_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
@@ -153,9 +153,9 @@ export class UserImageService {
     try {
       this.upload(req, res, async (error: any) => {
         if (error) {
-          res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            title: 'images.error.upload_image.title',
-            text: 'images.error.upload_image.message',
+          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            title: 'my_pictures.error.upload_image.title',
+            text: 'my_pictures.error.upload_image.message',
           });
         }
         if (req.files.length) {
@@ -164,18 +164,18 @@ export class UserImageService {
             imagePath,
             user,
           );
-          res.status(201).json(savedUserImageEntity);
+          return res.status(201).json(savedUserImageEntity);
         } else {
-          res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            title: 'images.error.upload_image.title',
-            text: 'images.error.upload_image.message',
+          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            title: 'my_pictures.error.upload_image.title',
+            text: 'my_pictures.error.upload_image.message',
           });
         }
       });
     } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        title: 'images.error.upload_image.title',
-        text: 'images.error.upload_image.message',
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        title: 'my_pictures.error.upload_image.title',
+        text: 'my_pictures.error.upload_image.message',
       });
     }
   }
@@ -215,8 +215,8 @@ export class UserImageService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'images.error.edit_images.title',
-          text: 'images.error.edit_images.message',
+          title: 'my_pictures.error.edit_images.title',
+          text: 'my_pictures.error.edit_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
