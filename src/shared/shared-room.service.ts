@@ -19,6 +19,7 @@ export class SharedRoomService {
     return await this.personalRoomRepository.find({
       where: { user: currentUser },
       relations,
+      order: { title: 'ASC' },
     });
   }
 
