@@ -76,7 +76,7 @@ export class PersonalAreaService {
       );
 
       let newAreaEntity: PersonalArea;
-      if (personalAreaReqDto.title) {
+      if (personalAreaReqDto.title !== 'Unassigned') {
         newAreaEntity = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: personalAreaReqDto.title,
@@ -121,6 +121,20 @@ export class PersonalAreaService {
         where: { user: activeCoreUser, id: areaId },
         relations: ['personalRooms'],
       });
+
+      // don't allow direct editing of unassigned area or creation of a new unassigned area
+      if (
+        personalAreaEntity.title === 'Unassigned' ||
+        personalAreaReqDto.title === 'Unassigned'
+      ) {
+        throw new HttpException(
+          {
+            title: 'personal_areas.error.edit_personal_area.title',
+            text: 'personal_areas.error.edit_personal_area.message',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
 
       const personalAreaRoomIds = personalAreaEntity.personalRooms.map(
         (personalRoom) => personalRoom.id,
