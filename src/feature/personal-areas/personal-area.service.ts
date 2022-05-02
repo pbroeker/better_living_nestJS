@@ -76,7 +76,10 @@ export class PersonalAreaService {
       );
 
       let newAreaEntity: PersonalArea;
-      if (personalAreaReqDto.title !== 'Unassigned') {
+      if (
+        personalAreaReqDto.title &&
+        personalAreaReqDto.title !== 'Unassigned'
+      ) {
         newAreaEntity = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: personalAreaReqDto.title,
