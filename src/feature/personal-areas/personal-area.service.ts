@@ -50,6 +50,17 @@ export class PersonalAreaService {
         this.reduceRoomToAreas(imageCount),
         areaEntities,
       );
+
+      // Sorting personalAreas alphabetically
+      personalAreas.sort((area1, area2) => {
+        return area1.title > area2.title ? 1 : -1;
+      });
+      // Moving Unassigned area to the end of the array
+      const unassignedIndex = personalAreas.findIndex(
+        (area) => area.title === PersonalAreaTitle.DEFAULT,
+      );
+      personalAreas.push(personalAreas.splice(unassignedIndex, 1)[0]);
+
       return personalAreas;
     } catch (error) {
       throw new HttpException(
@@ -267,6 +278,7 @@ export class PersonalAreaService {
       personalAreaArray: PersonalAreaResDto[],
       currentRoom: PersonalRoom,
     ) {
+      // console.log('personalArea')
       const index = personalAreaArray.findIndex((object) => {
         return object.id === currentRoom.personalArea.id;
       });
