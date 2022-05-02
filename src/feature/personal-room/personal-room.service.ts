@@ -10,6 +10,8 @@ import {
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from 'src/shared/shared-area.service';
 import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
+import { SharedImageService } from 'src/shared/shared-image.service';
+import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -17,6 +19,7 @@ export class PersonalRoomService {
     private personalRoomRepository: Repository<PersonalRoom>,
     private sharedAreaService: SharedAreaService,
     private sharedUserService: SharedUserService,
+    private sharedImageService: SharedImageService,
   ) {}
 
   async getAllRooms(
@@ -52,6 +55,59 @@ export class PersonalRoomService {
         {
           title: 'personal_rooms.error.get_personal_room.title',
           text: 'personal_rooms.error.get_personal_room.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getRoomImages(
+    currentUser: CoreUserDto,
+    roomId: number,
+    currentPage: number,
+  ): Promise<PaginatedImagesResDto> {
+    const imageCount = 10;
+    const skip = (currentPage - 1) * imageCount;
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+
+      const roomEntity = await this.personalRoomRepository.findOne({
+        where: { user: activeCoreUser, id: roomId },
+      });
+
+      const roomImages = await this.sharedImageService.findRoomImages(
+        activeCoreUser,
+        roomEntity,
+      );
+
+      const userImagesNoRooms = roomImages.map((roomImage) => {
+        const { personalRooms, user, ...imageNoRooms } = roomImage;
+        return imageNoRooms;
+      });
+
+      // create paginationData
+      const total = roomImages.length;
+      const lastPage = Math.ceil(total / imageCount);
+      const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
+      const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+
+      const paginatedImages = {
+        total,
+        currentPage,
+        lastPage,
+        nextPage,
+        prevPage,
+        images: userImagesNoRooms.slice(skip, imageCount),
+      };
+
+      return paginatedImages;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'personal_rooms.error.get_room_images.title',
+          text: 'personal_rooms.error.get_room_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
