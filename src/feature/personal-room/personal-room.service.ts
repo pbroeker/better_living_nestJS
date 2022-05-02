@@ -8,9 +8,9 @@ import {
   PersonalRoomResDto,
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { SharedAreaService } from 'src/shared/shared-area.service';
+import { SharedAreaService } from '../../shared/shared-area.service';
 import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
-import { SharedImageService } from 'src/shared/shared-image.service';
+import { SharedImageService } from '../../shared/shared-image.service';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 @Injectable()
 export class PersonalRoomService {

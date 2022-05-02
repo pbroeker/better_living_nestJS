@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
-import { UserImage } from 'src/feature/user-image/entity/user-image.entity';
-import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
+import { UserImage } from '../feature/user-image/entity/user-image.entity';
+import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 
 @Injectable()
 export class SharedImageService {
