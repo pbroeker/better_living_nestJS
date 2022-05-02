@@ -12,6 +12,7 @@ import { SharedAreaService } from '../../shared/shared-area.service';
 import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
+import { PersonalAreaTitle } from 'src/types/enums';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -126,7 +127,7 @@ export class PersonalRoomService {
       // Check if unassignedArea exists
       const existingPersonalArea = await this.sharedAreaService.findByTitle(
         activeCoreUser,
-        'Unassigned',
+        PersonalAreaTitle.DEFAULT,
       );
 
       let newPersonalRoomEntities: PersonalRoom[];
