@@ -24,6 +24,7 @@ import {
 import { PersonalRoomService } from './personal-room.service';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 
 @ApiBearerAuth()
 @ApiTags('personal-room')
@@ -55,6 +56,23 @@ export class PersonalRoomController {
     @Query('imageCount') imageCount?: number,
   ): Promise<PersonalRoomResDto[]> {
     return await this.personalRoomService.getAllRooms(user, imageCount);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returning rooms images',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Images could not be loaded',
+  })
+  @Get('/images/:roomId/:page')
+  async getRoomImages(
+    @User() user: CoreUserDto,
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('page', ParseIntPipe) page: number,
+  ): Promise<PaginatedImagesResDto> {
+    return await this.personalRoomService.getRoomImages(user, roomId, page);
   }
 
   @ApiResponse({

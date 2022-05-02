@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PersonalAreaTitle } from 'src/types/enums';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalArea } from '../feature/personal-areas/entity/personalArea.entity';
@@ -13,7 +14,7 @@ export class SharedAreaService {
 
   async createNewArea(
     currentUser: CoreUser,
-    title = 'Unassigned',
+    title = PersonalAreaTitle.DEFAULT,
   ): Promise<PersonalArea> {
     const createdNewArea = this.personalAreaRepository.create({
       user: currentUser,
