@@ -278,7 +278,6 @@ export class PersonalAreaService {
       personalAreaArray: PersonalAreaResDto[],
       currentRoom: PersonalRoom,
     ) {
-      // console.log('personalArea')
       const index = personalAreaArray.findIndex((object) => {
         return object.id === currentRoom.personalArea.id;
       });
