@@ -109,7 +109,7 @@ export class PersonalAreaController {
     description: 'Area could not be deleted',
   })
   @Delete('/:areaId')
-  async deleteRoom(
+  async deleteArea(
     @User() user: CoreUserDto,
     @Param('areaId', ParseIntPipe) areaId: number,
   ): Promise<PersonalAreaResDto> {

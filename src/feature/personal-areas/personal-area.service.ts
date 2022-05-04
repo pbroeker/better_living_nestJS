@@ -59,7 +59,10 @@ export class PersonalAreaService {
       const unassignedIndex = personalAreas.findIndex(
         (area) => area.title === PersonalAreaTitle.DEFAULT,
       );
-      personalAreas.push(personalAreas.splice(unassignedIndex, 1)[0]);
+      // make sure the array is sorted only if not empty
+      if (unassignedIndex !== -1) {
+        personalAreas.push(personalAreas.splice(unassignedIndex, 1)[0]);
+      }
 
       return personalAreas;
     } catch (error) {
@@ -98,11 +101,13 @@ export class PersonalAreaService {
           personalRooms: roomEntities,
         });
       } else {
-        newAreaEntity = this.personalAreaRepository.create({
-          user: activeCoreUser,
-          title: PersonalAreaTitle.DEFAULT,
-          personalRooms: roomEntities,
-        });
+        throw new HttpException(
+          {
+            title: 'personal_areas.error.create_unassigned.title',
+            text: 'personal_areas.error.create_unassigned.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
       }
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
@@ -114,10 +119,14 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'personal_areas.error.create_personal_area.title',
-          text: 'personal_areas.error.create_personal_area.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'personal_areas.error.edit_personal_area.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'personal_areas.error.edit_personal_area.message',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -205,7 +214,7 @@ export class PersonalAreaService {
             ? error.response.text
             : 'personal_areas.error.edit_personal_area.message',
         },
-        error.status,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
