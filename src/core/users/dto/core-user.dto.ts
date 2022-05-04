@@ -9,6 +9,10 @@ export class CoreUserDto {
   @ApiProperty()
   @IsString()
   email: string;
-
   //TODO: ADD MORE USER RELATED FIELDS HERE
+}
+
+export class CoreUserWithRefreshTokenDto extends CoreUserDto {
+  @IsString()
+  refreshToken: string;
 }
