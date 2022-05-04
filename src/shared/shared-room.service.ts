@@ -37,6 +37,9 @@ export class SharedRoomService {
     currentUser: CoreUser,
     ids: number[],
   ): Promise<PersonalRoom[]> {
+    if (!ids.length) {
+      return [];
+    }
     const findIdOptions = createIdFindOptions(ids).map((idObject) => {
       return { ...idObject, user: currentUser };
     });
