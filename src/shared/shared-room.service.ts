@@ -19,6 +19,7 @@ export class SharedRoomService {
     return await this.personalRoomRepository.find({
       where: { user: currentUser },
       relations,
+      order: { title: 'ASC' },
     });
   }
 
@@ -36,6 +37,9 @@ export class SharedRoomService {
     currentUser: CoreUser,
     ids: number[],
   ): Promise<PersonalRoom[]> {
+    if (!ids.length) {
+      return [];
+    }
     const findIdOptions = createIdFindOptions(ids).map((idObject) => {
       return { ...idObject, user: currentUser };
     });

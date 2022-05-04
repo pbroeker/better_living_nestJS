@@ -12,6 +12,7 @@ import { SharedRoomService } from 'src/shared/shared-room.service';
 import * as _ from 'lodash';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import { removeUser, removeDateStrings } from '../../utils/features/helpers';
+import { PersonalAreaTitle } from 'src/types/enums';
 @Injectable()
 export class PersonalAreaService {
   constructor(
@@ -49,6 +50,20 @@ export class PersonalAreaService {
         this.reduceRoomToAreas(imageCount),
         areaEntities,
       );
+
+      // Sorting personalAreas alphabetically
+      personalAreas.sort((area1, area2) => {
+        return area1.title > area2.title ? 1 : -1;
+      });
+      // Moving Unassigned area to the end of the array
+      const unassignedIndex = personalAreas.findIndex(
+        (area) => area.title === PersonalAreaTitle.DEFAULT,
+      );
+      // make sure the array is sorted only if not empty
+      if (unassignedIndex !== -1) {
+        personalAreas.push(personalAreas.splice(unassignedIndex, 1)[0]);
+      }
+
       return personalAreas;
     } catch (error) {
       throw new HttpException(
@@ -76,18 +91,23 @@ export class PersonalAreaService {
       );
 
       let newAreaEntity: PersonalArea;
-      if (personalAreaReqDto.title) {
+      if (
+        personalAreaReqDto.title &&
+        personalAreaReqDto.title !== PersonalAreaTitle.DEFAULT
+      ) {
         newAreaEntity = this.personalAreaRepository.create({
           user: activeCoreUser,
           title: personalAreaReqDto.title,
           personalRooms: roomEntities,
         });
       } else {
-        newAreaEntity = this.personalAreaRepository.create({
-          user: activeCoreUser,
-          title: 'Unassigned',
-          personalRooms: roomEntities,
-        });
+        throw new HttpException(
+          {
+            title: 'personal_areas.error.create_unassigned.title',
+            text: 'personal_areas.error.create_unassigned.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
       }
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
@@ -99,10 +119,14 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'personal_areas.error.create_personal_area.title',
-          text: 'personal_areas.error.create_personal_area.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'personal_areas.error.edit_personal_area.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'personal_areas.error.edit_personal_area.message',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -122,6 +146,20 @@ export class PersonalAreaService {
         relations: ['personalRooms'],
       });
 
+      // don't allow direct editing of unassigned area or creation of a new unassigned area
+      if (
+        personalAreaEntity.title === PersonalAreaTitle.DEFAULT ||
+        personalAreaReqDto.title === PersonalAreaTitle.DEFAULT
+      ) {
+        throw new HttpException(
+          {
+            title: 'personal_areas.error.edit_unassigned.title',
+            text: 'personal_areas.error.edit_unassigned.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       const personalAreaRoomIds = personalAreaEntity.personalRooms.map(
         (personalRoom) => personalRoom.id,
       );
@@ -139,7 +177,7 @@ export class PersonalAreaService {
         );
 
         const unassignedArea = await this.personalAreaRepository.findOne({
-          where: { title: 'Unassigned', user: activeCoreUser },
+          where: { title: PersonalAreaTitle.DEFAULT, user: activeCoreUser },
           relations: ['personalRooms'],
         });
 
@@ -169,10 +207,14 @@ export class PersonalAreaService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'personal_areas.error.edit_personal_area.title',
-          text: 'personal_areas.error.edit_personal_area.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'personal_areas.error.edit_personal_area.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'personal_areas.error.edit_personal_area.message',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -192,7 +234,7 @@ export class PersonalAreaService {
       });
 
       // prevent deletion of unassigned area
-      if (areaEntity.title === 'Unassigned') {
+      if (areaEntity.title === PersonalAreaTitle.DEFAULT) {
         throw new HttpException(
           {
             title: 'personal_areas.error.delete_personal_area.title',
@@ -211,7 +253,7 @@ export class PersonalAreaService {
           });
 
         const unassignedArea = await this.personalAreaRepository.findOne({
-          where: { user: activeCoreUser, title: 'Unassigned' },
+          where: { user: activeCoreUser, title: PersonalAreaTitle.DEFAULT },
           relations: ['personalRooms'],
         });
 
