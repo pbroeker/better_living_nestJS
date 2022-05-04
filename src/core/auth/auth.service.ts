@@ -26,20 +26,18 @@ export class AuthService {
         userEntity.user_password,
       );
       if (passwordMatches) {
-        const payload = {
-          username: userEntity.user_email,
-          sub: userEntity.id,
-        };
-        const accessToken = this.getAccessToken(payload);
-        const refreshToken = this.getRefreshToken(payload);
+        const tokens = await this.getTokens(
+          userEntity.id,
+          userEntity.user_email,
+        );
         await this.sharedUserService.setCurrentRefreshToken(
           userEntity.id,
-          refreshToken,
+          tokens.refresh_token,
         );
         return {
           email: userEntity.user_email,
-          access_token: accessToken,
-          refresh_token: refreshToken,
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
         };
       } else {
         throw new HttpException(
@@ -53,20 +51,18 @@ export class AuthService {
     } else {
       // if user doesnt exist, create one
       const createdUser = await this.userService.createUser(email, password);
-      const payload = {
-        username: createdUser.email,
-        sub: createdUser.userId,
-      };
-      const accessToken = this.getAccessToken(payload);
-      const refreshToken = this.getRefreshToken(payload);
+      const tokens = await this.getTokens(
+        createdUser.userId,
+        createdUser.email,
+      );
       await this.sharedUserService.setCurrentRefreshToken(
         createdUser.userId,
-        refreshToken,
+        tokens.refresh_token,
       );
       return {
         email: createdUser.email,
-        access_token: accessToken,
-        refresh_token: refreshToken,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       };
     }
   }
@@ -117,19 +113,14 @@ export class AuthService {
         HttpStatus.UNAUTHORIZED,
       );
 
-    const payload = {
-      username: userEntity.user_email,
-      sub: userEntity.id,
-    };
-    const accessToken = this.getAccessToken(payload);
-    const newRefreshToken = this.getRefreshToken(payload);
+    const tokens = await this.getTokens(userEntity.id, userEntity.user_email);
     await this.sharedUserService.setCurrentRefreshToken(
       userEntity.id,
-      newRefreshToken,
+      tokens.refresh_token,
     );
     return {
-      refresh_token: newRefreshToken,
-      access_token: accessToken,
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token,
       email: userEntity.user_email,
     };
   }
@@ -143,18 +134,25 @@ export class AuthService {
     return passwordMatches;
   }
 
-  private getAccessToken(payload: TokenPayload) {
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('ACCESS_TOKEN_SECRET'),
-      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME'),
-    });
-    return accessToken;
-  }
+  async getTokens(userId: number, email: string) {
+    const payload = {
+      username: email,
+      sub: userId,
+    };
 
-  private getRefreshToken(payload: TokenPayload) {
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('REFRESH_TOKEN_SECRET'),
-    });
-    return refreshToken;
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      }),
+    ]);
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
   }
 }
