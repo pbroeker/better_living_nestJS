@@ -5,7 +5,7 @@ import { plainToClass } from 'class-transformer';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { CoreUserWithRefreshTokenDto } from 'src/core/users/dto/core-user.dto';
-import { SharedUserService } from 'src/shared/shared-user.service';
+import { SharedUserService } from '../../../shared/shared-user.service';
 import { TokenPayloadWithRt } from '../../../types/token';
 
 @Injectable()
