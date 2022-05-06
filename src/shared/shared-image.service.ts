@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
+import { createIdFindOptions } from '../utils/features/helpers';
 
 @Injectable()
 export class SharedImageService {
@@ -11,6 +12,17 @@ export class SharedImageService {
     @InjectRepository(UserImage)
     private userImageRepository: Repository<UserImage>,
   ) {}
+
+  async findByIds(currentUser: CoreUser, ids: number[]): Promise<UserImage[]> {
+    if (!ids.length) {
+      return [];
+    }
+    const findIdOptions = createIdFindOptions(ids).map((idObject) => {
+      return { ...idObject, user: currentUser };
+    });
+
+    return await this.userImageRepository.find({ where: findIdOptions });
+  }
 
   async findRoomImages(
     currentUser: CoreUser,

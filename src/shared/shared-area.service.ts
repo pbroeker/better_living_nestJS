@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PersonalAreaTitle } from 'src/types/enums';
+import { PersonalAreaTitle } from '../types/enums';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalArea } from '../feature/personal-areas/entity/personalArea.entity';
-
 @Injectable()
 export class SharedAreaService {
   constructor(
