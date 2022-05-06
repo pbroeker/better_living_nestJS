@@ -2,7 +2,7 @@ import { CoreUser } from '../../../core/users/entity/user.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
-import { UserTag } from '../../user-tags/entity/userTags.entity';
+import { UserTag } from '../../user-tag/entity/userTags.entity';
 
 @Entity({ name: 'user-image' })
 export class UserImage extends IdentifiableEntity {
