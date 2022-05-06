@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { UserImageDto } from 'src/feature/user-image/dto/user-image.dto';
+import { UserImageDto } from '../../user-image/dto/user-image.dto';
 
 export class UserTagReqDto {
   @ApiProperty()

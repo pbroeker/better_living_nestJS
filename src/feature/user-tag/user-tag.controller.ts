@@ -9,8 +9,8 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { User } from 'src/utils/customDecorators/user.decorator';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { User } from '../../utils/customDecorators/user.decorator';
 import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
 import { UserTagService } from './user-tag.service';
 

@@ -3,7 +3,7 @@ import { PersonalAreaService } from './personal-area.service';
 import { PersonalAreaController } from './personal-area.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PersonalArea } from './entity/personalArea.entity';
-import { SharedModule } from 'src/shared/shared.module';
+import { SharedModule } from '../../shared/shared.module';
 
 @Module({
   imports: [SharedModule, TypeOrmModule.forFeature([PersonalArea])],

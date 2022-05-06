@@ -1,7 +1,7 @@
 import { IsNotEmpty } from 'class-validator';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
-import { IdentifiableEntity } from 'src/shared/generic.entity';
+import { CoreUser } from '../../../core/users/entity/user.entity';
+import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
+import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity({ name: 'personal-area' })

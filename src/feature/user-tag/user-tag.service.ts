@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { SharedUserService } from 'src/shared/shared-user.service';
-import { SharedImageService } from 'src/shared/shared-image.service';
-import { removeDateStrings, removeUser } from 'src/utils/features/helpers';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { SharedUserService } from '../../shared/shared-user.service';
+import { SharedImageService } from '../../shared/shared-image.service';
+import { removeDateStrings, removeUser } from '../../utils/features/helpers';
 import { Repository } from 'typeorm';
 import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
 import { UserTag } from './entity/userTags.entity';
