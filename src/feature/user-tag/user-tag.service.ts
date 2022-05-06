@@ -64,7 +64,7 @@ export class UserTagService {
         userImageEntities = [];
       }
 
-      const userTagEntity = await this.userTagRepository.create({
+      const userTagEntity = this.userTagRepository.create({
         user: activeCoreUser,
         title: userTagDto.title,
         userImages: userImageEntities,

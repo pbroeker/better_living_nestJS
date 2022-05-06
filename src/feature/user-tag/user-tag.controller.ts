@@ -62,7 +62,7 @@ export class UserTagsController {
     description: 'Tag could not be deleted',
   })
   @Delete('/:tagId')
-  async deleteRoom(
+  async deleteTag(
     @Param('tagId', ParseIntPipe) tagId: number,
   ): Promise<boolean> {
     return await this.userTagService.deleteTag(tagId);
