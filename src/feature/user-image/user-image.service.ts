@@ -15,22 +15,27 @@ import {
   UserImageDto,
 } from './dto/user-image.dto';
 import { UserImage } from './entity/user-image.entity';
+import { RequestHandler } from '@nestjs/common/interfaces';
 
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
   private readonly s3 = new AWS.S3();
-  private readonly upload = multer({
-    limits: { fieldSize: 25 * 1024 * 1024 },
-    storage: multerS3({
-      s3: this.s3,
-      bucket: this.AWS_S3_BUCKET_NAME,
-      acl: 'public-read',
-      key: function (request, file, cb) {
-        cb(null, `${Date.now().toString()} - ${file.originalname}`);
-      },
-    }),
-  }).array('image', 1);
+  private upload: RequestHandler;
+
+  createMulter(userId: string) {
+    return multer({
+      limits: { fieldSize: 25 * 1024 * 1024 },
+      storage: multerS3({
+        s3: this.s3,
+        bucket: this.AWS_S3_BUCKET_NAME,
+        acl: 'public-read',
+        key: function (request, file, cb) {
+          cb(null, `${userId}/${Date.now().toString()}-${file.originalname}`);
+        },
+      }),
+    }).array('image', 1);
+  }
 
   constructor(
     @InjectRepository(UserImage)
@@ -152,6 +157,7 @@ export class UserImageService {
 
   async imageUpload(req: any, res: any, user: CoreUserDto) {
     try {
+      this.upload = this.createMulter(String(user.userId));
       this.upload(req, res, async (error: any) => {
         if (error) {
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
@@ -174,10 +180,13 @@ export class UserImageService {
         }
       });
     } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        title: 'my_pictures.error.upload_image.title',
-        text: 'my_pictures.error.upload_image.message',
-      });
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(
+        {
+          title: 'my_pictures.error.upload_image.title',
+          text: 'my_pictures.error.upload_image.message',
+        },
+        user.userId,
+      );
     }
   }
 
