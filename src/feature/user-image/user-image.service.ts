@@ -23,7 +23,7 @@ export class UserImageService {
   private readonly s3 = new AWS.S3();
   private upload: RequestHandler;
 
-  createMulter(userId: string) {
+  private createMulter(userId: string) {
     return multer({
       limits: { fieldSize: 25 * 1024 * 1024 },
       storage: multerS3({
