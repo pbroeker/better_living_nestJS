@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-
+import { UserTagResDto } from 'src/feature/user-tag/dto/user-tag.dto';
 export class UserImageDto {
   @ApiProperty()
   @IsOptional()
@@ -31,12 +31,23 @@ export class UserImageDto {
   @IsOptional()
   @IsArray()
   personalRoomIds?: number[];
+
+  @ApiProperty({ type: [UserTagResDto] })
+  @IsOptional()
+  @IsArray()
+  userTags?: UserTagResDto[];
 }
 
-export class EditImageRoomDto {
+export class EditImageDto {
+  @ApiProperty({ type: [Number] })
+  personalRoomIds: number[];
+
+  @ApiProperty({ type: [Number] })
+  usertagIds: number[];
+
   @ApiProperty()
   @IsArray()
-  personalRoomIds: number[];
+  newUsertags: string[];
 }
 
 export class PaginatedImagesResDto {
