@@ -53,7 +53,7 @@ export class UserImageService {
     });
   }
 
-  async getUserImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
+  async getAllImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
@@ -65,18 +65,60 @@ export class UserImageService {
       if (allUserImages) {
         const allUserImageDtos = allUserImages.map((userImageEntity) => {
           const imageEntityNoUser = removeUser(userImageEntity);
+          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
 
           return {
-            ...imageEntityNoUser,
-            personalRooms: imageEntityNoUser.personalRooms.map(
+            ...imageEntityNoRooms,
+            personalRoomIds: imageEntityNoUser.personalRooms.map(
               (personalRoom) => personalRoom.id,
             ),
+            userTags: imageEntityNoRooms.userTags.map((userTag) => {
+              const { createdAt, updatedAt, ...tagNoDates } = userTag;
+              return tagNoDates;
+            }),
           };
         });
         return allUserImageDtos;
       } else {
         return [];
       }
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.load_images.title',
+          text: 'my_pictures.error.load_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getUserImage(
+    currentUser: CoreUserDto,
+    imageId: number,
+  ): Promise<UserImageDto> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+      const imageEntity = await this.userImageRepository.findOne({
+        where: { user: activeCoreUser, id: imageId },
+        relations: ['personalRooms', 'userTags'],
+      });
+
+      const imageDtoNoUser = removeUser(imageEntity);
+      const { personalRooms, ...imageDtoNoRooms } = imageDtoNoUser;
+
+      return {
+        ...imageDtoNoRooms,
+        personalRoomIds: imageDtoNoUser.personalRooms.map(
+          (personalRoom) => personalRoom.id,
+        ),
+        userTags: imageDtoNoRooms.userTags.map((userTag) => {
+          const { createdAt, updatedAt, ...tagNoDates } = userTag;
+          return tagNoDates;
+        }),
+      };
     } catch (error) {
       throw new HttpException(
         {
@@ -114,12 +156,16 @@ export class UserImageService {
         const countedUserImageDtos = countedUserImages[0].map(
           (userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-
+            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoUser,
-              personalRooms: imageEntityNoUser.personalRooms.map(
+              ...imageEntityNoRooms,
+              personalRoomIds: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => personalRoom.id,
               ),
+              userTags: imageEntityNoUser.userTags.map((userTag) => {
+                const { createdAt, updatedAt, ...tagNoDates } = userTag;
+                return tagNoDates;
+              }),
             };
           },
         );
@@ -193,7 +239,7 @@ export class UserImageService {
     }
   }
 
-  async updateRoom(
+  async updateImage(
     currentUser: CoreUserDto,
     imageId: number,
     editImage: EditImageDto,

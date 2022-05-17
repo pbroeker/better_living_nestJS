@@ -36,7 +36,7 @@ export class UserImageController {
   })
   @Get('/all')
   async getImages(@User() user: CoreUserDto): Promise<UserImageDto[]> {
-    return await this.imageService.getUserImages(user);
+    return await this.imageService.getAllImages(user);
   }
 
   @ApiResponse({
@@ -49,6 +49,18 @@ export class UserImageController {
     @Param('page', ParseIntPipe) page: number,
   ): Promise<PaginatedImagesResDto> {
     return await this.imageService.getUserImagesCount(user, page);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returning image details',
+  })
+  @Get('/detail/:imageId')
+  async getImage(
+    @User() user: CoreUserDto,
+    @Param('imageId', ParseIntPipe) imageId: number,
+  ): Promise<UserImageDto> {
+    return await this.imageService.getUserImage(user, imageId);
   }
 
   @ApiResponse({
@@ -69,11 +81,11 @@ export class UserImageController {
     description: 'Add relations to room',
   })
   @Patch('/:imageId')
-  async updateRoom(
+  async updateImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
     @Body() editImageDto: EditImageDto,
   ): Promise<UserImageDto> {
-    return await this.imageService.updateRoom(user, imageId, editImageDto);
+    return await this.imageService.updateImage(user, imageId, editImageDto);
   }
 }
