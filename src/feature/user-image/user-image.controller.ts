@@ -68,7 +68,7 @@ export class UserImageController {
     status: HttpStatus.OK,
     description: 'Add relations to room',
   })
-  @Patch('/:imageId/')
+  @Patch('/:imageId')
   async editRoomRelations(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,

@@ -39,12 +39,10 @@ export class UserImageDto {
 }
 
 export class EditImageDto {
-  @ApiProperty()
-  @IsArray()
+  @ApiProperty({ type: [Number] })
   personalRoomIds: number[];
 
-  @ApiProperty()
-  @IsArray()
+  @ApiProperty({ type: [Number] })
   usertagIds: number[];
 
   @ApiProperty()
