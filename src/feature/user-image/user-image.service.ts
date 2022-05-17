@@ -16,6 +16,8 @@ import {
 } from './dto/user-image.dto';
 import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
+import { UserTag } from '../user-tag/entity/userTags.entity';
+import { SharedTagService } from 'src/shared/shared-tag.service';
 
 @Injectable()
 export class UserImageService {
@@ -43,6 +45,7 @@ export class UserImageService {
     private configService: ConfigService,
     private sharedUserService: SharedUserService,
     private sharedRoomService: SharedRoomService,
+    private sharedTagService: SharedTagService,
   ) {
     AWS.config.update({
       accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
@@ -57,7 +60,7 @@ export class UserImageService {
       );
       const allUserImages = await this.userImageRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalRooms'],
+        relations: ['personalRooms', 'userTags'],
       });
       if (allUserImages) {
         const allUserImageDtos = allUserImages.map((userImageEntity) => {
@@ -100,7 +103,7 @@ export class UserImageService {
         order: { createdAt: 'DESC' },
         take: imageCount,
         skip: skip,
-        relations: ['personalRooms'],
+        relations: ['personalRooms', 'userTags'],
       });
 
       if (countedUserImages) {
@@ -208,19 +211,44 @@ export class UserImageService {
         relations: ['personalRooms'],
       });
 
+      // getPresentTagEntities
+      const oldTags: UserTag[] = [];
+      if (editImage.usertagIds.length) {
+        const oldUserTags = await this.sharedTagService.findByIds(
+          activeCoreUser,
+          editImage.usertagIds,
+        );
+        oldTags.push(...oldUserTags);
+      }
+
+      // createNewTagEntities
+      const newTags: UserTag[] = [];
+      if (editImage.newUsertags.length) {
+        const newUserTags = await this.sharedTagService.createTags(
+          activeCoreUser,
+          editImage.newUsertags,
+        );
+        newTags.push(...newUserTags);
+      }
+
       const roomEntities = await this.sharedRoomService.findByIds(
         activeCoreUser,
         editImage.personalRoomIds,
       );
 
       imageEntity.personalRooms = roomEntities;
+      imageEntity.userTags = [...oldTags, ...newTags];
       const savedImageEntity = await this.userImageRepository.save(imageEntity);
-
+      const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
+        const { user, createdAt, updatedAt, ...userTagNoUser } = userTag;
+        return userTagNoUser;
+      });
       const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
 
       return {
         ...imageEntityNoUser,
         personalRoomIds: editImage.personalRoomIds,
+        userTags: userTagsNoUser,
       };
     } catch (error) {
       throw new HttpException(

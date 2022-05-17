@@ -66,14 +66,18 @@ export class UserImageController {
 
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Edited room relations',
+    description: 'Add relations to room',
   })
-  @Patch('/:imageId/edit-rooms')
+  @Patch('/:imageId/')
   async editRoomRelations(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
-    @Body() editImage: EditImageRoomDto,
+    @Body() editImageDto: EditImageRoomDto,
   ): Promise<UserImageDto> {
-    return await this.imageService.editRoomRelations(user, imageId, editImage);
+    return await this.imageService.editRoomRelations(
+      user,
+      imageId,
+      editImageDto,
+    );
   }
 }
