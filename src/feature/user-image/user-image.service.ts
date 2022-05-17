@@ -72,6 +72,10 @@ export class UserImageService {
             personalRoomIds: imageEntityNoUser.personalRooms.map(
               (personalRoom) => personalRoom.id,
             ),
+            userTags: imageEntityNoRooms.userTags.map((userTag) => {
+              const { createdAt, updatedAt, ...tagNoDates } = userTag;
+              return tagNoDates;
+            }),
           };
         });
         return allUserImageDtos;
@@ -110,6 +114,10 @@ export class UserImageService {
         personalRoomIds: imageDtoNoUser.personalRooms.map(
           (personalRoom) => personalRoom.id,
         ),
+        userTags: imageDtoNoRooms.userTags.map((userTag) => {
+          const { createdAt, updatedAt, ...tagNoDates } = userTag;
+          return tagNoDates;
+        }),
       };
     } catch (error) {
       throw new HttpException(
@@ -154,6 +162,10 @@ export class UserImageService {
               personalRoomIds: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => personalRoom.id,
               ),
+              userTags: imageEntityNoUser.userTags.map((userTag) => {
+                const { createdAt, updatedAt, ...tagNoDates } = userTag;
+                return tagNoDates;
+              }),
             };
           },
         );
