@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
-import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
+import { UserTag } from '../feature/user-tag/entity/userTags.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 
 @Injectable()

@@ -17,7 +17,7 @@ import {
 import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
-import { SharedTagService } from 'src/shared/shared-tag.service';
+import { SharedTagService } from '../../shared/shared-tag.service';
 
 @Injectable()
 export class UserImageService {
@@ -193,7 +193,7 @@ export class UserImageService {
     }
   }
 
-  async editRoomRelations(
+  async updateRoom(
     currentUser: CoreUserDto,
     imageId: number,
     editImage: EditImageDto,
@@ -212,13 +212,13 @@ export class UserImageService {
       });
 
       // getPresentTagEntities
-      const oldTags: UserTag[] = [];
+      const existingTags: UserTag[] = [];
       if (editImage.usertagIds.length) {
-        const oldUserTags = await this.sharedTagService.findByIds(
+        const existingTagEntitites = await this.sharedTagService.findByIds(
           activeCoreUser,
           editImage.usertagIds,
         );
-        oldTags.push(...oldUserTags);
+        existingTags.push(...existingTagEntitites);
       }
 
       // createNewTagEntities
@@ -237,7 +237,7 @@ export class UserImageService {
       );
 
       imageEntity.personalRooms = roomEntities;
-      imageEntity.userTags = [...oldTags, ...newTags];
+      imageEntity.userTags = [...existingTags, ...newTags];
       const savedImageEntity = await this.userImageRepository.save(imageEntity);
       const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
         const { user, createdAt, updatedAt, ...userTagNoUser } = userTag;
