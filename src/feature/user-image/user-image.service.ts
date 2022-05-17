@@ -239,7 +239,7 @@ export class UserImageService {
     }
   }
 
-  async updateRoom(
+  async updateImage(
     currentUser: CoreUserDto,
     imageId: number,
     editImage: EditImageDto,

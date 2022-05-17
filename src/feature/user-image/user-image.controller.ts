@@ -81,11 +81,11 @@ export class UserImageController {
     description: 'Add relations to room',
   })
   @Patch('/:imageId')
-  async updateRoom(
+  async updateImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
     @Body() editImageDto: EditImageDto,
   ): Promise<UserImageDto> {
-    return await this.imageService.updateRoom(user, imageId, editImageDto);
+    return await this.imageService.updateImage(user, imageId, editImageDto);
   }
 }
