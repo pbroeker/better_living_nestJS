@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
-  EditImageRoomDto,
+  EditImageDto,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -196,7 +196,7 @@ export class UserImageService {
   async editRoomRelations(
     currentUser: CoreUserDto,
     imageId: number,
-    editImage: EditImageRoomDto,
+    editImage: EditImageDto,
   ): Promise<UserImageDto> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(

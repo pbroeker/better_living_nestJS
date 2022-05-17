@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
-  EditImageRoomDto,
+  EditImageDto,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -72,7 +72,7 @@ export class UserImageController {
   async editRoomRelations(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
-    @Body() editImageDto: EditImageRoomDto,
+    @Body() editImageDto: EditImageDto,
   ): Promise<UserImageDto> {
     return await this.imageService.editRoomRelations(
       user,

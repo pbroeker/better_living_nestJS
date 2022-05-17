@@ -38,18 +38,18 @@ export class UserImageDto {
   userTags?: UserTagResDto[];
 }
 
-export class EditImageRoomDto {
+export class EditImageDto {
   @ApiProperty()
   @IsArray()
   personalRoomIds: number[];
 
   @ApiProperty()
   @IsArray()
-  usertagIds?: number[];
+  usertagIds: number[];
 
   @ApiProperty()
   @IsArray()
-  newUsertags?: string[];
+  newUsertags: string[];
 }
 
 export class PaginatedImagesResDto {
