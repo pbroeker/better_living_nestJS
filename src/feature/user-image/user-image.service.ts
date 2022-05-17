@@ -53,7 +53,7 @@ export class UserImageService {
     });
   }
 
-  async getUserImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
+  async getAllImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
@@ -65,10 +65,11 @@ export class UserImageService {
       if (allUserImages) {
         const allUserImageDtos = allUserImages.map((userImageEntity) => {
           const imageEntityNoUser = removeUser(userImageEntity);
+          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
 
           return {
-            ...imageEntityNoUser,
-            personalRooms: imageEntityNoUser.personalRooms.map(
+            ...imageEntityNoRooms,
+            personalRoomIds: imageEntityNoUser.personalRooms.map(
               (personalRoom) => personalRoom.id,
             ),
           };
@@ -77,6 +78,39 @@ export class UserImageService {
       } else {
         return [];
       }
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.load_images.title',
+          text: 'my_pictures.error.load_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getUserImage(
+    currentUser: CoreUserDto,
+    imageId: number,
+  ): Promise<UserImageDto> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+      const imageEntity = await this.userImageRepository.findOne({
+        where: { user: activeCoreUser, id: imageId },
+        relations: ['personalRooms', 'userTags'],
+      });
+
+      const imageDtoNoUser = removeUser(imageEntity);
+      const { personalRooms, ...imageDtoNoRooms } = imageDtoNoUser;
+
+      return {
+        ...imageDtoNoRooms,
+        personalRoomIds: imageDtoNoUser.personalRooms.map(
+          (personalRoom) => personalRoom.id,
+        ),
+      };
     } catch (error) {
       throw new HttpException(
         {
@@ -114,10 +148,10 @@ export class UserImageService {
         const countedUserImageDtos = countedUserImages[0].map(
           (userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-
+            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoUser,
-              personalRooms: imageEntityNoUser.personalRooms.map(
+              ...imageEntityNoRooms,
+              personalRoomIds: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => personalRoom.id,
               ),
             };
