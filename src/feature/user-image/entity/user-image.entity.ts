@@ -12,7 +12,9 @@ export class UserImage extends IdentifiableEntity {
   @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userImages)
   personalRooms: PersonalRoom[];
 
-  @ManyToMany(() => UserTag, (userTag) => userTag.userImages)
+  @ManyToMany(() => UserTag, (userTag) => userTag.userImages, {
+    cascade: ['insert', 'update'],
+  })
   userTags: UserTag[];
 
   @ManyToOne(() => CoreUser, (user) => user.images, {
