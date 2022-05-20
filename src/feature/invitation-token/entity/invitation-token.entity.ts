@@ -10,8 +10,8 @@ export class InvitationToken extends IdentifiableEntity {
   @IsNotEmpty()
   token: string;
 
-  @ManyToOne(() => CoreUser, (user) => user.personalAreas, {
+  @ManyToOne(() => CoreUser, (user) => user.invitationTokens, {
     onDelete: 'CASCADE',
   })
-  user: CoreUser;
+  inviter: CoreUser;
 }
