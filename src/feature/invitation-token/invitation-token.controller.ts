@@ -6,7 +6,7 @@ import { InvitationTokenResDto } from './dto/invitation-token.dto';
 import { InvitationTokenService } from './invitation-token.service';
 
 @ApiBearerAuth()
-@ApiTags('living-area')
+@ApiTags('invitation-token')
 @ApiResponse({
   status: HttpStatus.UNAUTHORIZED,
   description: 'Wrong user credentials',
