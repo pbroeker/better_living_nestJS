@@ -1,7 +1,8 @@
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm';
-import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
+import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
+import { UserTag } from '../../user-tag/entity/userTags.entity';
 
 @Entity({ name: 'user-image' })
 export class UserImage extends IdentifiableEntity {
@@ -10,6 +11,11 @@ export class UserImage extends IdentifiableEntity {
 
   @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userImages)
   personalRooms: PersonalRoom[];
+
+  @ManyToMany(() => UserTag, (userTag) => userTag.userImages, {
+    cascade: ['insert', 'update'],
+  })
+  userTags: UserTag[];
 
   @ManyToOne(() => CoreUser, (user) => user.images, {
     onDelete: 'CASCADE',

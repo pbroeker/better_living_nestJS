@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
-  EditImageRoomDto,
+  EditImageDto,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -36,7 +36,7 @@ export class UserImageController {
   })
   @Get('/all')
   async getImages(@User() user: CoreUserDto): Promise<UserImageDto[]> {
-    return await this.imageService.getUserImages(user);
+    return await this.imageService.getAllImages(user);
   }
 
   @ApiResponse({
@@ -49,6 +49,18 @@ export class UserImageController {
     @Param('page', ParseIntPipe) page: number,
   ): Promise<PaginatedImagesResDto> {
     return await this.imageService.getUserImagesCount(user, page);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returning image details',
+  })
+  @Get('/detail/:imageId')
+  async getImage(
+    @User() user: CoreUserDto,
+    @Param('imageId', ParseIntPipe) imageId: number,
+  ): Promise<UserImageDto> {
+    return await this.imageService.getUserImage(user, imageId);
   }
 
   @ApiResponse({
@@ -66,14 +78,14 @@ export class UserImageController {
 
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Edited room relations',
+    description: 'Add relations to room',
   })
-  @Patch('/:imageId/edit-rooms')
-  async editRoomRelations(
+  @Patch('/:imageId')
+  async updateImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
-    @Body() editImage: EditImageRoomDto,
+    @Body() editImageDto: EditImageDto,
   ): Promise<UserImageDto> {
-    return await this.imageService.editRoomRelations(user, imageId, editImage);
+    return await this.imageService.updateImage(user, imageId, editImageDto);
   }
 }

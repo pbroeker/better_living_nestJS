@@ -10,10 +10,18 @@ import { PersonalArea } from '../feature/personal-areas/entity/personalArea.enti
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { SharedImageService } from './shared-image.service';
+import { SharedTagService } from './shared-tag.service';
+import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([CoreUser, PersonalArea, PersonalRoom, UserImage]),
+    TypeOrmModule.forFeature([
+      CoreUser,
+      PersonalArea,
+      PersonalRoom,
+      UserImage,
+      UserTag,
+    ]),
   ],
   providers: [
     SharedAuthService,
@@ -21,6 +29,7 @@ import { SharedImageService } from './shared-image.service';
     SharedRoomService,
     SharedAreaService,
     SharedImageService,
+    SharedTagService,
   ],
   exports: [
     SharedAuthService,
@@ -28,6 +37,7 @@ import { SharedImageService } from './shared-image.service';
     SharedRoomService,
     SharedAreaService,
     SharedImageService,
+    SharedTagService,
   ],
 })
 export class SharedModule {}

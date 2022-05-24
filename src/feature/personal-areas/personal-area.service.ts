@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { Repository } from 'typeorm';
 import {
   PersonalAreaReqDto,
@@ -8,11 +8,11 @@ import {
 } from './dto/personal-area.dto';
 import { PersonalArea } from './entity/personalArea.entity';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { SharedRoomService } from 'src/shared/shared-room.service';
-import * as _ from 'lodash';
+import { SharedRoomService } from '../../shared/shared-room.service';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
 import { removeUser, removeDateStrings } from '../../utils/features/helpers';
-import { PersonalAreaTitle } from 'src/types/enums';
+import { PersonalAreaTitle } from '../../types/enums';
+import * as _ from 'lodash';
 @Injectable()
 export class PersonalAreaService {
   constructor(
