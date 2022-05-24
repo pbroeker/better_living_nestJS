@@ -69,8 +69,14 @@ export class UserImageService {
 
           return {
             ...imageEntityNoRooms,
-            personalRoomIds: imageEntityNoUser.personalRooms.map(
-              (personalRoom) => personalRoom.id,
+            personalRooms: imageEntityNoUser.personalRooms.map(
+              (personalRoom) => {
+                return {
+                  id: personalRoom.id,
+                  iconId: personalRoom.iconId,
+                  title: personalRoom.title,
+                };
+              },
             ),
             userTags: imageEntityNoRooms.userTags.map((userTag) => {
               const { createdAt, updatedAt, ...tagNoDates } = userTag;
@@ -111,9 +117,13 @@ export class UserImageService {
 
       return {
         ...imageDtoNoRooms,
-        personalRoomIds: imageDtoNoUser.personalRooms.map(
-          (personalRoom) => personalRoom.id,
-        ),
+        personalRooms: imageDtoNoUser.personalRooms.map((personalRoom) => {
+          return {
+            id: personalRoom.id,
+            iconId: personalRoom.iconId,
+            title: personalRoom.title,
+          };
+        }),
         userTags: imageDtoNoRooms.userTags.map((userTag) => {
           const { createdAt, updatedAt, ...tagNoDates } = userTag;
           return tagNoDates;
@@ -159,8 +169,14 @@ export class UserImageService {
             const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
               ...imageEntityNoRooms,
-              personalRoomIds: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => personalRoom.id,
+              personalRooms: imageEntityNoUser.personalRooms.map(
+                (personalRoom) => {
+                  return {
+                    id: personalRoom.id,
+                    iconId: personalRoom.iconId,
+                    title: personalRoom.title,
+                  };
+                },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
                 const { createdAt, updatedAt, ...tagNoDates } = userTag;
@@ -293,7 +309,13 @@ export class UserImageService {
 
       return {
         ...imageEntityNoUser,
-        personalRoomIds: editImage.personalRoomIds,
+        personalRooms: roomEntities.map((personalRoom) => {
+          return {
+            id: personalRoom.id,
+            iconId: personalRoom.iconId,
+            title: personalRoom.title,
+          };
+        }),
         userTags: userTagsNoUser,
       };
     } catch (error) {
