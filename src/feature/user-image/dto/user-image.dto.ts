@@ -6,7 +6,8 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { UserTagResDto } from 'src/feature/user-tag/dto/user-tag.dto';
+import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
+import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
 export class UserImageDto {
   @ApiProperty()
   @IsOptional()
@@ -30,7 +31,7 @@ export class UserImageDto {
   @ApiProperty()
   @IsOptional()
   @IsArray()
-  personalRoomIds?: number[];
+  personalRooms?: Partial<PersonalRoom>[];
 
   @ApiProperty({ type: [UserTagResDto] })
   @IsOptional()
