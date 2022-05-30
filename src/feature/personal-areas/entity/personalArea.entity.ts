@@ -2,7 +2,7 @@ import { IsNotEmpty } from 'class-validator';
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity({ name: 'personal-area' })
 export class PersonalArea extends IdentifiableEntity {
@@ -15,8 +15,6 @@ export class PersonalArea extends IdentifiableEntity {
   })
   personalRooms: PersonalRoom[];
 
-  @ManyToOne(() => CoreUser, (user) => user.personalAreas, {
-    onDelete: 'CASCADE',
-  })
-  user: CoreUser;
+  @ManyToMany(() => CoreUser, (user) => user.personalAreas)
+  users: CoreUser[];
 }
