@@ -14,6 +14,9 @@ export class CoreUser extends IdentifiableEntity {
   @Column({ default: '' })
   user_email: string;
 
+  @Column('int', { array: true, nullable: true })
+  guestIds: number[];
+
   @ManyToMany(() => PersonalArea, (personalArea) => personalArea.users)
   @JoinTable()
   personalAreas: PersonalArea[];
@@ -24,12 +27,12 @@ export class CoreUser extends IdentifiableEntity {
   @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.user)
   personalRooms: PersonalRoom[];
 
+  @OneToMany(() => PersonalArea, (personalArea) => personalArea.owner)
+  ownedAreas: PersonalArea[];
+
   @OneToMany(() => UserTag, (userTag) => userTag.user)
   userTags: UserTag[];
 
   @OneToMany(() => InvitationToken, (token) => token.inviter)
   invitationTokens: InvitationToken[];
-
-  // @OneToMany(() => UserTag, (userTag) => userTag.user)
-  // guests: UserTag[];
 }
