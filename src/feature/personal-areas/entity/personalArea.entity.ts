@@ -15,6 +15,9 @@ export class PersonalArea extends IdentifiableEntity {
   })
   personalRooms: PersonalRoom[];
 
+  @ManyToOne(() => CoreUser, (user) => user.ownedAreas)
+  owner: CoreUser;
+
   @ManyToMany(() => CoreUser, (user) => user.personalAreas)
   users: CoreUser[];
 }
