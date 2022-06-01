@@ -1,12 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { SharedGuestService } from 'src/shared/shared-guest.service';
+import { SharedGuestService } from '../../shared/shared-guest.service';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { InvitationTokenResDto } from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
+import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
 
 @Injectable()
 export class InvitationTokenService {
@@ -46,7 +46,7 @@ export class InvitationTokenService {
   async checkInvitationToken(
     invitedUser: CoreUserDto,
     invitationToken: string,
-  ): Promise<CoreUser> {
+  ): Promise<GuestUserDto> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         invitedUser.email,
@@ -58,21 +58,25 @@ export class InvitationTokenService {
       });
 
       if (foundInvitationToken) {
-        await this.sharedGuestService.addGuest(
+        const guestUserEntity = await this.sharedGuestService.addGuest(
           foundInvitationToken.inviter,
           activeCoreUser,
         );
 
         // Deleting used invitationToken
         await this.invitationTokenRepo.delete(foundInvitationToken.id);
-        return foundInvitationToken.inviter;
+        const guestUserDto: GuestUserDto = {
+          hostmail: guestUserEntity.host.user_email,
+          guestmail: guestUserEntity.guest_email,
+        };
+        return guestUserDto;
       } else {
         throw new HttpException(
           {
             title: 'invitation_token.error.expired.title',
             text: 'invitation_token.error.expired.message',
           },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          HttpStatus.FORBIDDEN,
         );
       }
     } catch (error) {

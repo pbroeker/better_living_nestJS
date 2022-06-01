@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PersonalAreaResDto } from 'src/feature/personal-areas/dto/personal-area.dto';
+import { PersonalAreaResDto } from '../feature/personal-areas/dto/personal-area.dto';
 import { FindConditions, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';

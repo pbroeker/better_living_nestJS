@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PersonalAreaResDto } from 'src/feature/personal-areas/dto/personal-area.dto';
+import { PersonalAreaResDto } from '../feature/personal-areas/dto/personal-area.dto';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 
@@ -50,11 +50,5 @@ export class SharedUserService {
     } else {
       return [] as PersonalAreaResDto[];
     }
-  }
-
-  async addGuest(hostUser: CoreUser, guestUser: CoreUser) {
-    hostUser.guestIds = [...hostUser.guestIds, guestUser.id];
-    await this.userRepository.save(hostUser);
-    return true;
   }
 }

@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CoreUser } from 'src/core/users/entity/user.entity';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { InvitationTokenResDto } from './dto/invitation-token.dto';
 import { InvitationTokenService } from './invitation-token.service';
+import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('invitation-token')
@@ -35,7 +35,7 @@ export class InvitationTokenController {
   async checkInvitationToken(
     @User() user: CoreUserDto,
     @Body() invitationToken: string,
-  ): Promise<CoreUser> {
+  ): Promise<GuestUserDto> {
     return await this.invitationTokenService.checkInvitationToken(
       user,
       invitationToken,
