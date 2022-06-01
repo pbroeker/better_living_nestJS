@@ -80,6 +80,10 @@ export class PersonalAreaService {
         coreUserDto.email,
       );
 
+      const guestsOfUser = await this.sharedUserService.findGuestsByHost(
+        activeCoreUser,
+      );
+
       const roomEntities = await this.sharedRoomService.findByIds(
         activeCoreUser,
         personalAreaReqDto.personalRoomIds,
@@ -91,7 +95,7 @@ export class PersonalAreaService {
         personalAreaReqDto.title !== PersonalAreaTitle.DEFAULT
       ) {
         newAreaEntity = this.personalAreaRepository.create({
-          users: [activeCoreUser],
+          users: [...guestsOfUser, activeCoreUser],
           title: personalAreaReqDto.title,
           personalRooms: roomEntities,
           owner: activeCoreUser,

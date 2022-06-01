@@ -142,9 +142,13 @@ export class PersonalRoomService {
           });
         });
       } else {
+        const guestsOfUser = await this.sharedUserService.findGuestsByHost(
+          activeCoreUser,
+        );
         // Creating new unassigned area
         const newPersonalArea = await this.sharedAreaService.createNewArea(
           activeCoreUser,
+          guestsOfUser,
         );
 
         newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
