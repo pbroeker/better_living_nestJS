@@ -11,6 +11,16 @@ export class SharedAreaService {
     private personalAreaRepository: Repository<PersonalArea>,
   ) {}
 
+  async findAllOwned(currentUser: CoreUser): Promise<PersonalArea[]> {
+    return await this.personalAreaRepository.find({
+      where: { owner: currentUser },
+    });
+  }
+
+  async updateAreas(updatedAreas: PersonalArea[]) {
+    return await this.personalAreaRepository.save(updatedAreas);
+  }
+
   async createNewArea(
     currentUser: CoreUser,
     title = PersonalAreaTitle.DEFAULT,

@@ -1,6 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedGuestService } from '../../shared/shared-guest.service';
+import { CoreUser } from 'src/core/users/entity/user.entity';
+import { SharedAreaService } from 'src/shared/shared-area.service';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
@@ -15,6 +17,7 @@ export class InvitationTokenService {
     private invitationTokenRepo: Repository<InvitationToken>,
     private sharedUserService: SharedUserService,
     private sharedGuestService: SharedGuestService,
+    private sharedAreaService: SharedAreaService,
   ) {}
 
   async createInvitationToken(inviter: CoreUserDto) {
@@ -62,13 +65,16 @@ export class InvitationTokenService {
           foundInvitationToken.inviter,
           activeCoreUser,
         );
-
         // Deleting used invitationToken
         await this.invitationTokenRepo.delete(foundInvitationToken.id);
         const guestUserDto: GuestUserDto = {
           hostmail: guestUserEntity.host.user_email,
           guestmail: guestUserEntity.guest_email,
         };
+        await this.addGuestToInviterAreas(
+          foundInvitationToken.inviter,
+          activeCoreUser,
+        );
         return guestUserDto;
       } else {
         throw new HttpException(
@@ -92,5 +98,19 @@ export class InvitationTokenService {
         error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  private async addGuestToInviterAreas(inviter: CoreUser, guestUser: CoreUser) {
+    const inviterAreas = await this.sharedAreaService.findAllOwned(inviter);
+
+    const updatedInviterAreas = inviterAreas.map((inviterArea) => {
+      return { ...inviterArea, users: [...inviterArea.users, guestUser] };
+    });
+
+    const savedInviterAreas = await this.sharedAreaService.updateAreas(
+      updatedInviterAreas,
+    );
+
+    return savedInviterAreas;
   }
 }
