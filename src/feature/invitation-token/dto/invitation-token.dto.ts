@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDateString, IsNumber, IsString } from 'class-validator';
 
+export class InvitationTokenReqDto {
+  @ApiProperty()
+  @IsString()
+  invitationToken: string;
+}
+
 export class InvitationTokenResDto {
   @ApiProperty()
   @IsString()
