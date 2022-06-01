@@ -100,7 +100,7 @@ export class PersonalRoomService {
         lastPage,
         nextPage,
         prevPage,
-        images: userImagesNoRooms.slice(skip, imageCount),
+        images: userImagesNoRooms.slice(skip, skip + imageCount),
       };
 
       return paginatedImages;
