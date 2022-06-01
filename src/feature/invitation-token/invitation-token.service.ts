@@ -6,7 +6,10 @@ import { SharedAreaService } from 'src/shared/shared-area.service';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { InvitationTokenResDto } from './dto/invitation-token.dto';
+import {
+  InvitationTokenResDto,
+  PendingInvitationResDto,
+} from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
 import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
 
@@ -124,5 +127,18 @@ export class InvitationTokenService {
     );
 
     return savedInviterAreas;
+  }
+
+  async getPendingInvitations(user: CoreUserDto) {
+    const activeCoreUser = await this.sharedUserService.findByEmail(user.email);
+    const foundInvitationTokens = await this.invitationTokenRepo.find({
+      where: { inviter: activeCoreUser },
+    });
+    return foundInvitationTokens.map((token) => {
+      return {
+        id: token.id,
+        createdAt: token.createdAt,
+      } as PendingInvitationResDto;
+    });
   }
 }

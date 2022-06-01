@@ -6,7 +6,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
+import { PersonalRoomResDto } from '../../../feature/personal-room/dto/personal-room.dto';
 
 export class PersonalAreaReqDto {
   @ApiProperty()

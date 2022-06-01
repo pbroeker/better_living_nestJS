@@ -9,7 +9,7 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
+import { removeUser, removeDateStrings } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
