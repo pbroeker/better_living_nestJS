@@ -12,6 +12,8 @@ import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { SharedImageService } from './shared-image.service';
 import { SharedTagService } from './shared-tag.service';
 import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
+import { SharedGuestService } from './shared-guest.service';
+import { GuestUser } from 'src/feature/user-guest/entity/guestUser.entity';
 @Module({
   imports: [
     ConfigModule,
@@ -21,6 +23,7 @@ import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
       PersonalRoom,
       UserImage,
       UserTag,
+      GuestUser,
     ]),
   ],
   providers: [
@@ -30,6 +33,7 @@ import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
     SharedAreaService,
     SharedImageService,
     SharedTagService,
+    SharedGuestService,
   ],
   exports: [
     SharedAuthService,
@@ -38,6 +42,7 @@ import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
     SharedAreaService,
     SharedImageService,
     SharedTagService,
+    SharedGuestService,
   ],
 })
 export class SharedModule {}
