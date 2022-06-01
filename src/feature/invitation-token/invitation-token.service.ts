@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedGuestService } from '../../shared/shared-guest.service';
-import { CoreUser } from 'src/core/users/entity/user.entity';
-import { SharedAreaService } from 'src/shared/shared-area.service';
+import { CoreUser } from '../../core/users/entity/user.entity';
+import { SharedAreaService } from '../../shared/shared-area.service';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
