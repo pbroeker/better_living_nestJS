@@ -21,7 +21,7 @@ export class GuestUserService {
       );
 
       const guestEntities = await this.guestUserRepository.find({
-        where: { user: activeCoreUser },
+        where: { host: activeCoreUser },
       });
 
       const guestUserDtos: GuestUserDto[] = guestEntities.map((guest) => {
