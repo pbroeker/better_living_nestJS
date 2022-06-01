@@ -16,7 +16,8 @@ export class SharedAreaService {
     title = PersonalAreaTitle.DEFAULT,
   ): Promise<PersonalArea> {
     const createdNewArea = this.personalAreaRepository.create({
-      user: currentUser,
+      users: [currentUser],
+      owner: currentUser,
       title: title,
     });
 
@@ -26,22 +27,12 @@ export class SharedAreaService {
     return savedPersonalArea;
   }
 
-  async findAll(
-    currentUser: CoreUser,
-    relations = [],
-  ): Promise<PersonalArea[]> {
-    return await this.personalAreaRepository.find({
-      where: { user: currentUser },
-      relations,
-    });
-  }
-
   async findByTitle(
     currentUser: CoreUser,
     title: string,
   ): Promise<PersonalArea> {
     const foundArea = await this.personalAreaRepository.findOne({
-      where: { user: currentUser, title: title },
+      where: { owner: currentUser, title: title },
     });
     return foundArea;
   }

@@ -166,10 +166,10 @@ export class PersonalRoomService {
         const roomNoDates = removeDateStrings(newRoomEntity);
         const roomNoUser = removeUser(roomNoDates);
         const areaNoDates = removeDateStrings(roomNoUser.personalArea);
-        const areaNoUser = removeUser(areaNoDates);
+        const { users, ...areaNoUsers } = areaNoDates;
         return {
           ...roomNoUser,
-          personalArea: areaNoUser,
+          personalArea: areaNoUsers,
         };
       });
 
@@ -225,18 +225,18 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(roomId: number): Promise<PersonalRoomResDto> {
+  async deleteRoom(roomId: number): Promise<boolean> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne(
         roomId,
         { relations: ['personalArea'] },
       );
 
-      await this.personalRoomRepository.delete(personalRoomEntity.id);
+      const deleteResult = await this.personalRoomRepository.delete(
+        personalRoomEntity.id,
+      );
 
-      const roomNoDates = removeDateStrings(personalRoomEntity);
-      const roomNoUser = removeUser(roomNoDates);
-      return roomNoUser;
+      return deleteResult.affected > 0;
     } catch (error) {
       throw new HttpException(
         {

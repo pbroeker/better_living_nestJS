@@ -125,7 +125,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-  ): Promise<PersonalRoomResDto> {
+  ): Promise<boolean> {
     return await this.personalRoomService.deleteRoom(roomId);
   }
 }
