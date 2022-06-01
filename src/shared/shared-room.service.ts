@@ -36,6 +36,7 @@ export class SharedRoomService {
       .where('personalArea.id IN (:...ids)', {
         ids: [...sharedAreaids],
       })
+      .orderBy('personalRoom.title', 'ASC')
       .getMany();
   }
 

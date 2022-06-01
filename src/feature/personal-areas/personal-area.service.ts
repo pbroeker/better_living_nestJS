@@ -48,7 +48,7 @@ export class PersonalAreaService {
 
       // Sorting personalAreas alphabetically
       personalAreasDtos.sort((area1, area2) => {
-        return area1.title > area2.title ? 1 : -1;
+        return area1.title > area2.title ? -1 : 1;
       });
       // Moving Unassigned area to the end of the array
       const unassignedIndex = personalAreasDtos.findIndex(
