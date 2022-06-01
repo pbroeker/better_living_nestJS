@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUser } from 'src/core/users/entity/user.entity';
+import { SharedGuestService } from 'src/shared/shared-guest.service';
 import { Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
@@ -13,6 +14,7 @@ export class InvitationTokenService {
     @InjectRepository(InvitationToken)
     private invitationTokenRepo: Repository<InvitationToken>,
     private sharedUserService: SharedUserService,
+    private sharedGuestService: SharedGuestService,
   ) {}
 
   async createInvitationToken(inviter: CoreUserDto) {
@@ -56,10 +58,13 @@ export class InvitationTokenService {
       });
 
       if (foundInvitationToken) {
-        await this.sharedUserService.addGuest(
+        await this.sharedGuestService.addGuest(
           foundInvitationToken.inviter,
           activeCoreUser,
         );
+
+        // Deleting used invitationToken
+        await this.invitationTokenRepo.delete(foundInvitationToken.id);
         return foundInvitationToken.inviter;
       } else {
         throw new HttpException(
