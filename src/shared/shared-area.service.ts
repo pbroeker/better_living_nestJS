@@ -14,6 +14,7 @@ export class SharedAreaService {
   async findAllOwned(currentUser: CoreUser): Promise<PersonalArea[]> {
     return await this.personalAreaRepository.find({
       where: { owner: currentUser },
+      relations: ['users'],
     });
   }
 
