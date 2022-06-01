@@ -1,4 +1,4 @@
-import { CoreUser } from 'src/core/users/entity/user.entity';
+import { CoreUser } from '../../core/users/entity/user.entity';
 
 interface HasUser {
   user: CoreUser;
