@@ -112,7 +112,7 @@ export class PersonalAreaController {
   async deleteArea(
     @User() user: CoreUserDto,
     @Param('areaId', ParseIntPipe) areaId: number,
-  ): Promise<PersonalAreaResDto> {
+  ): Promise<boolean> {
     return await this.personalAreaService.deleteArea(user, areaId);
   }
 }
