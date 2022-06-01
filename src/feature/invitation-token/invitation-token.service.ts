@@ -61,20 +61,32 @@ export class InvitationTokenService {
       });
 
       if (foundInvitationToken) {
-        const guestUserEntity = await this.sharedGuestService.addGuest(
+        const userExistsAlready = this.sharedGuestService.checkForExistingGuest(
           foundInvitationToken.inviter,
           activeCoreUser,
         );
+
+        // Only adding guest if it doesn't exist yet
+        if (!userExistsAlready) {
+          await this.sharedGuestService.addGuest(
+            foundInvitationToken.inviter,
+            activeCoreUser,
+          );
+
+          await this.addGuestToInviterAreas(
+            foundInvitationToken.inviter,
+            activeCoreUser,
+          );
+        }
+
         // Deleting used invitationToken
         await this.invitationTokenRepo.delete(foundInvitationToken.id);
+
         const guestUserDto: GuestUserDto = {
-          hostmail: guestUserEntity.host.user_email,
-          guestmail: guestUserEntity.guest_email,
+          hostmail: foundInvitationToken.inviter.user_email,
+          guestmail: activeCoreUser.user_email,
         };
-        await this.addGuestToInviterAreas(
-          foundInvitationToken.inviter,
-          activeCoreUser,
-        );
+
         return guestUserDto;
       } else {
         throw new HttpException(
