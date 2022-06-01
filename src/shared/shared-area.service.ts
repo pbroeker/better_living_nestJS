@@ -23,10 +23,11 @@ export class SharedAreaService {
 
   async createNewArea(
     currentUser: CoreUser,
+    guestsOfUser: CoreUser[],
     title = PersonalAreaTitle.DEFAULT,
   ): Promise<PersonalArea> {
     const createdNewArea = this.personalAreaRepository.create({
-      users: [currentUser],
+      users: [...guestsOfUser, currentUser],
       owner: currentUser,
       title: title,
     });

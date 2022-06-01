@@ -26,6 +26,24 @@ export class SharedUserService {
     }
   }
 
+  async findGuestsByHost(currentUser: CoreUser) {
+    const userWithGuests = await this.userRepository.findOne({
+      where: { id: currentUser.id },
+      relations: ['guests'],
+    });
+
+    const guestCoreUsers = Promise.all(
+      userWithGuests.guests.map(async (guest) => {
+        return await this.userRepository.findOne({
+          where: { host: guest.host },
+        });
+      }),
+    );
+
+    console.log('coreUsers ===========+: ', guestCoreUsers);
+    return guestCoreUsers;
+  }
+
   // Typeorm only returns the correct and complete relations when using "getRawData()"
   // Therefore the neccessary creation and return of a new object
   async findSharedPersonalAreas(currentUser: CoreUser) {
