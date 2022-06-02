@@ -14,16 +14,16 @@ import { DeviceType } from './types';
   description: 'App link file does not exist',
 })
 @SkipAuth()
-@Controller('app-links')
+@Controller('.well-known')
 export class ApplinksController {
   constructor(private applinksService: ApplinksService) {}
 
-  @Get('.well-known/apple-app-site-association')
+  @Get('apple-app-site-association')
   async getAppleAssociationLinkFile(): Promise<StreamableFile> {
     return await this.applinksService.getAppLink(DeviceType.IOS);
   }
 
-  @Get('.well-known/assetlinks.json')
+  @Get('assetlinks.json')
   async getAndroidLinkFile(): Promise<StreamableFile> {
     return await this.applinksService.getAppLink(DeviceType.ANDROID);
   }
