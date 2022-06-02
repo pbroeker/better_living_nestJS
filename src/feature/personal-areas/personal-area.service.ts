@@ -209,7 +209,14 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         personalAreaEntity,
       );
-      const areaWithoutDates = removeDateStrings(savedPersonalAreaEntity);
+      const savedPersonalAreaEntityWithOwner =
+        await this.personalAreaRepository.findOne({
+          where: { id: savedPersonalAreaEntity.id },
+          relations: ['owner', 'personalRooms'],
+        });
+      const areaWithoutDates = removeDateStrings(
+        savedPersonalAreaEntityWithOwner,
+      );
       const { users, ...areaWithoutUsers } = areaWithoutDates;
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutDates,
@@ -219,7 +226,7 @@ export class PersonalAreaService {
           const { personalArea, ...currentRoomDto } = currentRoomNoUser;
           return currentRoomDto;
         }),
-        isOwner: areaWithoutDates.owner === activeCoreUser,
+        isOwner: areaWithoutDates.owner.id === activeCoreUser.id,
       };
 
       return areaDto;

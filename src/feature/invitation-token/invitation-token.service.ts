@@ -62,12 +62,12 @@ export class InvitationTokenService {
         where: { token: invitationToken },
         relations: ['inviter'],
       });
-
       if (foundInvitationToken) {
-        const userExistsAlready = this.sharedGuestService.checkForExistingGuest(
-          foundInvitationToken.inviter,
-          activeCoreUser,
-        );
+        const userExistsAlready =
+          await this.sharedGuestService.checkForExistingGuest(
+            foundInvitationToken.inviter,
+            activeCoreUser,
+          );
 
         // Only adding guest if it doesn't exist yet
         if (!userExistsAlready) {
