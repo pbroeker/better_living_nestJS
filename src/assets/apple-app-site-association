@@ -1,0 +1,23 @@
+{
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appID": "com.siegenia.HomeInspirator.Debug",
+                "paths": [ "*" ]
+            },
+            {
+                "appID": "com.siegenia.HomeInspirator.RC-Test",
+                "paths": [ "*" ]
+            },
+            {
+                "appID": "com.siegenia.HomeInspirator.RC-Live",
+                "paths": [ "*" ]
+            },
+            {
+                "appID": "com.siegenia.HomeInspirator",
+                "paths": [ "*" ]
+            }
+        ]
+    }
+}
