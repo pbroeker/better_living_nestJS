@@ -3,19 +3,19 @@
         "apps": [],
         "details": [
             {
-                "appID": "com.siegenia.HomeInspirator.Debug",
+                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.Debug",
                 "paths": [ "*" ]
             },
             {
-                "appID": "com.siegenia.HomeInspirator.RC-Test",
+                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.RC-Test",
                 "paths": [ "*" ]
             },
             {
-                "appID": "com.siegenia.HomeInspirator.RC-Live",
+                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.RC-Live",
                 "paths": [ "*" ]
             },
             {
-                "appID": "com.siegenia.HomeInspirator",
+                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator",
                 "paths": [ "*" ]
             }
         ]
