@@ -15,18 +15,13 @@ export class WellKnownMiddleware implements NestMiddleware {
       let filename: string;
       if (req.originalUrl.includes('assetlinks.json')) {
         filename = 'assetlinks.json';
+        res.sendFile(path.join(dirPath, filename));
       } else if (req.originalUrl.includes('apple-app-site-association')) {
         filename = 'apple-app-site-association';
+        res.sendFile(path.join(dirPath, filename));
       } else {
-        throw new HttpException(
-          {
-            title: 'app_link.error.title',
-            text: 'app_link.error.message',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+        res.status(200).send();
       }
-      res.sendFile(path.join(dirPath, filename));
     } else {
       next();
     }
