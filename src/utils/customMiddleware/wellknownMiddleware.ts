@@ -1,13 +1,9 @@
 import * as path from 'path';
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NestMiddleware,
-} from '@nestjs/common';
+import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
 @Injectable()
+// .wellknown doesn't work with globalPrefixExceptions (probably because of the .).
 export class WellKnownMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     if (req.originalUrl.includes('.well-known')) {
