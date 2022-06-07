@@ -35,7 +35,15 @@ export class GuestUserController {
     return await this.guestUserService.getAllGuests(user);
   }
 
-  @Delete()
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Guest removed',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Guest could not be removed',
+  })
+  @Delete('/:guestId')
   async deleteGuest(
     @User() user: CoreUserDto,
     @Param('guestId', ParseIntPipe) guestUserId: number,

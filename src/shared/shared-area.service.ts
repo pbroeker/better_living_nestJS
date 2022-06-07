@@ -51,4 +51,17 @@ export class SharedAreaService {
     });
     return foundArea;
   }
+
+  async removeUser(areas: PersonalArea[], userId: number) {
+    const updatedPersonalAreas = areas.map((personalArea) => {
+      personalArea.users = personalArea.users.filter(
+        (user) => user.id !== userId,
+      );
+      return personalArea;
+    });
+
+    await this.personalAreaRepository.save(updatedPersonalAreas);
+
+    return updatedPersonalAreas;
+  }
 }

@@ -16,15 +16,28 @@ export class SharedGuestService {
       where: { guest_email: guest.user_email, host: inviter },
     });
 
-    return existingGuest ? true : false;
+    return existingGuest;
   }
 
   async addGuest(inviter: CoreUser, guest: CoreUser) {
     const guestUserObject = this.guestUserRepository.create({
-      host: inviter,
+      core_user_id: guest.id,
+      hosts: [inviter],
       guest_email: guest.user_email,
     });
 
     return await this.guestUserRepository.save(guestUserObject);
+  }
+
+  async updateGuest(inviter: CoreUser, guest: GuestUser) {
+    guest.hosts = [...guest.hosts, inviter];
+    const updatedGuest = await this.guestUserRepository.save(guest);
+    return updatedGuest;
+  }
+
+  async deleteGuest(guestId: number) {
+    return (
+      (await (await this.guestUserRepository.delete(guestId)).affected) > 0
+    );
   }
 }
