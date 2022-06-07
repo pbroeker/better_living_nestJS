@@ -15,15 +15,18 @@ export class SharedUserService {
     return await this.userRepository.find();
   }
 
-  async findByEmail(email: string, relations?: string[]): Promise<CoreUser> {
-    if (!relations) {
-      return await this.userRepository.findOne({ user_email: email });
-    } else {
-      return await this.userRepository.findOne(
-        { user_email: email },
-        { relations },
-      );
-    }
+  async findByEmail(
+    email: string,
+    relations: string[] = [],
+  ): Promise<CoreUser> {
+    return await this.userRepository.findOne(
+      { user_email: email },
+      { relations },
+    );
+  }
+
+  async findById(id: number, relations: string[] = []): Promise<CoreUser> {
+    return await this.userRepository.findOne({ id: id }, { relations });
   }
 
   async findGuestsByHost(currentUser: CoreUser) {
@@ -39,8 +42,6 @@ export class SharedUserService {
         });
       }),
     );
-
-    console.log('coreUsers ===========+: ', guestCoreUsers);
     return guestCoreUsers;
   }
 

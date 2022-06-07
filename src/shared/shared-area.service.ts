@@ -11,10 +11,13 @@ export class SharedAreaService {
     private personalAreaRepository: Repository<PersonalArea>,
   ) {}
 
-  async findAllOwned(currentUser: CoreUser): Promise<PersonalArea[]> {
+  async findAllOwned(
+    currentUser: CoreUser,
+    relations: string[] = [],
+  ): Promise<PersonalArea[]> {
     return await this.personalAreaRepository.find({
       where: { owner: currentUser },
-      relations: ['users'],
+      relations: relations,
     });
   }
 

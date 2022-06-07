@@ -293,8 +293,7 @@ export class UserImageService {
         newTags.push(...newUserTags);
       }
 
-      const roomEntities = await this.sharedRoomService.findByIds(
-        activeCoreUser,
+      const roomEntities = await this.sharedRoomService.findAnyByIds(
         editImage.personalRoomIds,
       );
 

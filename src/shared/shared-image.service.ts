@@ -24,6 +24,16 @@ export class SharedImageService {
     return await this.userImageRepository.find({ where: findIdOptions });
   }
 
+  async findAllOwned(
+    currentUser: CoreUser,
+    relations: string[] = [],
+  ): Promise<UserImage[]> {
+    return await this.userImageRepository.find({
+      where: { user: currentUser },
+      relations: relations,
+    });
+  }
+
   async findRoomImages(
     currentUser: CoreUser,
     room: PersonalRoom,
