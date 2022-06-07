@@ -5,11 +5,15 @@ import { SharedUserService } from '../../shared/shared-user.service';
 import { Repository } from 'typeorm';
 import { GuestUser } from './entity/guestUser.entity';
 import { GuestUserDto } from './dto/guest-user.dto';
+import { SharedAreaService } from 'src/shared/shared-area.service';
+import { SharedImageService } from 'src/shared/shared-image.service';
 
 @Injectable()
 export class GuestUserService {
   constructor(
     private sharedUserService: SharedUserService,
+    private sharedImageService: SharedImageService,
+    private sharedAreaService: SharedAreaService,
     @InjectRepository(GuestUser)
     private guestUserRepository: Repository<GuestUser>,
   ) {}
@@ -40,5 +44,34 @@ export class GuestUserService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async deleteGuestUser(user: CoreUserDto, guestUserId: number) {
+    const activeCoreUser = await this.sharedUserService.findByEmail(user.email);
+
+    const personalAreas = await this.sharedAreaService.findAllOwned(
+      activeCoreUser,
+      ['users', 'personalRooms'],
+    );
+
+    const activeGuest = await this.sharedUserService.findById(guestUserId);
+
+    const guestImages = await this.sharedImageService.findAllOwned(
+      activeGuest,
+      ['personalRooms'],
+    );
+
+    // activeCoreUser.guests = activeCoreUser.guests.filter(
+    //   (guest) => guest.id !== guestUserId,
+    // );
+
+    // const updatedPersonalAreas = personalAreas.map((personalArea) => {
+    //   personalArea.users = personalArea.users.filter(
+    //     (user) => user.id !== guestUserId,
+    //   );
+    //   return personalArea;
+    // });
+
+    // const savedActiveCoreUser = await this.sharedUserService
   }
 }

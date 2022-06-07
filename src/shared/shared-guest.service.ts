@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
-import { GuestUser } from '../feature/user-guest/entity/guestUser.entity';
+import { GuestUser } from '../feature/guest-user/entity/guestUser.entity';
 
 @Injectable()
 export class SharedGuestService {

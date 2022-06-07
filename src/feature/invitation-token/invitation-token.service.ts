@@ -11,7 +11,7 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
-import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
+import { GuestUserDto } from '../guest-user/dto/guest-user.dto';
 
 @Injectable()
 export class InvitationTokenService {
@@ -116,7 +116,9 @@ export class InvitationTokenService {
   }
 
   private async addGuestToInviterAreas(inviter: CoreUser, guestUser: CoreUser) {
-    const inviterAreas = await this.sharedAreaService.findAllOwned(inviter);
+    const inviterAreas = await this.sharedAreaService.findAllOwned(inviter, [
+      'users',
+    ]);
 
     const updatedInviterAreas = inviterAreas.map((inviterArea) => {
       return { ...inviterArea, users: [...inviterArea.users, guestUser] };
