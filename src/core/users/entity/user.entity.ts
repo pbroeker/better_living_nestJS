@@ -15,7 +15,8 @@ export class CoreUser extends IdentifiableEntity {
   @Column({ default: '' })
   user_email: string;
 
-  @OneToMany(() => GuestUser, (guest) => guest.host)
+  @ManyToMany(() => GuestUser, (guest) => guest.hosts)
+  @JoinTable()
   guests: GuestUser[];
 
   @ManyToMany(() => PersonalArea, (personalArea) => personalArea.users)
