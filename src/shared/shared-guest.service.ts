@@ -11,12 +11,20 @@ export class SharedGuestService {
     private guestUserRepository: Repository<GuestUser>,
   ) {}
 
-  async checkForExistingGuest(inviter: CoreUser, guest: CoreUser) {
+  async checkForExistingGuest(guest: CoreUser) {
     const existingGuest = await this.guestUserRepository.findOne({
-      where: { guest_email: guest.user_email, host: inviter },
+      where: { guest_email: guest.user_email },
+      relations: ['hosts'],
     });
 
     return existingGuest;
+  }
+
+  async findGuestByMail(guestMail: string, relations = []) {
+    return await this.guestUserRepository.findOne({
+      where: { guest_email: guestMail },
+      relations: relations,
+    });
   }
 
   async addGuest(inviter: CoreUser, guest: CoreUser) {

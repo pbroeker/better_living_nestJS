@@ -35,10 +35,10 @@ export class SharedUserService {
       relations: ['guests'],
     });
 
-    const guestCoreUsers = Promise.all(
+    const guestCoreUsers = await Promise.all(
       userWithGuests.guests.map(async (guest) => {
         return await this.userRepository.findOne({
-          where: { host: guest.host },
+          where: { id: guest.core_user_id },
         });
       }),
     );
@@ -69,5 +69,12 @@ export class SharedUserService {
     } else {
       return [] as PersonalAreaResDto[];
     }
+  }
+
+  async removeGuest(currentUser: CoreUser, guestId: number) {
+    currentUser.guests = currentUser.guests.filter((guest) => {
+      return guest.core_user_id !== guestId;
+    });
+    return await this.userRepository.save(currentUser);
   }
 }

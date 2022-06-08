@@ -52,16 +52,14 @@ export class SharedAreaService {
     return foundArea;
   }
 
-  async removeUser(areas: PersonalArea[], userId: number) {
+  async removeUserFromArea(areas: PersonalArea[], guestCoreId: number) {
     const updatedPersonalAreas = areas.map((personalArea) => {
       personalArea.users = personalArea.users.filter(
-        (user) => user.id !== userId,
+        (user) => user.id !== guestCoreId,
       );
       return personalArea;
     });
 
-    await this.personalAreaRepository.save(updatedPersonalAreas);
-
-    return updatedPersonalAreas;
+    return await this.personalAreaRepository.save(updatedPersonalAreas);
   }
 }
