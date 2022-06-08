@@ -10,7 +10,11 @@ import { PersonalArea } from './entity/personalArea.entity';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
-import { removeUser, removeDateStrings } from '../../utils/features/helpers';
+import {
+  removeUser,
+  removeDateStrings,
+  getUserInitials,
+} from '../../utils/features/helpers';
 import { PersonalAreaTitle } from '../../types/enums';
 import * as _ from 'lodash';
 import { PersonalRoomResDto } from '../personal-room/dto/personal-room.dto';
@@ -33,16 +37,17 @@ export class PersonalAreaService {
         coreUserDto.email,
       );
 
-      const areaDtos = await this.sharedUserService.findSharedPersonalAreas(
+      const areas = await this.sharedUserService.findSharedPersonalAreas(
         activeCoreUser,
       );
 
       const personalRoomEntities =
-        await this.sharedRoomService.findRoomsForSharedAreas(areaDtos);
+        await this.sharedRoomService.findRoomsForSharedAreas(areas);
 
       const personalAreasDtos = this.reduceRoomsToAreas(
-        areaDtos,
+        areas,
         personalRoomEntities,
+        activeCoreUser.id,
         imageCount,
       );
 
@@ -116,6 +121,7 @@ export class PersonalAreaService {
       const { users, owner, ...areaWithoutUsers } = areaWithoutDates;
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutUsers,
+        ownerInitals: getUserInitials(areaWithoutDates.owner),
         personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
           const currentRoomNoDates = removeDateStrings(personalRoom);
           const currentRoomNoUser = removeUser(currentRoomNoDates);
@@ -154,6 +160,7 @@ export class PersonalAreaService {
         where: { owner: activeCoreUser, id: areaId },
         relations: ['personalRooms'],
       });
+
       // don't allow direct editing of unassigned area or creation of a new unassigned area
       if (
         personalAreaEntity.title === PersonalAreaTitle.DEFAULT ||
@@ -220,6 +227,7 @@ export class PersonalAreaService {
       const { users, ...areaWithoutUsers } = areaWithoutDates;
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutDates,
+        ownerInitals: getUserInitials(areaWithoutDates.owner),
         personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
           const currentRoomNoDates = removeDateStrings(personalRoom);
           const currentRoomNoUser = removeUser(currentRoomNoDates);
@@ -309,19 +317,18 @@ export class PersonalAreaService {
   }
 
   private reduceRoomsToAreas(
-    personalAreas: PersonalAreaResDto[],
+    personalAreas: PersonalArea[],
     personalRooms: PersonalRoom[],
+    currentUserId: number,
     imageCount?: number,
   ): PersonalAreaResDto[] {
     return personalAreas.reduce(
-      (
-        personalAreaArray: PersonalAreaResDto[],
-        currentArea: PersonalAreaResDto,
-      ) => {
+      (personalAreaArray: PersonalAreaResDto[], currentArea: PersonalArea) => {
         const newPersonalAreaDto: PersonalAreaResDto = {
           id: currentArea.id,
           title: currentArea.title,
-          isOwner: currentArea.isOwner,
+          isOwner: currentArea.owner.id === currentUserId,
+          ownerInitals: getUserInitials(currentArea.owner),
         };
 
         const newRoomDtos: PersonalRoomResDto[] = personalRooms
@@ -333,7 +340,13 @@ export class PersonalAreaService {
               ? personalRoom.userImages.slice(0, imageCount)
               : personalRoom.userImages;
 
-            const { personalArea, user, ...personalRoomNoArea } = personalRoom;
+            const {
+              personalArea,
+              createdAt,
+              updatedAt,
+              user,
+              ...personalRoomNoArea
+            } = personalRoom;
             return {
               ...personalRoomNoArea,
               userImages: userImagesSlice,

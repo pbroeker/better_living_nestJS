@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PersonalAreaResDto } from '../feature/personal-areas/dto/personal-area.dto';
 import { Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
+import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
 
 @Injectable()
 export class SharedUserService {
@@ -39,8 +39,6 @@ export class SharedUserService {
         });
       }),
     );
-
-    console.log('coreUsers ===========+: ', guestCoreUsers);
     return guestCoreUsers;
   }
 
@@ -55,18 +53,24 @@ export class SharedUserService {
       })
       .getRawMany();
 
-    const areaDtos = rawData.map((rawUser) => {
-      const areaDto = {
-        id: rawUser.personalArea_id,
-        title: rawUser.personalArea_title,
-        isOwner: rawUser.personalArea_ownerId === currentUser.id,
-      };
-      return areaDto;
-    });
-    if (areaDtos[0].id) {
-      return areaDtos as PersonalAreaResDto[];
+    const areas = await Promise.all(
+      rawData.map(async (rawUser) => {
+        const owner = await this.userRepository.findOne({
+          where: { id: rawUser.personalArea_ownerId },
+        });
+
+        const areaDto = {
+          id: rawUser.personalArea_id,
+          title: rawUser.personalArea_title,
+          owner: owner,
+        };
+        return areaDto;
+      }),
+    );
+    if (areas[0].id) {
+      return areas as PersonalArea[];
     } else {
-      return [] as PersonalAreaResDto[];
+      return [] as PersonalArea[];
     }
   }
 }
