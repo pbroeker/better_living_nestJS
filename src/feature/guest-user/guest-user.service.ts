@@ -22,16 +22,24 @@ export class GuestUserService {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
+        ['guests'],
       );
 
-      const guestEntities = await this.guestUserRepository.find({
-        where: { host: activeCoreUser },
-      });
+      const guestEntities = await Promise.all(
+        activeCoreUser.guests.map((guest) => {
+          return this.guestUserRepository.findOne({
+            where: { id: guest.id },
+            relations: ['hosts'],
+          });
+        }),
+      );
 
       const guestUserDtos: GuestUserDto[] = guestEntities.map((guest) => {
         return {
-          guestmail: guest.guest_email,
-          hostmail: activeCoreUser.user_email,
+          id: guest.id,
+          hostIds: guest.hosts.map((host) => host.id),
+          core_user_id: guest.core_user_id,
+          guest_email: guest.guest_email,
         };
       });
       return guestUserDtos;
@@ -46,32 +54,71 @@ export class GuestUserService {
     }
   }
 
-  async deleteGuestUser(user: CoreUserDto, guestUserId: number) {
-    const activeCoreUser = await this.sharedUserService.findByEmail(user.email);
+  async deleteGuestUser(
+    user: CoreUserDto,
+    guestCoreId: number,
+  ): Promise<GuestUserDto[]> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+        ['guests'],
+      );
 
-    const personalAreas = await this.sharedAreaService.findAllOwned(
-      activeCoreUser,
-      ['users', 'personalRooms'],
-    );
+      const guestCoreUserEntity = await this.sharedUserService.findById(
+        guestCoreId,
+      );
 
-    const activeGuest = await this.sharedUserService.findById(guestUserId);
+      const personalAreas = await this.sharedAreaService.findAllOwned(
+        activeCoreUser,
+        ['users', 'personalRooms'],
+      );
 
-    const guestImages = await this.sharedImageService.findAllOwned(
-      activeGuest,
-      ['personalRooms'],
-    );
+      const hostRoomIds = personalAreas
+        .flatMap((personalArea) => personalArea.personalRooms)
+        .map((room) => room.id);
 
-    // activeCoreUser.guests = activeCoreUser.guests.filter(
-    //   (guest) => guest.id !== guestUserId,
-    // );
+      // Removing guest from personalAreas
+      await this.sharedAreaService.removeUserFromArea(
+        personalAreas,
+        guestCoreId,
+      );
 
-    // const updatedPersonalAreas = personalAreas.map((personalArea) => {
-    //   personalArea.users = personalArea.users.filter(
-    //     (user) => user.id !== guestUserId,
-    //   );
-    //   return personalArea;
-    // });
+      // Removing guest-images from personalRooms
+      await this.sharedImageService.removeRoomsFromImages(
+        guestCoreUserEntity,
+        hostRoomIds,
+      );
 
-    // const savedActiveCoreUser = await this.sharedUserService
+      // // Removing guest from activeCoreUser.guests
+      const updatedUser = await this.sharedUserService.removeGuest(
+        activeCoreUser,
+        guestCoreId,
+      );
+
+      // Delete guest if he has no more hosts
+      const guestEntity = await this.guestUserRepository.findOne({
+        where: { core_user_id: guestCoreId },
+        relations: ['hosts'],
+      });
+
+      if (!guestEntity.hosts.length) {
+        await this.guestUserRepository.delete(guestEntity.id);
+      }
+
+      const guestUserDtos = updatedUser.guests.map((guest) => {
+        const { createdAt, updatedAt, hosts, ...guestNoDates } = guest;
+        return guestNoDates;
+      });
+
+      return guestUserDtos;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'user-guest.error.delete_guest.title',
+          text: 'user-guest.error.delete_guest.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

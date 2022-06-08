@@ -43,11 +43,11 @@ export class GuestUserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Guest could not be removed',
   })
-  @Delete('/:guestId')
+  @Delete('/:guestCoreId')
   async deleteGuest(
     @User() user: CoreUserDto,
-    @Param('guestId', ParseIntPipe) guestUserId: number,
-  ): Promise<boolean> {
-    return await this.guestUserService.deleteGuestUser(user, guestUserId);
+    @Param('guestCoreId', ParseIntPipe) guestCoreId: number,
+  ): Promise<GuestUserDto[]> {
+    return await this.guestUserService.deleteGuestUser(user, guestCoreId);
   }
 }

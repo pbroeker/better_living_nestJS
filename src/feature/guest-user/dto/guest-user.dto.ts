@@ -4,15 +4,13 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class GuestUserDto {
   @ApiProperty()
   @IsNumber()
-  coreUserId: number;
+  core_user_id: number;
 
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  guestmail: string;
+  guest_email: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  hostmail: string;
+  @ApiProperty({ type: [Number] })
+  hostIds?: number[];
 }
