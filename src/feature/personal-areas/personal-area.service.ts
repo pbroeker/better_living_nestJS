@@ -89,7 +89,7 @@ export class PersonalAreaService {
         activeCoreUser,
       );
 
-      const roomEntities = await this.sharedRoomService.findByIds(
+      const roomEntities = await this.sharedRoomService.findOwnedByIds(
         activeCoreUser,
         personalAreaReqDto.personalRoomIds,
       );
@@ -186,7 +186,7 @@ export class PersonalAreaService {
 
       // move removed rooms to unassigned personalArea
       if (unassignedRoomIds.length) {
-        const roomsToRemove = await this.sharedRoomService.findByIds(
+        const roomsToRemove = await this.sharedRoomService.findOwnedByIds(
           activeCoreUser,
           unassignedRoomIds,
         );
@@ -204,7 +204,7 @@ export class PersonalAreaService {
       }
 
       // update personalArea with new list of rooms
-      const roomsToAdd = await this.sharedRoomService.findByIds(
+      const roomsToAdd = await this.sharedRoomService.findOwnedByIds(
         activeCoreUser,
         personalAreaReqDto.personalRoomIds,
       );

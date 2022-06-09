@@ -1,13 +1,13 @@
 import { IsNotEmpty } from 'class-validator';
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { Column, Entity, ManyToOne, Generated } from 'typeorm';
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 
 @Entity({ name: 'invitation-token' })
 export class InvitationToken extends IdentifiableEntity {
-  @Column({ default: uuidv4() })
+  @Column()
   @IsNotEmpty()
+  @Generated('uuid')
   token: string;
 
   @ManyToOne(() => CoreUser, (user) => user.invitationTokens, {

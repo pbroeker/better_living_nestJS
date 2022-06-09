@@ -50,7 +50,7 @@ export class SharedRoomService {
     });
   }
 
-  async findByIds(
+  async findOwnedByIds(
     currentUser: CoreUser,
     ids: number[],
   ): Promise<PersonalRoom[]> {
@@ -66,6 +66,23 @@ export class SharedRoomService {
       .leftJoinAndSelect('personalRoom.userImages', 'userImages')
       .where('personalRoom.user.id = :userId', { userId: currentUser.id })
       .andWhere('personalRoom.id IN (:...ids)', {
+        ids: [...ids],
+      })
+      .getMany();
+  }
+
+  async findAnyByIds(ids: number[]): Promise<PersonalRoom[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    return await this.personalRoomRepository
+      .createQueryBuilder('personalRoom')
+      .select(['personalRoom.iconId', 'personalRoom.title', 'personalRoom.id'])
+      .leftJoinAndSelect('personalRoom.user', 'user')
+      .leftJoinAndSelect('personalRoom.personalArea', 'personalArea')
+      .leftJoinAndSelect('personalRoom.userImages', 'userImages')
+      .where('personalRoom.id IN (:...ids)', {
         ids: [...ids],
       })
       .getMany();
