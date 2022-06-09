@@ -170,7 +170,7 @@ export class PersonalRoomService {
         const roomNoDates = removeDateStrings(newRoomEntity);
         const roomNoUser = removeUser(roomNoDates);
         const areaNoDates = removeDateStrings(roomNoUser.personalArea);
-        const { users, ...areaNoUsers } = areaNoDates;
+        const { users, owner, ...areaNoUsers } = areaNoDates;
         return {
           ...roomNoUser,
           personalArea: areaNoUsers,

@@ -11,7 +11,8 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
-import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
+import { GuestUserDto } from '../guest-user/dto/guest-user.dto';
+import { GuestUser } from '../guest-user/entity/guestUser.entity';
 
 @Injectable()
 export class InvitationTokenService {
@@ -74,15 +75,15 @@ export class InvitationTokenService {
           );
         }
 
-        const userExistsAlready =
+        const existingUser =
           await this.sharedGuestService.checkForExistingGuest(
             foundInvitationToken.inviter,
-            activeCoreUser,
           );
 
         // Only adding guest if it doesn't exist yet
-        if (!userExistsAlready) {
-          await this.sharedGuestService.addGuest(
+        let guestEntity: GuestUser;
+        if (!existingUser) {
+          guestEntity = await this.sharedGuestService.addGuest(
             foundInvitationToken.inviter,
             activeCoreUser,
           );
@@ -91,14 +92,32 @@ export class InvitationTokenService {
             foundInvitationToken.inviter,
             activeCoreUser,
           );
+        } else {
+          const hostIds = existingUser.hosts.map((host) => host.id);
+          if (!hostIds.includes(activeCoreUser.id)) {
+            guestEntity = await this.sharedGuestService.updateGuest(
+              foundInvitationToken.inviter,
+              existingUser,
+            );
+
+            await this.addGuestToInviterAreas(
+              foundInvitationToken.inviter,
+              activeCoreUser,
+            );
+          } else {
+            guestEntity = await this.sharedGuestService.findGuestByMail(
+              existingUser.guest_email,
+            );
+          }
         }
 
         // Deleting used invitationToken
         await this.invitationTokenRepo.delete(foundInvitationToken.id);
 
         const guestUserDto: GuestUserDto = {
-          hostmail: foundInvitationToken.inviter.user_email,
-          guestmail: activeCoreUser.user_email,
+          core_user_id: activeCoreUser.id,
+          hostIds: guestEntity.hosts.map((host) => host.id),
+          guest_email: activeCoreUser.user_email,
         };
 
         return guestUserDto;
@@ -112,6 +131,7 @@ export class InvitationTokenService {
         );
       }
     } catch (error) {
+      console.log('error: ', error);
       throw new HttpException(
         {
           title: error.response?.title
@@ -127,7 +147,9 @@ export class InvitationTokenService {
   }
 
   private async addGuestToInviterAreas(inviter: CoreUser, guestUser: CoreUser) {
-    const inviterAreas = await this.sharedAreaService.findAllOwned(inviter);
+    const inviterAreas = await this.sharedAreaService.findAllOwned(inviter, [
+      'users',
+    ]);
 
     const updatedInviterAreas = inviterAreas.map((inviterArea) => {
       return { ...inviterArea, users: [...inviterArea.users, guestUser] };
