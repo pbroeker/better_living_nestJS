@@ -24,6 +24,16 @@ export class SharedImageService {
     return await this.userImageRepository.find({ where: findIdOptions });
   }
 
+  async findAllOwned(
+    currentUser: CoreUser,
+    relations: string[] = [],
+  ): Promise<UserImage[]> {
+    return await this.userImageRepository.find({
+      where: { user: currentUser },
+      relations: relations,
+    });
+  }
+
   async findRoomImages(
     currentUser: CoreUser,
     room: PersonalRoom,
@@ -41,5 +51,18 @@ export class SharedImageService {
     );
 
     return filteredImages;
+  }
+
+  async removeRoomsFromImages(user: CoreUser, roomIds: number[]) {
+    const userImages = await this.findAllOwned(user, ['personalRooms']);
+    const updatedGuestImages = userImages.map((guestImage) => {
+      guestImage.personalRooms = guestImage.personalRooms.filter(
+        (personalRoom) => !roomIds.includes(personalRoom.id),
+      );
+      return guestImage;
+    });
+
+    await this.userImageRepository.save(updatedGuestImages);
+    return updatedGuestImages;
   }
 }

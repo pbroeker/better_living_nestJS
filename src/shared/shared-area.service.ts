@@ -11,10 +11,13 @@ export class SharedAreaService {
     private personalAreaRepository: Repository<PersonalArea>,
   ) {}
 
-  async findAllOwned(currentUser: CoreUser): Promise<PersonalArea[]> {
+  async findAllOwned(
+    currentUser: CoreUser,
+    relations: string[] = [],
+  ): Promise<PersonalArea[]> {
     return await this.personalAreaRepository.find({
       where: { owner: currentUser },
-      relations: ['users'],
+      relations: relations,
     });
   }
 
@@ -47,5 +50,16 @@ export class SharedAreaService {
       where: { owner: currentUser, title: title },
     });
     return foundArea;
+  }
+
+  async removeUserFromArea(areas: PersonalArea[], guestCoreId: number) {
+    const updatedPersonalAreas = areas.map((personalArea) => {
+      personalArea.users = personalArea.users.filter(
+        (user) => user.id !== guestCoreId,
+      );
+      return personalArea;
+    });
+
+    return await this.personalAreaRepository.save(updatedPersonalAreas);
   }
 }

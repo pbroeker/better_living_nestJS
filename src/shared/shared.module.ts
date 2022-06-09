@@ -13,7 +13,7 @@ import { SharedImageService } from './shared-image.service';
 import { SharedTagService } from './shared-tag.service';
 import { UserTag } from '../feature/user-tag/entity/userTags.entity';
 import { SharedGuestService } from './shared-guest.service';
-import { GuestUser } from '../feature/user-guest/entity/guestUser.entity';
+import { GuestUser } from '../feature/guest-user/entity/guestUser.entity';
 @Module({
   imports: [
     ConfigModule,

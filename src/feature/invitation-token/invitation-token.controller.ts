@@ -8,7 +8,7 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationTokenService } from './invitation-token.service';
-import { GuestUserDto } from '../user-guest/dto/guest-user.dto';
+import { GuestUserDto } from '../guest-user/dto/guest-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('invitation-token')
