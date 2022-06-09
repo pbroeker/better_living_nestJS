@@ -63,6 +63,17 @@ export class InvitationTokenService {
         relations: ['inviter'],
       });
       if (foundInvitationToken) {
+        // Making sure you can't invite yourself
+        if (foundInvitationToken.inviter.id === activeCoreUser.id) {
+          throw new HttpException(
+            {
+              title: 'invitation_token.error.expired.title',
+              text: 'invitation_token.error.expired.message',
+            },
+            HttpStatus.FORBIDDEN,
+          );
+        }
+
         const userExistsAlready =
           await this.sharedGuestService.checkForExistingGuest(
             foundInvitationToken.inviter,
