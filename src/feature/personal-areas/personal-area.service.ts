@@ -286,17 +286,8 @@ export class PersonalAreaService {
         ];
         await this.personalAreaRepository.save(unassignedArea);
       }
-
-      // Dissolving relations so area can be deleted
-      areaEntity.users = [];
-      const areaNoRelations = await this.personalAreaRepository.save(
-        areaEntity,
-      );
-
-      const deleteResult = await this.personalAreaRepository.delete(
-        areaNoRelations.id,
-      );
-      return deleteResult.affected > 0;
+      const deletedArea = await this.personalAreaRepository.remove(areaEntity);
+      return deletedArea ? true : false;
     } catch (error) {
       throw new HttpException(
         {
