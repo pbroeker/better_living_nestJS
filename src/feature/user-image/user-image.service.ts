@@ -79,7 +79,7 @@ export class UserImageService {
               },
             ),
             userTags: imageEntityNoRooms.userTags.map((userTag) => {
-              const { createdAt, updatedAt, ...tagNoDates } = userTag;
+              const { ...tagNoDates } = userTag;
               return tagNoDates;
             }),
           };
@@ -125,7 +125,7 @@ export class UserImageService {
           };
         }),
         userTags: imageDtoNoRooms.userTags.map((userTag) => {
-          const { createdAt, updatedAt, ...tagNoDates } = userTag;
+          const { ...tagNoDates } = userTag;
           return tagNoDates;
         }),
       };
@@ -179,7 +179,7 @@ export class UserImageService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { createdAt, updatedAt, ...tagNoDates } = userTag;
+                const { ...tagNoDates } = userTag;
                 return tagNoDates;
               }),
             };
@@ -301,7 +301,7 @@ export class UserImageService {
       imageEntity.userTags = [...existingTags, ...newTags];
       const savedImageEntity = await this.userImageRepository.save(imageEntity);
       const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-        const { user, createdAt, updatedAt, ...userTagNoUser } = userTag;
+        const { user, ...userTagNoUser } = userTag;
         return userTagNoUser;
       });
       const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
