@@ -35,9 +35,12 @@ export class AuthService {
       const createdUser = await this.userService.createUser(registerUserDto);
       const { user_password, user_email, id, ...userNoPW } = createdUser;
 
-      const tokens = await this.getTokens(userEntity.id, userEntity.user_email);
+      const tokens = await this.getTokens(
+        createdUser.id,
+        createdUser.user_email,
+      );
       await this.sharedUserService.setCurrentRefreshToken(
-        userEntity.id,
+        createdUser.id,
         tokens.refresh_token,
       );
 
