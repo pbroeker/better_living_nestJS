@@ -68,11 +68,10 @@ export class PersonalRoomController {
   })
   @Get('/images/:roomId/:page')
   async getRoomImages(
-    @User() user: CoreUserDto,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('page', ParseIntPipe) page: number,
   ): Promise<PaginatedImagesResDto> {
-    return await this.personalRoomService.getRoomImages(user, roomId, page);
+    return await this.personalRoomService.getRoomImages(roomId, page);
   }
 
   @ApiResponse({

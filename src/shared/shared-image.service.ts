@@ -34,15 +34,11 @@ export class SharedImageService {
     });
   }
 
-  async findRoomImages(
-    currentUser: CoreUser,
-    room: PersonalRoom,
-  ): Promise<UserImage[]> {
+  async findRoomImages(room: PersonalRoom): Promise<UserImage[]> {
     // nestjs/typeorm just supports typeorm 0.2
     // use "ArrayContains" as soon as it supports the actual version 0.3
     const foundImages = await this.userImageRepository.find({
       relations: ['personalRooms'],
-      where: { user: currentUser },
       order: { updatedAt: 'DESC' },
     });
 
