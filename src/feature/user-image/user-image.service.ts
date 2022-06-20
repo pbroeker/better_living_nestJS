@@ -99,16 +99,10 @@ export class UserImageService {
     }
   }
 
-  async getUserImage(
-    currentUser: CoreUserDto,
-    imageId: number,
-  ): Promise<UserImageDto> {
+  async getUserImage(imageId: number): Promise<UserImageDto> {
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        currentUser.email,
-      );
       const imageEntity = await this.userImageRepository.findOne({
-        where: { user: activeCoreUser, id: imageId },
+        where: { id: imageId },
         relations: ['personalRooms', 'userTags'],
       });
 
