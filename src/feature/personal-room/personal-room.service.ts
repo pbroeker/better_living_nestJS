@@ -9,7 +9,7 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
+import { removeUser, removeDateStrings } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
@@ -63,23 +63,17 @@ export class PersonalRoomService {
   }
 
   async getRoomImages(
-    currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        currentUser.email,
-      );
-
       const roomEntity = await this.personalRoomRepository.findOne({
-        where: { user: activeCoreUser, id: roomId },
+        where: { id: roomId },
       });
 
       const roomImages = await this.sharedImageService.findRoomImages(
-        activeCoreUser,
         roomEntity,
       );
 
@@ -100,7 +94,7 @@ export class PersonalRoomService {
         lastPage,
         nextPage,
         prevPage,
-        images: userImagesNoRooms.slice(skip, imageCount),
+        images: userImagesNoRooms.slice(skip, skip + imageCount),
       };
 
       return paginatedImages;
@@ -142,9 +136,13 @@ export class PersonalRoomService {
           });
         });
       } else {
+        const guestsOfUser = await this.sharedUserService.findGuestsByHost(
+          activeCoreUser,
+        );
         // Creating new unassigned area
         const newPersonalArea = await this.sharedAreaService.createNewArea(
           activeCoreUser,
+          guestsOfUser,
         );
 
         newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
@@ -166,10 +164,10 @@ export class PersonalRoomService {
         const roomNoDates = removeDateStrings(newRoomEntity);
         const roomNoUser = removeUser(roomNoDates);
         const areaNoDates = removeDateStrings(roomNoUser.personalArea);
-        const areaNoUser = removeUser(areaNoDates);
+        const { users, owner, ...areaNoUsers } = areaNoDates;
         return {
           ...roomNoUser,
-          personalArea: areaNoUser,
+          personalArea: areaNoUsers,
         };
       });
 
@@ -225,18 +223,18 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(roomId: number): Promise<PersonalRoomResDto> {
+  async deleteRoom(roomId: number): Promise<boolean> {
     try {
       const personalRoomEntity = await this.personalRoomRepository.findOne(
         roomId,
         { relations: ['personalArea'] },
       );
 
-      await this.personalRoomRepository.delete(personalRoomEntity.id);
+      const deleteResult = await this.personalRoomRepository.delete(
+        personalRoomEntity.id,
+      );
 
-      const roomNoDates = removeDateStrings(personalRoomEntity);
-      const roomNoUser = removeUser(roomNoDates);
-      return roomNoUser;
+      return deleteResult.affected > 0;
     } catch (error) {
       throw new HttpException(
         {

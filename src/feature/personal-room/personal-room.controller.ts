@@ -68,11 +68,10 @@ export class PersonalRoomController {
   })
   @Get('/images/:roomId/:page')
   async getRoomImages(
-    @User() user: CoreUserDto,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('page', ParseIntPipe) page: number,
   ): Promise<PaginatedImagesResDto> {
-    return await this.personalRoomService.getRoomImages(user, roomId, page);
+    return await this.personalRoomService.getRoomImages(roomId, page);
   }
 
   @ApiResponse({
@@ -125,7 +124,7 @@ export class PersonalRoomController {
   @Delete('/:roomId')
   async deleteRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
-  ): Promise<PersonalRoomResDto> {
+  ): Promise<boolean> {
     return await this.personalRoomService.deleteRoom(roomId);
   }
 }

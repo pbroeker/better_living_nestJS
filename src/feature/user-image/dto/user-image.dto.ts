@@ -11,7 +11,7 @@ import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
 export class UserImageDto {
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsNumber()
   id: number;
 
   @ApiProperty()
