@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CoreUserDto {
   @ApiProperty()
@@ -24,6 +24,11 @@ export class CoreUserDto {
   @IsOptional()
   @IsString()
   user_name?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsDateString()
+  birthday?: string;
 }
 
 export class CoreUserWithRefreshTokenDto extends CoreUserDto {

@@ -1,7 +1,6 @@
 import { UserImage } from '../../../feature/user-image/entity/user-image.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { PersonalArea } from './../../../feature/personal-areas/entity/personalArea.entity';
-import { Exclude } from 'class-transformer';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { PersonalRoom } from './../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTag } from './../../../feature/user-tag/entity/userTags.entity';
@@ -22,7 +21,10 @@ export class CoreUser extends IdentifiableEntity {
   @Column({ nullable: true })
   user_name?: string;
 
-  @Column({ default: '' })
+  @Column({ nullable: true })
+  birthday?: string;
+
+  @Column({ default: '', unique: true })
   user_email: string;
 
   @ManyToMany(() => GuestUser, (guest) => guest.hosts)
@@ -39,7 +41,6 @@ export class CoreUser extends IdentifiableEntity {
   @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.user)
   personalRooms: PersonalRoom[];
 
-  @Exclude()
   @Column({ default: null })
   currentHashedRefreshToken?: string | null;
 
