@@ -23,18 +23,17 @@ export class PersonalRoomService {
     private sharedImageService: SharedImageService,
   ) {}
 
-  async getAllRooms(
-    user: CoreUserDto,
-    imageCount?: number,
-  ): Promise<PersonalRoomResDto[]> {
+  async getAllRooms(user: CoreUserDto, imageCount?: number): Promise<any[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
       );
 
       const personalRoomEntities = await this.personalRoomRepository.find({
-        where: { user: activeCoreUser },
-        relations: ['userImages'],
+        where: { user: { id: activeCoreUser.id } },
+        relations: {
+          userImages: true,
+        },
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
@@ -188,10 +187,10 @@ export class PersonalRoomService {
     editData: PersonalRoomReqDto,
   ): Promise<PersonalRoomResDto> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne(
-        roomId,
-        { relations: ['personalArea'] },
-      );
+      const personalRoomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: { personalArea: true },
+      });
 
       if (personalRoomEntity) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
@@ -225,10 +224,10 @@ export class PersonalRoomService {
 
   async deleteRoom(roomId: number): Promise<boolean> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne(
-        roomId,
-        { relations: ['personalArea'] },
-      );
+      const personalRoomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: { personalArea: true },
+      });
 
       const deleteResult = await this.personalRoomRepository.delete(
         personalRoomEntity.id,
