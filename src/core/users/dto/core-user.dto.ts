@@ -25,3 +25,8 @@ export class CoreUserDto {
   @IsString()
   user_name?: string;
 }
+
+export class CoreUserWithRefreshTokenDto extends CoreUserDto {
+  @IsString()
+  refreshToken: string;
+}

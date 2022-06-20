@@ -62,23 +62,17 @@ export class PersonalRoomService {
   }
 
   async getRoomImages(
-    currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        currentUser.email,
-      );
-
       const roomEntity = await this.personalRoomRepository.findOne({
-        where: { user: activeCoreUser, id: roomId },
+        where: { id: roomId },
       });
 
       const roomImages = await this.sharedImageService.findRoomImages(
-        activeCoreUser,
         roomEntity,
       );
 

@@ -1,14 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
+import { IsNull, Not, Repository } from 'typeorm';
+import { CoreUser } from '../core/users/entity/user.entity';
+import * as bcrypt from 'bcryptjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SharedUserService {
   constructor(
     @InjectRepository(CoreUser)
     private userRepository: Repository<CoreUser>,
+    private configService: ConfigService,
   ) {}
 
   async findAll(): Promise<CoreUser[]> {
@@ -75,6 +78,26 @@ export class SharedUserService {
     } else {
       return [] as PersonalArea[];
     }
+  }
+
+  async setCurrentRefreshToken(userId: number, newRefreshToken: string) {
+    const salt = parseInt(this.configService.get<string>('BCRYPT_SALT'));
+    const newHashedRefreshToken = await bcrypt.hash(newRefreshToken, salt);
+    await this.userRepository.update(userId, {
+      currentHashedRefreshToken: newHashedRefreshToken,
+    });
+  }
+
+  async removeRefreshToken(userId: number): Promise<boolean> {
+    const updateResult = await this.userRepository.update(
+      {
+        id: userId,
+        currentHashedRefreshToken: Not(IsNull()),
+      },
+      { currentHashedRefreshToken: null },
+    );
+
+    return updateResult.affected > 0;
   }
 
   async removeGuest(currentUser: CoreUser, guestId: number) {

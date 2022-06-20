@@ -4,12 +4,15 @@ import { SharedUserService } from '../../shared/shared-user.service';
 import { UserService } from '../users/users.service';
 import { LoginUserResDto, RegisterUserReqDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { TokenPayload } from '../../types/token';
 
 @Injectable()
 export class AuthService {
   constructor(
     private sharedUserService: SharedUserService,
     private userService: UserService,
+    private configService: ConfigService,
     private jwtService: JwtService,
   ) {}
 
@@ -31,11 +34,18 @@ export class AuthService {
       }
       const createdUser = await this.userService.createUser(registerUserDto);
       const { user_password, user_email, id, ...userNoPW } = createdUser;
-      const payload = { username: createdUser.user_email, sub: createdUser.id };
+
+      const tokens = await this.getTokens(userEntity.id, userEntity.user_email);
+      await this.sharedUserService.setCurrentRefreshToken(
+        userEntity.id,
+        tokens.refresh_token,
+      );
+
       return {
         ...userNoPW,
         email: createdUser.user_email,
-        token: this.jwtService.sign(payload),
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       };
     } catch (error) {
       throw new HttpException(
@@ -55,17 +65,25 @@ export class AuthService {
   async loginUser(email: string, password: string): Promise<LoginUserResDto> {
     try {
       const user = await this.sharedUserService.findByEmail(email);
+
       const passwordMatches = await this.checkPassword(
         password,
         user.user_password,
       );
       if (passwordMatches) {
         const { user_password, user_email, id, ...userNoPW } = user;
-        const payload = { username: user.user_email, sub: user.id };
+        const tokens = await this.getTokens(user.id, user.user_email);
+
+        await this.sharedUserService.setCurrentRefreshToken(
+          user.id,
+          tokens.refresh_token,
+        );
+
         return {
           ...userNoPW,
           email: user.user_email,
-          token: this.jwtService.sign(payload),
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
         };
       } else {
         throw new HttpException(
@@ -91,6 +109,64 @@ export class AuthService {
     }
   }
 
+  async logout(userId: number) {
+    try {
+      return await this.sharedUserService.removeRefreshToken(userId);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'login.error.logout.title',
+          text: 'login.error.logout.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async refreshToken(
+    email: string,
+    refreshToken: string,
+  ): Promise<LoginUserResDto> {
+    const userEntity = await this.sharedUserService.findByEmail(email);
+
+    // no refreshToken
+    if (!userEntity || !userEntity.currentHashedRefreshToken) {
+      throw new HttpException(
+        {
+          title: 'login.error.no_refresh_token.title',
+          text: 'login.error.no_refresh_token.message',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const rtMatches = await bcrypt.compare(
+      refreshToken,
+      userEntity.currentHashedRefreshToken,
+    );
+
+    // refreshToken doesn't match
+    if (!rtMatches)
+      throw new HttpException(
+        {
+          title: 'login.error.matching_refresh_token.title',
+          text: 'login.error.matching_refresh_token.message',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+
+    const tokens = await this.getTokens(userEntity.id, userEntity.user_email);
+    await this.sharedUserService.setCurrentRefreshToken(
+      userEntity.id,
+      tokens.refresh_token,
+    );
+    return {
+      refresh_token: tokens.refresh_token,
+      access_token: tokens.access_token,
+      email: userEntity.user_email,
+    };
+  }
+
   async checkPassword(
     loginPassword: string,
     userPassword: string,
@@ -98,5 +174,27 @@ export class AuthService {
     const decodedPassword = Buffer.from(loginPassword, 'base64').toString();
     const passwordMatches = await bcrypt.compare(decodedPassword, userPassword);
     return passwordMatches;
+  }
+
+  private async getTokens(userId: number, email: string) {
+    const payload: TokenPayload = {
+      username: email,
+      sub: userId,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
+        expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION_TIME'),
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
+      }),
+    ]);
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    };
   }
 }
