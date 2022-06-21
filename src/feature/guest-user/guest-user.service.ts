@@ -22,26 +22,23 @@ export class GuestUserService {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
-        ['guests'],
+        {
+          guests: {
+            hosts: true,
+          },
+        },
       );
 
-      const guestEntities = await Promise.all(
-        activeCoreUser.guests.map((guest) => {
-          return this.guestUserRepository.findOne({
-            where: { id: guest.id },
-            relations: ['hosts'],
-          });
-        }),
+      const guestUserDtos: GuestUserDto[] = activeCoreUser.guests.map(
+        (guest) => {
+          return {
+            id: guest.id,
+            hostIds: guest.hosts.map((host) => host.id),
+            core_user_id: guest.core_user_id,
+            guest_email: guest.guest_email,
+          };
+        },
       );
-
-      const guestUserDtos: GuestUserDto[] = guestEntities.map((guest) => {
-        return {
-          id: guest.id,
-          hostIds: guest.hosts.map((host) => host.id),
-          core_user_id: guest.core_user_id,
-          guest_email: guest.guest_email,
-        };
-      });
       return guestUserDtos;
     } catch (error) {
       throw new HttpException(
@@ -61,7 +58,7 @@ export class GuestUserService {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
-        ['guests'],
+        { guests: true },
       );
 
       const guestCoreUserEntity = await this.sharedUserService.findById(

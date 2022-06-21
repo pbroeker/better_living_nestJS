@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Not, Repository, FindOptionsRelations } from 'typeorm';
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
-import { IsNull, Not, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
@@ -20,16 +20,16 @@ export class SharedUserService {
 
   async findByEmail(
     email: string,
-    relations: string[] = [],
+    relations?: FindOptionsRelations<CoreUser> | string[],
   ): Promise<CoreUser> {
-    return await this.userRepository.findOne(
-      { user_email: email },
-      { relations },
-    );
+    return await this.userRepository.findOne({
+      where: { user_email: email },
+      relations: relations,
+    });
   }
 
   async findById(id: number, relations: string[] = []): Promise<CoreUser> {
-    return await this.userRepository.findOne({ id: id }, { relations });
+    return await this.userRepository.findOne({ where: { id: id }, relations });
   }
 
   async findGuestsByHost(currentUser: CoreUser) {

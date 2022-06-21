@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindConditions, Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
@@ -41,7 +41,7 @@ export class SharedRoomService {
   }
 
   async findWhere<T>(
-    where: FindConditions<T>[] | FindConditions<T>,
+    where: FindOptionsWhere<T>[] | FindOptionsWhere<T>,
     relations = [],
   ): Promise<PersonalRoom[]> {
     return await this.personalRoomRepository.find({
