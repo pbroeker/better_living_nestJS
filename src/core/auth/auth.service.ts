@@ -2,9 +2,9 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { UserService } from '../users/users.service';
-import { ConfigService } from '@nestjs/config';
+import { LoginUserResDto, RegisterUserReqDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { LoginUserResDto } from './dto/login-user.dto';
+import { ConfigService } from '@nestjs/config';
 import { TokenPayload } from '../../types/token';
 
 @Injectable()
@@ -16,26 +16,75 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async loginUser(email: string, password: string): Promise<LoginUserResDto> {
-    const userEntity = await this.sharedUserService.findByEmail(email);
+  async registerUser(
+    registerUserDto: RegisterUserReqDto,
+  ): Promise<LoginUserResDto> {
+    try {
+      const userEntity = await this.sharedUserService.findByEmail(
+        registerUserDto.email.toLocaleLowerCase(),
+      );
+      if (userEntity) {
+        throw new HttpException(
+          {
+            title: 'login.error.already_existing.title',
+            text: 'login.error.already_existing.message',
+          },
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      const createdUser = await this.userService.createUser(registerUserDto);
+      const { user_password, user_email, id, ...userNoPW } = createdUser;
 
-    // if user does exist, validate
-    if (userEntity) {
+      const tokens = await this.getTokens(
+        createdUser.id,
+        createdUser.user_email,
+      );
+      await this.sharedUserService.setCurrentRefreshToken(
+        createdUser.id,
+        tokens.refresh_token,
+      );
+
+      return {
+        ...userNoPW,
+        email: createdUser.user_email,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: error.response?.title
+            ? error.response.title
+            : 'login.error.internal.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'login.error.internal.message',
+        },
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async loginUser(email: string, password: string): Promise<LoginUserResDto> {
+    try {
+      const user = await this.sharedUserService.findByEmail(email);
+
       const passwordMatches = await this.checkPassword(
         password,
-        userEntity.user_password,
+        user.user_password,
       );
       if (passwordMatches) {
-        const tokens = await this.getTokens(
-          userEntity.id,
-          userEntity.user_email,
-        );
+        const { user_password, user_email, id, ...userNoPW } = user;
+        const tokens = await this.getTokens(user.id, user.user_email);
+
         await this.sharedUserService.setCurrentRefreshToken(
-          userEntity.id,
+          user.id,
           tokens.refresh_token,
         );
+
         return {
-          email: userEntity.user_email,
+          ...userNoPW,
+          email: user.user_email,
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
         };
@@ -48,22 +97,18 @@ export class AuthService {
           HttpStatus.UNAUTHORIZED,
         );
       }
-    } else {
-      // if user doesnt exist, create one
-      const createdUser = await this.userService.createUser(email, password);
-      const tokens = await this.getTokens(
-        createdUser.userId,
-        createdUser.email,
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: error.response?.title
+            ? error.response.title
+            : 'login.error.internal.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'login.error.internal.message',
+        },
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
-      await this.sharedUserService.setCurrentRefreshToken(
-        createdUser.userId,
-        tokens.refresh_token,
-      );
-      return {
-        email: createdUser.email,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-      };
     }
   }
 
@@ -134,8 +179,8 @@ export class AuthService {
     return passwordMatches;
   }
 
-  async getTokens(userId: number, email: string) {
-    const payload = {
+  private async getTokens(userId: number, email: string) {
+    const payload: TokenPayload = {
       username: email,
       sub: userId,
     };

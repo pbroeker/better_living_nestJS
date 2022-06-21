@@ -33,6 +33,11 @@ export class PersonalAreaResDto {
   @IsBoolean()
   isOwner?: boolean;
 
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  ownerInitals?: string;
+
   @ApiProperty({ type: [PersonalRoomResDto] })
   @IsOptional()
   @IsArray()

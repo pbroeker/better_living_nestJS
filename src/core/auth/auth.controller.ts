@@ -2,7 +2,11 @@ import { SkipAuth } from '../../utils/customDecorators/skipAuth.decorator';
 import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginUserReqDto, LoginUserResDto } from './dto/login-user.dto';
+import {
+  LoginUserReqDto,
+  LoginUserResDto,
+  RegisterUserReqDto,
+} from './dto/login-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
   CoreUserDto,
@@ -21,16 +25,12 @@ export class AuthController {
     description: 'Successfully logged in',
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: 'User created',
-  })
-  @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Wrong user credentials',
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
-    description: 'User could not be created',
+    description: 'Login was not possible',
   })
   @Post('/login')
   async login(@Body() loginUserDto: LoginUserReqDto): Promise<LoginUserResDto> {
@@ -38,6 +38,22 @@ export class AuthController {
       loginUserDto.email,
       loginUserDto.password,
     );
+  }
+
+  @SkipAuth()
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'User could not be created',
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'User created',
+  })
+  @Post('/register')
+  async register(
+    @Body() registerUserDto: RegisterUserReqDto,
+  ): Promise<LoginUserResDto> {
+    return await this.authService.registerUser(registerUserDto);
   }
 
   @ApiResponse({

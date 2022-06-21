@@ -46,7 +46,7 @@ export class EditImageDto {
   @ApiProperty({ type: [Number] })
   usertagIds: number[];
 
-  @ApiProperty()
+  @ApiProperty({ type: [String] })
   @IsArray()
   newUsertags: string[];
 }

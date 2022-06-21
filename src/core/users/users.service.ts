@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { CoreUser } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedAuthService } from '../../shared/shared-auth.service';
-import { CoreUserDto } from './dto/core-user.dto';
+import { RegisterUserReqDto } from '../auth/dto/login-user.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -12,29 +12,31 @@ export class UserService {
     private userRepository: Repository<CoreUser>,
   ) {}
 
-  async createUser(
-    userEmail: string,
-    userPassword: string,
-  ): Promise<CoreUserDto> {
-    try {
-      const decodedPassword = Buffer.from(userPassword, 'base64').toString();
-      const pwHash = await this.sharedAuthServiceService.hashPassword(
-        decodedPassword,
-      );
-      const userEntity = this.userRepository.create({
-        user_email: userEmail,
-        user_password: pwHash,
-      });
-      const savedUserEntity = await this.userRepository.save(userEntity);
-      return { userId: savedUserEntity.id, email: savedUserEntity.user_email };
-    } catch (error) {
+  async createUser(registerUserDto: RegisterUserReqDto): Promise<CoreUser> {
+    const decodedPassword = Buffer.from(
+      registerUserDto.password,
+      'base64',
+    ).toString();
+
+    if (decodedPassword.length < 4) {
       throw new HttpException(
         {
-          title: 'login.error.create_user.title',
-          text: 'login.error.create_user.message',
+          title: 'login.error.short_pw.title',
+          text: 'login.error.short_pw.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+    const pwHash = await this.sharedAuthServiceService.hashPassword(
+      decodedPassword,
+    );
+    const userEntity = this.userRepository.create({
+      ...registerUserDto,
+      user_email: registerUserDto.email,
+      user_password: pwHash,
+    });
+
+    const savedUserEntity = await this.userRepository.save(userEntity);
+    return savedUserEntity;
   }
 }

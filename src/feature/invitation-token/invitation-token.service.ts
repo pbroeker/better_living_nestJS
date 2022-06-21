@@ -131,7 +131,6 @@ export class InvitationTokenService {
         );
       }
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException(
         {
           title: error.response?.title

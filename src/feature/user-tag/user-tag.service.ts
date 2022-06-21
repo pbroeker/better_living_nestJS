@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedImageService } from '../../shared/shared-image.service';
-import { removeDateStrings, removeUser } from '../../utils/features/helpers';
+import { removeUser } from '../../utils/features/helpers';
 import { Repository } from 'typeorm';
 import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
 import { UserTag } from './entity/userTags.entity';
@@ -30,8 +30,7 @@ export class UserTagService {
       });
 
       const userTagDtos = userTagEntities.map((usertag) => {
-        const userTagNoDates = removeDateStrings(usertag);
-        return userTagNoDates;
+        return usertag;
       });
       return userTagDtos;
     } catch (error) {
@@ -71,8 +70,7 @@ export class UserTagService {
       });
 
       const savedTagEntity = await this.userTagRepository.save(userTagEntity);
-      const tagNoDated = removeDateStrings(savedTagEntity);
-      const tagNoUser = removeUser(tagNoDated);
+      const tagNoUser = removeUser(savedTagEntity);
 
       return tagNoUser;
     } catch (error) {
