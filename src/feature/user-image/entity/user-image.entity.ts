@@ -9,6 +9,9 @@ export class UserImage extends EntityWithDates {
   @Column({ default: '' })
   src: string;
 
+  @Column({ default: '' })
+  key: string;
+
   @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userImages)
   personalRooms: PersonalRoom[];
 

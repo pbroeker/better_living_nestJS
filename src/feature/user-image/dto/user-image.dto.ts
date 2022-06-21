@@ -20,6 +20,10 @@ export class UserImageDto {
 
   @ApiProperty()
   @IsString()
+  key: string;
+
+  @ApiProperty()
+  @IsString()
   @IsDateString()
   createdAt: Date;
 
