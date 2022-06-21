@@ -351,13 +351,27 @@ export class UserImageService {
           (err) => {
             if (err) {
               console.error(err);
+              throw new HttpException(
+                {
+                  title: 'my_pictures.error.delete_images.title',
+                  text: 'my_pictures.error.delete_images.message',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              );
             }
           },
         );
       }
       await this.userImageRepository.remove(imageEntity);
-
       return true;
-    } catch (error) {}
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.delete_images.title',
+          text: 'my_pictures.error.delete_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
