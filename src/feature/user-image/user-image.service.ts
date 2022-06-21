@@ -327,4 +327,17 @@ export class UserImageService {
       );
     }
   }
+
+  deleteImage(imageName: string) {
+    this.s3.deleteObject(
+      {
+        Bucket: this.AWS_S3_BUCKET_NAME,
+        Key: imageName,
+      },
+      (err, data) => {
+        if (err) console.log(err);
+        else console.log(data);
+      },
+    );
+  }
 }
