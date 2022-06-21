@@ -201,12 +201,17 @@ export class UserImageService {
     }
   }
 
-  async saveUserImage(imagePath: string, currentUser: CoreUserDto) {
+  async saveUserImage(
+    imagePath: string,
+    imageKey: string,
+    currentUser: CoreUserDto,
+  ) {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
     );
     const imageEntity = this.userImageRepository.create({
       src: imagePath,
+      key: imageKey,
       user: activeCoreUser,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
@@ -226,8 +231,10 @@ export class UserImageService {
         }
         if (req.files.length) {
           const imagePath = req.files[0].location as string;
+          const imageKey = req.files[0].key as string;
           const savedUserImageEntity = await this.saveUserImage(
             imagePath,
+            imageKey,
             user,
           );
           return res.status(201).json(savedUserImageEntity);
@@ -316,6 +323,51 @@ export class UserImageService {
         {
           title: 'my_pictures.error.edit_images.title',
           text: 'my_pictures.error.edit_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteImage(currentUser: CoreUserDto, imageId: number) {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+
+      const imageEntity = await this.userImageRepository.findOne({
+        where: {
+          user: activeCoreUser,
+          id: imageId,
+        },
+      });
+      if (imageEntity) {
+        this.s3.deleteObject(
+          {
+            Bucket: this.AWS_S3_BUCKET_NAME,
+            Key: imageEntity.key,
+          },
+          (err) => {
+            if (err) {
+              console.error(err);
+              throw new HttpException(
+                {
+                  title: 'my_pictures.error.delete_images.title',
+                  text: 'my_pictures.error.delete_images.message',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              );
+            }
+          },
+        );
+      }
+      await this.userImageRepository.remove(imageEntity);
+      return true;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.delete_images.title',
+          text: 'my_pictures.error.delete_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
