@@ -23,7 +23,10 @@ export class PersonalRoomService {
     private sharedImageService: SharedImageService,
   ) {}
 
-  async getAllRooms(user: CoreUserDto, imageCount?: number): Promise<any[]> {
+  async getAllRooms(
+    user: CoreUserDto,
+    imageCount?: number,
+  ): Promise<PersonalRoomResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
