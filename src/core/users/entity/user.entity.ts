@@ -12,19 +12,16 @@ export class CoreUser extends IdentifiableEntity {
   @Column({ default: '' })
   user_password: string;
 
-  @Column({ nullable: true })
-  first_name?: string;
+  @Column()
+  first_name: string;
 
   @Column({ nullable: true })
   last_name?: string;
 
   @Column({ nullable: true })
-  user_name?: string;
-
-  @Column({ nullable: true })
   birthday?: string;
 
-  @Column({ default: '', unique: true })
+  @Column({ unique: true })
   user_email: string;
 
   @ManyToMany(() => GuestUser, (guest) => guest.hosts)

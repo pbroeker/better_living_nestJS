@@ -4,6 +4,8 @@ import {
   IsString,
   IsNotEmpty,
   IsDateString,
+  MinLength,
+  IsEmail,
 } from 'class-validator';
 
 export class LoginUserReqDto {
@@ -20,7 +22,7 @@ export class LoginUserReqDto {
 
 export class RegisterUserReqDto {
   @ApiProperty()
-  @IsString()
+  @IsEmail()
   email: string;
 
   @ApiProperty()
@@ -28,19 +30,14 @@ export class RegisterUserReqDto {
   password: string;
 
   @ApiProperty()
-  @IsOptional()
+  @MinLength(2)
   @IsString()
-  first_name?: string;
+  first_name: string;
 
   @ApiProperty()
   @IsOptional()
   @IsString()
   last_name?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  user_name?: string;
 
   @ApiProperty()
   @IsOptional()
@@ -50,7 +47,7 @@ export class RegisterUserReqDto {
 
 export class LoginUserResDto {
   @ApiProperty()
-  @IsString()
+  @IsEmail()
   email: string;
 
   @ApiProperty()
@@ -62,11 +59,6 @@ export class LoginUserResDto {
   @IsOptional()
   @IsString()
   last_name?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsString()
-  user_name?: string;
 
   @ApiProperty()
   @IsOptional()
