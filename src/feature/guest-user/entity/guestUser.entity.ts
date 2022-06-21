@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany } from 'typeorm';
@@ -11,7 +10,6 @@ export class GuestUser extends IdentifiableEntity {
   @Column()
   core_user_id: number;
 
-  @Exclude()
   @ManyToMany(() => CoreUser, (user) => user.guests)
   hosts: CoreUser[];
 }

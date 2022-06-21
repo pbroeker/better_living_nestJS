@@ -103,7 +103,7 @@ export class GuestUserService {
       }
 
       const guestUserDtos = updatedUser.guests.map((guest) => {
-        const { createdAt, updatedAt, hosts, ...guestNoDates } = guest;
+        const { hosts, ...guestNoDates } = guest;
         return guestNoDates;
       });
 

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PersonalAreaResDto } from '../feature/personal-areas/dto/personal-area.dto';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
+import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
 
 @Injectable()
 export class SharedRoomService {
@@ -24,7 +24,7 @@ export class SharedRoomService {
   }
 
   async findRoomsForSharedAreas(
-    sharedAreas: PersonalAreaResDto[],
+    sharedAreas: PersonalArea[],
   ): Promise<PersonalRoom[]> {
     if (!sharedAreas.length) return [];
     const sharedAreaids = sharedAreas.map((area) => area.id);

@@ -9,7 +9,7 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { removeUser, removeDateStrings } from '../../utils/features/helpers';
+import { removeUser } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
@@ -37,8 +37,7 @@ export class PersonalRoomService {
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoDates = removeDateStrings(roomEntity);
-        const roomNoUser = removeUser(roomNoDates);
+        const roomNoUser = removeUser(roomEntity);
         // reducing amount of images included in room depending on queryParam
         const imagesSlices = imageCount
           ? roomNoUser.userImages.slice(0, imageCount)
@@ -160,10 +159,8 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomNoDates = removeDateStrings(newRoomEntity);
-        const roomNoUser = removeUser(roomNoDates);
-        const areaNoDates = removeDateStrings(roomNoUser.personalArea);
-        const { users, owner, ...areaNoUsers } = areaNoDates;
+        const roomNoUser = removeUser(newRoomEntity);
+        const { users, owner, ...areaNoUsers } = roomNoUser.personalArea;
         return {
           ...roomNoUser,
           personalArea: areaNoUsers,
@@ -197,9 +194,7 @@ export class PersonalRoomService {
           ...personalRoomEntity,
           ...editData,
         });
-
-        const roomNoDates = removeDateStrings(savedPersonalRoomEntity);
-        const roomNoUser = removeUser(roomNoDates);
+        const roomNoUser = removeUser(savedPersonalRoomEntity);
 
         return roomNoUser;
       } else {

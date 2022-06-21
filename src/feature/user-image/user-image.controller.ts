@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -57,10 +58,9 @@ export class UserImageController {
   })
   @Get('/detail/:imageId')
   async getImage(
-    @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
   ): Promise<UserImageDto> {
-    return await this.imageService.getUserImage(user, imageId);
+    return await this.imageService.getUserImage(imageId);
   }
 
   @ApiResponse({
@@ -87,5 +87,17 @@ export class UserImageController {
     @Body() editImageDto: EditImageDto,
   ): Promise<UserImageDto> {
     return await this.imageService.updateImage(user, imageId, editImageDto);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Delete User Image',
+  })
+  @Delete('/:imageId')
+  async deleteImage(
+    @User() user: CoreUserDto,
+    @Param('imageId', ParseIntPipe) imageId: number,
+  ): Promise<boolean> {
+    return await this.imageService.deleteImage(user, imageId);
   }
 }
