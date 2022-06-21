@@ -79,7 +79,7 @@ export class UserImageService {
               },
             ),
             userTags: imageEntityNoRooms.userTags.map((userTag) => {
-              const { createdAt, updatedAt, ...tagNoDates } = userTag;
+              const { ...tagNoDates } = userTag;
               return tagNoDates;
             }),
           };
@@ -99,16 +99,10 @@ export class UserImageService {
     }
   }
 
-  async getUserImage(
-    currentUser: CoreUserDto,
-    imageId: number,
-  ): Promise<UserImageDto> {
+  async getUserImage(imageId: number): Promise<UserImageDto> {
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        currentUser.email,
-      );
       const imageEntity = await this.userImageRepository.findOne({
-        where: { user: activeCoreUser, id: imageId },
+        where: { id: imageId },
         relations: ['personalRooms', 'userTags'],
       });
 
@@ -125,7 +119,7 @@ export class UserImageService {
           };
         }),
         userTags: imageDtoNoRooms.userTags.map((userTag) => {
-          const { createdAt, updatedAt, ...tagNoDates } = userTag;
+          const { ...tagNoDates } = userTag;
           return tagNoDates;
         }),
       };
@@ -179,7 +173,7 @@ export class UserImageService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { createdAt, updatedAt, ...tagNoDates } = userTag;
+                const { ...tagNoDates } = userTag;
                 return tagNoDates;
               }),
             };
@@ -301,7 +295,7 @@ export class UserImageService {
       imageEntity.userTags = [...existingTags, ...newTags];
       const savedImageEntity = await this.userImageRepository.save(imageEntity);
       const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-        const { user, createdAt, updatedAt, ...userTagNoUser } = userTag;
+        const { user, ...userTagNoUser } = userTag;
         return userTagNoUser;
       });
       const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
