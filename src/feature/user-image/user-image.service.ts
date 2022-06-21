@@ -340,7 +340,6 @@ export class UserImageService {
           user: activeCoreUser,
           id: imageId,
         },
-        relations: ['personalRooms'],
       });
       if (imageEntity) {
         this.s3.deleteObject(
