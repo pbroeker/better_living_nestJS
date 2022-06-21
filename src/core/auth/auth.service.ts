@@ -21,7 +21,7 @@ export class AuthService {
   ): Promise<LoginUserResDto> {
     try {
       const userEntity = await this.sharedUserService.findByEmail(
-        registerUserDto.email,
+        registerUserDto.email.toLocaleLowerCase(),
       );
       if (userEntity) {
         throw new HttpException(
