@@ -201,12 +201,17 @@ export class UserImageService {
     }
   }
 
-  async saveUserImage(imagePath: string, currentUser: CoreUserDto) {
+  async saveUserImage(
+    imagePath: string,
+    imageKey: string,
+    currentUser: CoreUserDto,
+  ) {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
     );
     const imageEntity = this.userImageRepository.create({
       src: imagePath,
+      key: imageKey,
       user: activeCoreUser,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
@@ -226,8 +231,10 @@ export class UserImageService {
         }
         if (req.files.length) {
           const imagePath = req.files[0].location as string;
+          const imageKey = req.files[0].key as string;
           const savedUserImageEntity = await this.saveUserImage(
             imagePath,
+            imageKey,
             user,
           );
           return res.status(201).json(savedUserImageEntity);
@@ -322,16 +329,35 @@ export class UserImageService {
     }
   }
 
-  deleteImage(imageName: string) {
-    this.s3.deleteObject(
-      {
-        Bucket: this.AWS_S3_BUCKET_NAME,
-        Key: imageName,
-      },
-      (err, data) => {
-        if (err) console.log(err);
-        else console.log(data);
-      },
-    );
+  async deleteImage(currentUser: CoreUserDto, imageId: number) {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+
+      const imageEntity = await this.userImageRepository.findOne({
+        where: {
+          user: activeCoreUser,
+          id: imageId,
+        },
+        relations: ['personalRooms'],
+      });
+      if (imageEntity) {
+        this.s3.deleteObject(
+          {
+            Bucket: this.AWS_S3_BUCKET_NAME,
+            Key: imageEntity.key,
+          },
+          (err) => {
+            if (err) {
+              console.error(err);
+            }
+          },
+        );
+      }
+      await this.userImageRepository.remove(imageEntity);
+
+      return true;
+    } catch (error) {}
   }
 }
