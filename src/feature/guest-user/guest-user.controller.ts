@@ -9,7 +9,7 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { GuestUserDto } from './dto/guest-user.dto';
+import { GuestUserResDto } from './dto/guest-user.dto';
 import { GuestUserService } from './guest-user.service';
 
 @ApiBearerAuth()
@@ -31,7 +31,7 @@ export class GuestUserController {
     description: 'User guests could not be loaded',
   })
   @Get()
-  async getGuests(@User() user: CoreUserDto): Promise<GuestUserDto[]> {
+  async getGuests(@User() user: CoreUserDto): Promise<GuestUserResDto[]> {
     return await this.guestUserService.getAllGuests(user);
   }
 
@@ -43,11 +43,11 @@ export class GuestUserController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Guest could not be removed',
   })
-  @Delete('/:guestCoreId')
+  @Delete('/:guestId')
   async deleteGuest(
     @User() user: CoreUserDto,
-    @Param('guestCoreId', ParseIntPipe) guestCoreId: number,
-  ): Promise<GuestUserDto[]> {
-    return await this.guestUserService.deleteGuestUser(user, guestCoreId);
+    @Param('guestId', ParseIntPipe) guestId: number,
+  ): Promise<GuestUserResDto[]> {
+    return await this.guestUserService.deleteGuestUser(user, guestId);
   }
 }
