@@ -14,6 +14,37 @@ export class GuestUserService {
     private sharedAreaService: SharedAreaService,
   ) {}
 
+  async getAllHosts(user: CoreUserDto): Promise<GuestUserResDto[]> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+        {
+          hosts: { guests: true },
+        },
+      );
+
+      const hostUserDtos: GuestUserResDto[] = activeCoreUser.hosts.map(
+        (host) => {
+          return {
+            id: host.id,
+            guestIds: host.guests.map((guest) => guest.id),
+            userInitals: getUserInitials(host),
+            host_email: host.user_email,
+          };
+        },
+      );
+      return hostUserDtos;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'user-guest.error.get_all_hosts.title',
+          text: 'user-guest.error.get_all_hosts.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async getAllGuests(user: CoreUserDto): Promise<GuestUserResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
@@ -26,9 +57,9 @@ export class GuestUserService {
       const guestUserDtos: GuestUserResDto[] = activeCoreUser.guests.map(
         (guest) => {
           return {
-            core_user_id: guest.id,
+            id: guest.id,
             hostIds: guest.hosts.map((guest) => guest.id),
-            guestInitals: getUserInitials(guest),
+            userInitals: getUserInitials(guest),
             guest_email: guest.user_email,
           };
         },
@@ -45,18 +76,16 @@ export class GuestUserService {
     }
   }
 
-  async deleteGuestUser(
-    hostUser: CoreUserDto,
-    guestId: number,
-  ): Promise<GuestUserResDto[]> {
+  async deleteUser(hostId: number, guestId: number): Promise<boolean> {
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        hostUser.email,
-        { guests: true },
-      );
+      const hostUser = await this.sharedUserService.findById(hostId, {
+        guests: true,
+      });
+
+      const guestEntity = await this.sharedUserService.findById(guestId);
 
       // Making sure it is not possible to delete myself
-      if (activeCoreUser.id === guestId) {
+      if (hostId === guestId) {
         throw new HttpException(
           {
             title: 'user-guest.error.delete_guest.title',
@@ -66,13 +95,9 @@ export class GuestUserService {
         );
       }
 
-      const guestCoreUserEntity = await this.sharedUserService.findById(
-        guestId,
-      );
-
       // Removing guest from personalAreas
       const personalAreas = await this.sharedAreaService.findAllOwned(
-        activeCoreUser,
+        hostUser,
         { users: true, personalRooms: true },
       );
 
@@ -84,27 +109,19 @@ export class GuestUserService {
         .map((room) => room.id);
 
       await this.sharedImageService.removeRoomsFromImages(
-        guestCoreUserEntity,
+        guestEntity,
         hostRoomIds,
       );
 
       // // Removing guest from activeCoreUser.guests
       const updatedUser = await this.sharedUserService.removeGuest(
-        activeCoreUser,
+        hostUser,
         guestId,
       );
 
-      const guestUserDtos: GuestUserResDto[] = updatedUser.guests.map(
-        (guest) => {
-          return {
-            core_user_id: guest.id,
-            hostIds: guest.hosts.map((host) => host.id),
-          };
-        },
-      );
-
-      return guestUserDtos;
+      return updatedUser ? true : false;
     } catch (error) {
+      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'user-guest.error.delete_guest.title',

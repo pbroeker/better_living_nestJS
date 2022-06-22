@@ -4,7 +4,7 @@ import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 export class GuestUserResDto {
   @ApiProperty()
   @IsNumber()
-  core_user_id: number;
+  id: number;
 
   @ApiProperty({ type: [Number] })
   @IsOptional()
@@ -17,10 +17,10 @@ export class GuestUserResDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  guestInitals?: string;
+  userInitals?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsEmail()
-  guest_email?: string;
+  email?: string;
 }

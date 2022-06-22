@@ -85,7 +85,7 @@ export class InvitationTokenService {
           return {
             guestIds: activeCoreUser.guests.map((guest) => guest.id),
             hostIds: activeCoreUser.hosts.map((host) => host.id),
-            core_user_id: activeCoreUser.id,
+            id: activeCoreUser.id,
           };
         } else {
           const newActiveCoreUser = await this.sharedUserService.addGuest(
@@ -99,7 +99,7 @@ export class InvitationTokenService {
           return {
             guestIds: newActiveCoreUser.guests.map((guest) => guest.id),
             hostIds: newActiveCoreUser.hosts.map((host) => host.id),
-            core_user_id: newActiveCoreUser.id,
+            id: newActiveCoreUser.id,
           };
         }
       } else {
