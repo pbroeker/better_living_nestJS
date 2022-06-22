@@ -37,6 +37,35 @@ export class GuestUserController {
 
   @ApiResponse({
     status: HttpStatus.OK,
+    description: 'Returning all user hosts',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'User hosts could not be loaded',
+  })
+  @Get('/hosts')
+  async getHosts(@User() user: CoreUserDto): Promise<GuestUserResDto[]> {
+    return await this.guestUserService.getAllHosts(user);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Host user successfully deleted',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Host user could not be deleted',
+  })
+  @Delete('/host/:hostId')
+  async deleteHost(
+    @User() user: CoreUserDto,
+    @Param('hostId', ParseIntPipe) hostId: number,
+  ): Promise<boolean> {
+    return await this.guestUserService.deleteUser(hostId, user.userId);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
     description: 'Guest removed',
   })
   @ApiResponse({
@@ -47,7 +76,7 @@ export class GuestUserController {
   async deleteGuest(
     @User() user: CoreUserDto,
     @Param('guestId', ParseIntPipe) guestId: number,
-  ): Promise<GuestUserResDto[]> {
-    return await this.guestUserService.deleteGuestUser(user, guestId);
+  ): Promise<boolean> {
+    return await this.guestUserService.deleteUser(user.userId, guestId);
   }
 }
