@@ -28,8 +28,14 @@ export class SharedUserService {
     });
   }
 
-  async findById(id: number, relations: string[] = []): Promise<CoreUser> {
-    return await this.userRepository.findOne({ where: { id: id }, relations });
+  async findById(
+    id: number,
+    relations?: FindOptionsRelations<CoreUser> | string[],
+  ): Promise<CoreUser> {
+    return await this.userRepository.findOne({
+      where: { id: id },
+      relations: relations,
+    });
   }
 
   async findGuestsByHost(currentUser: CoreUser) {
