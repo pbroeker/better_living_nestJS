@@ -115,10 +115,6 @@ export class SharedUserService {
     currentUser.guests = currentUser.guests.filter((guest) => {
       return guest.id !== guestId;
     });
-    await this.userRepository.save(currentUser);
-    return await this.userRepository.findOne({
-      where: { id: currentUser.id },
-      relations: { guests: { hosts: true } },
-    });
+    return await this.userRepository.save(currentUser);
   }
 }
