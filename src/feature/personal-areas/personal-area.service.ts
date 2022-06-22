@@ -154,7 +154,7 @@ export class PersonalAreaService {
 
       const personalAreaEntity = await this.personalAreaRepository.findOne({
         where: { owner: activeCoreUser, id: areaId },
-        relations: ['personalRooms'],
+        relations: { personalRooms: true },
       });
 
       // don't allow direct editing of unassigned area or creation of a new unassigned area
@@ -189,7 +189,7 @@ export class PersonalAreaService {
 
         const unassignedArea = await this.personalAreaRepository.findOne({
           where: { title: PersonalAreaTitle.DEFAULT, owner: activeCoreUser },
-          relations: ['personalRooms'],
+          relations: { personalRooms: true },
         });
 
         unassignedArea.personalRooms = [
@@ -215,11 +215,12 @@ export class PersonalAreaService {
       const savedPersonalAreaEntityWithOwner =
         await this.personalAreaRepository.findOne({
           where: { id: savedPersonalAreaEntity.id },
-          relations: ['owner', 'personalRooms'],
+          relations: { owner: true, personalRooms: true },
         });
-      const { users, ...areaWithoutUsers } = savedPersonalAreaEntityWithOwner;
+      const { users, owner, ...areaWithoutUsers } =
+        savedPersonalAreaEntityWithOwner;
       const areaDto: PersonalAreaResDto = {
-        ...savedPersonalAreaEntityWithOwner,
+        ...areaWithoutUsers,
         ownerInitals: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
         personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
           const currentRoomNoUser = removeUser(personalRoom);

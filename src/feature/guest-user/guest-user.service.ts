@@ -1,12 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { Repository } from 'typeorm';
-import { GuestUser } from './entity/guestUser.entity';
-import { GuestUserDto } from './dto/guest-user.dto';
 import { SharedAreaService } from 'src/shared/shared-area.service';
 import { SharedImageService } from 'src/shared/shared-image.service';
+import { GuestUserResDto } from './dto/guest-user.dto';
+import { getUserInitials } from 'src/utils/features/helpers';
 
 @Injectable()
 export class GuestUserService {
@@ -14,28 +12,24 @@ export class GuestUserService {
     private sharedUserService: SharedUserService,
     private sharedImageService: SharedImageService,
     private sharedAreaService: SharedAreaService,
-    @InjectRepository(GuestUser)
-    private guestUserRepository: Repository<GuestUser>,
   ) {}
 
-  async getAllGuests(user: CoreUserDto): Promise<GuestUserDto[]> {
+  async getAllGuests(user: CoreUserDto): Promise<GuestUserResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
         {
-          guests: {
-            hosts: true,
-          },
+          guests: { hosts: true },
         },
       );
 
-      const guestUserDtos: GuestUserDto[] = activeCoreUser.guests.map(
+      const guestUserDtos: GuestUserResDto[] = activeCoreUser.guests.map(
         (guest) => {
           return {
-            id: guest.id,
-            hostIds: guest.hosts.map((host) => host.id),
-            core_user_id: guest.core_user_id,
-            guest_email: guest.guest_email,
+            core_user_id: guest.id,
+            hostIds: guest.hosts.map((guest) => guest.id),
+            guestInitals: getUserInitials(guest),
+            guest_email: guest.user_email,
           };
         },
       );
@@ -52,35 +46,43 @@ export class GuestUserService {
   }
 
   async deleteGuestUser(
-    user: CoreUserDto,
-    guestCoreId: number,
-  ): Promise<GuestUserDto[]> {
+    hostUser: CoreUserDto,
+    guestId: number,
+  ): Promise<GuestUserResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
-        user.email,
+        hostUser.email,
         { guests: true },
       );
 
+      // Making sure it is not possible to delete myself
+      if (activeCoreUser.id === guestId) {
+        throw new HttpException(
+          {
+            title: 'user-guest.error.delete_guest.title',
+            text: 'user-guest.error.delete_guest.message',
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
       const guestCoreUserEntity = await this.sharedUserService.findById(
-        guestCoreId,
+        guestId,
       );
 
+      // Removing guest from personalAreas
       const personalAreas = await this.sharedAreaService.findAllOwned(
         activeCoreUser,
-        ['users', 'personalRooms'],
+        { users: true, personalRooms: true },
       );
 
+      await this.sharedAreaService.removeUserFromArea(personalAreas, guestId);
+
+      // Removing guest-images from personalRooms
       const hostRoomIds = personalAreas
         .flatMap((personalArea) => personalArea.personalRooms)
         .map((room) => room.id);
 
-      // Removing guest from personalAreas
-      await this.sharedAreaService.removeUserFromArea(
-        personalAreas,
-        guestCoreId,
-      );
-
-      // Removing guest-images from personalRooms
       await this.sharedImageService.removeRoomsFromImages(
         guestCoreUserEntity,
         hostRoomIds,
@@ -89,23 +91,17 @@ export class GuestUserService {
       // // Removing guest from activeCoreUser.guests
       const updatedUser = await this.sharedUserService.removeGuest(
         activeCoreUser,
-        guestCoreId,
+        guestId,
       );
 
-      // Delete guest if he has no more hosts
-      const guestEntity = await this.guestUserRepository.findOne({
-        where: { core_user_id: guestCoreId },
-        relations: ['hosts'],
-      });
-
-      if (!guestEntity.hosts.length) {
-        await this.guestUserRepository.delete(guestEntity.id);
-      }
-
-      const guestUserDtos = updatedUser.guests.map((guest) => {
-        const { hosts, ...guestNoDates } = guest;
-        return guestNoDates;
-      });
+      const guestUserDtos: GuestUserResDto[] = updatedUser.guests.map(
+        (guest) => {
+          return {
+            core_user_id: guest.id,
+            hostIds: guest.hosts.map((host) => host.id),
+          };
+        },
+      );
 
       return guestUserDtos;
     } catch (error) {

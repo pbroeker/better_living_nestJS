@@ -35,17 +35,10 @@ export class SharedUserService {
   async findGuestsByHost(currentUser: CoreUser) {
     const userWithGuests = await this.userRepository.findOne({
       where: { id: currentUser.id },
-      relations: ['guests'],
+      relations: { guests: true },
     });
 
-    const guestCoreUsers = await Promise.all(
-      userWithGuests.guests.map(async (guest) => {
-        return await this.userRepository.findOne({
-          where: { id: guest.core_user_id },
-        });
-      }),
-    );
-    return guestCoreUsers;
+    return userWithGuests.guests;
   }
 
   // Typeorm only returns the correct and complete relations when using "getRawData()"
@@ -100,10 +93,26 @@ export class SharedUserService {
     return updateResult.affected > 0;
   }
 
+  async addGuest(hostUser: CoreUser, guestUser: CoreUser) {
+    hostUser.guests = [...hostUser.guests, guestUser];
+    await this.userRepository.save(hostUser);
+
+    const newGuest = await this.userRepository.findOne({
+      where: { id: guestUser.id },
+      relations: { hosts: true, guests: true },
+    });
+
+    return newGuest;
+  }
+
   async removeGuest(currentUser: CoreUser, guestId: number) {
     currentUser.guests = currentUser.guests.filter((guest) => {
-      return guest.core_user_id !== guestId;
+      return guest.id !== guestId;
     });
-    return await this.userRepository.save(currentUser);
+    await this.userRepository.save(currentUser);
+    return await this.userRepository.findOne({
+      where: { id: currentUser.id },
+      relations: { guests: { hosts: true } },
+    });
   }
 }

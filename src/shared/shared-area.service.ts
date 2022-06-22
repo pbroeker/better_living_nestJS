@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PersonalAreaTitle } from '../types/enums';
-import { Repository } from 'typeorm';
+import { FindOptionsRelations, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { PersonalArea } from '../feature/personal-areas/entity/personalArea.entity';
 @Injectable()
@@ -13,7 +13,7 @@ export class SharedAreaService {
 
   async findAllOwned(
     currentUser: CoreUser,
-    relations: string[] = [],
+    relations: FindOptionsRelations<PersonalArea> | string[],
   ): Promise<PersonalArea[]> {
     return await this.personalAreaRepository.find({
       where: { owner: currentUser },
@@ -52,10 +52,10 @@ export class SharedAreaService {
     return foundArea;
   }
 
-  async removeUserFromArea(areas: PersonalArea[], guestCoreId: number) {
+  async removeUserFromArea(areas: PersonalArea[], guestId: number) {
     const updatedPersonalAreas = areas.map((personalArea) => {
       personalArea.users = personalArea.users.filter(
-        (user) => user.id !== guestCoreId,
+        (user) => user.id !== guestId,
       );
       return personalArea;
     });

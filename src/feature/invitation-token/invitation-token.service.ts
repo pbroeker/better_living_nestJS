@@ -1,6 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SharedGuestService } from '../../shared/shared-guest.service';
 import { CoreUser } from '../../core/users/entity/user.entity';
 import { SharedAreaService } from '../../shared/shared-area.service';
 import { Repository } from 'typeorm';
@@ -11,8 +10,7 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
-import { GuestUserDto } from '../guest-user/dto/guest-user.dto';
-import { GuestUser } from '../guest-user/entity/guestUser.entity';
+import { GuestUserResDto } from '../guest-user/dto/guest-user.dto';
 
 @Injectable()
 export class InvitationTokenService {
@@ -20,7 +18,6 @@ export class InvitationTokenService {
     @InjectRepository(InvitationToken)
     private invitationTokenRepo: Repository<InvitationToken>,
     private sharedUserService: SharedUserService,
-    private sharedGuestService: SharedGuestService,
     private sharedAreaService: SharedAreaService,
   ) {}
 
@@ -53,15 +50,16 @@ export class InvitationTokenService {
   async checkInvitationToken(
     invitedUser: CoreUserDto,
     invitationToken: string,
-  ): Promise<GuestUserDto> {
+  ): Promise<GuestUserResDto> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         invitedUser.email,
+        { guests: true, hosts: true },
       );
 
       const foundInvitationToken = await this.invitationTokenRepo.findOne({
         where: { token: invitationToken },
-        relations: ['inviter'],
+        relations: { inviter: true },
       });
       if (foundInvitationToken) {
         // Making sure you can't invite yourself
@@ -75,52 +73,35 @@ export class InvitationTokenService {
           );
         }
 
-        const existingUser =
-          await this.sharedGuestService.checkForExistingGuest(
-            foundInvitationToken.inviter,
-          );
+        // get coreUserEntity of host
+        const hostEntity = await this.sharedUserService.findByEmail(
+          foundInvitationToken.inviter.user_email,
+          { guests: true },
+        );
 
         // Only adding guest if it doesn't exist yet
-        let guestEntity: GuestUser;
-        if (!existingUser) {
-          guestEntity = await this.sharedGuestService.addGuest(
-            foundInvitationToken.inviter,
-            activeCoreUser,
-          );
-
-          await this.addGuestToInviterAreas(
-            foundInvitationToken.inviter,
-            activeCoreUser,
-          );
+        const guestIds = hostEntity.guests.map((guest) => guest.id);
+        if (guestIds.includes(activeCoreUser.id)) {
+          return {
+            guestIds: activeCoreUser.guests.map((guest) => guest.id),
+            hostIds: activeCoreUser.hosts.map((host) => host.id),
+            core_user_id: activeCoreUser.id,
+          };
         } else {
-          const hostIds = existingUser.hosts.map((host) => host.id);
-          if (!hostIds.includes(activeCoreUser.id)) {
-            guestEntity = await this.sharedGuestService.updateGuest(
-              foundInvitationToken.inviter,
-              existingUser,
-            );
-
-            await this.addGuestToInviterAreas(
-              foundInvitationToken.inviter,
-              activeCoreUser,
-            );
-          } else {
-            guestEntity = await this.sharedGuestService.findGuestByMail(
-              existingUser.guest_email,
-            );
-          }
+          const newActiveCoreUser = await this.sharedUserService.addGuest(
+            hostEntity,
+            activeCoreUser,
+          );
+          // Adding guest to inviters areas
+          await this.addGuestToInviterAreas(hostEntity, newActiveCoreUser);
+          // Deleting used invitationToken
+          await this.invitationTokenRepo.delete(foundInvitationToken.id);
+          return {
+            guestIds: newActiveCoreUser.guests.map((guest) => guest.id),
+            hostIds: newActiveCoreUser.hosts.map((host) => host.id),
+            core_user_id: newActiveCoreUser.id,
+          };
         }
-
-        // Deleting used invitationToken
-        await this.invitationTokenRepo.delete(foundInvitationToken.id);
-
-        const guestUserDto: GuestUserDto = {
-          core_user_id: activeCoreUser.id,
-          hostIds: guestEntity.hosts.map((host) => host.id),
-          guest_email: activeCoreUser.user_email,
-        };
-
-        return guestUserDto;
       } else {
         throw new HttpException(
           {

@@ -8,7 +8,7 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationTokenService } from './invitation-token.service';
-import { GuestUserDto } from '../guest-user/dto/guest-user.dto';
+import { GuestUserResDto } from '../guest-user/dto/guest-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('invitation-token')
@@ -54,7 +54,7 @@ export class InvitationTokenController {
   async checkInvitationToken(
     @User() user: CoreUserDto,
     @Body() invitationReqDto: InvitationTokenReqDto,
-  ): Promise<GuestUserDto> {
+  ): Promise<GuestUserResDto> {
     return await this.invitationTokenService.checkInvitationToken(
       user,
       invitationReqDto.invitationToken,

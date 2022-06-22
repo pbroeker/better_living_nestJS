@@ -1,16 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class GuestUserDto {
+export class GuestUserResDto {
   @ApiProperty()
   @IsNumber()
   core_user_id: number;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsEmail()
-  guest_email: string;
+  @ApiProperty({ type: [Number] })
+  @IsOptional()
+  guestIds?: number[];
 
   @ApiProperty({ type: [Number] })
+  @IsOptional()
   hostIds?: number[];
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  guestInitals?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEmail()
+  guest_email?: string;
 }
