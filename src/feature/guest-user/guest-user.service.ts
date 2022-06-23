@@ -28,7 +28,7 @@ export class GuestUserService {
           return {
             id: host.id,
             guestIds: host.guests.map((guest) => guest.id),
-            userInitals: getUserInitials(host),
+            userInitials: getUserInitials(host),
             host_email: host.user_email,
           };
         },
@@ -59,7 +59,7 @@ export class GuestUserService {
           return {
             id: guest.id,
             hostIds: guest.hosts.map((guest) => guest.id),
-            userInitals: getUserInitials(guest),
+            userInitials: getUserInitials(guest),
             guest_email: guest.user_email,
           };
         },

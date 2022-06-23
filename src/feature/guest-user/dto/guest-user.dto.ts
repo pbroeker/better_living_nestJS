@@ -17,7 +17,7 @@ export class GuestUserResDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  userInitals?: string;
+  userInitials?: string;
 
   @ApiProperty()
   @IsOptional()
