@@ -69,33 +69,42 @@ export class AuthService {
     try {
       const user = await this.sharedUserService.findByEmail(email);
 
-      const passwordMatches = await this.checkPassword(
-        password,
-        user.user_password,
-      );
-      if (passwordMatches) {
-        const { user_password, user_email, id, ...userNoPW } = user;
-        const tokens = await this.getTokens(user.id, user.user_email);
-
-        await this.sharedUserService.setCurrentRefreshToken(
-          user.id,
-          tokens.refresh_token,
+      if (user) {
+        const passwordMatches = await this.checkPassword(
+          password,
+          user.user_password,
         );
+        if (passwordMatches) {
+          const { user_password, user_email, id, ...userNoPW } = user;
+          const tokens = await this.getTokens(user.id, user.user_email);
 
-        return {
-          ...userNoPW,
-          email: user.user_email,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-        };
+          await this.sharedUserService.setCurrentRefreshToken(
+            user.id,
+            tokens.refresh_token,
+          );
+
+          return {
+            ...userNoPW,
+            email: user.user_email,
+            access_token: tokens.access_token,
+            refresh_token: tokens.refresh_token,
+          };
+        } else {
+          throw new HttpException(
+            {
+              title: 'login.error.wrong_password.title',
+              text: 'login.error.wrong_password.message',
+            },
+            HttpStatus.UNAUTHORIZED,
+          );
+        }
       } else {
-        throw new HttpException(
-          {
-            title: 'login.error.wrong_password.title',
-            text: 'login.error.wrong_password.message',
-          },
-          HttpStatus.UNAUTHORIZED,
-        );
+        const registerUserObj: RegisterUserReqDto = {
+          email: email,
+          password: password,
+          first_name: email,
+        };
+        return this.registerUser(registerUserObj);
       }
     } catch (error) {
       throw new HttpException(
