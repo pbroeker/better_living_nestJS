@@ -83,6 +83,7 @@ export class InvitationTokenService {
         const guestIds = hostEntity.guests.map((guest) => guest.id);
         if (guestIds.includes(activeCoreUser.id)) {
           return {
+            ...activeCoreUser,
             guestIds: activeCoreUser.guests.map((guest) => guest.id),
             hostIds: activeCoreUser.hosts.map((host) => host.id),
             id: activeCoreUser.id,
@@ -96,7 +97,15 @@ export class InvitationTokenService {
           await this.addGuestToInviterAreas(hostEntity, newActiveCoreUser);
           // Deleting used invitationToken
           await this.invitationTokenRepo.delete(foundInvitationToken.id);
+          const {
+            currentHashedRefreshToken,
+            user_password,
+            hosts,
+            guests,
+            ...newActiveCoreUserNoPW
+          } = newActiveCoreUser;
           return {
+            ...newActiveCoreUserNoPW,
             guestIds: newActiveCoreUser.guests.map((guest) => guest.id),
             hostIds: newActiveCoreUser.hosts.map((host) => host.id),
             id: newActiveCoreUser.id,

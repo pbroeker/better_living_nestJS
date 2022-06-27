@@ -25,8 +25,15 @@ export class GuestUserService {
 
       const hostUserDtos: GuestUserResDto[] = activeCoreUser.hosts.map(
         (host) => {
+          const {
+            user_password,
+            currentHashedRefreshToken,
+            guests,
+            hosts,
+            ...hostNoPW
+          } = host;
           return {
-            id: host.id,
+            ...hostNoPW,
             guestIds: host.guests.map((guest) => guest.id),
             userInitials: getUserInitials(host),
             host_email: host.user_email,
@@ -56,8 +63,16 @@ export class GuestUserService {
 
       const guestUserDtos: GuestUserResDto[] = activeCoreUser.guests.map(
         (guest) => {
+          const {
+            user_password,
+            currentHashedRefreshToken,
+            hosts,
+            guests,
+            ...guestNoPW
+          } = guest;
+
           return {
-            id: guest.id,
+            ...guestNoPW,
             hostIds: guest.hosts.map((guest) => guest.id),
             userInitials: getUserInitials(guest),
             guest_email: guest.user_email,
