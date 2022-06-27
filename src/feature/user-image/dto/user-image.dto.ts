@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsNumber,
   IsOptional,
@@ -21,6 +22,16 @@ export class UserImageDto {
   @ApiProperty()
   @IsString()
   key: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  isOwner?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  ownerInitals?: string;
 
   @ApiProperty()
   @IsString()
