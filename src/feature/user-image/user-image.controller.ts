@@ -58,9 +58,10 @@ export class UserImageController {
   })
   @Get('/detail/:imageId')
   async getImage(
+    @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
   ): Promise<UserImageDto> {
-    return await this.imageService.getUserImage(imageId);
+    return await this.imageService.getUserImage(user, imageId);
   }
 
   @ApiResponse({
