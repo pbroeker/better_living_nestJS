@@ -56,6 +56,9 @@ export class UserImageDto {
 
 export class EditImageDto {
   @ApiProperty({ type: [Number] })
+  imageIds: number[];
+
+  @ApiProperty({ type: [Number] })
   personalRoomIds: number[];
 
   @ApiProperty({ type: [Number] })

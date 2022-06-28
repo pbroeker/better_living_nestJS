@@ -6,7 +6,7 @@ import * as multer from 'multer';
 import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { getUserInitials, removeUser } from '../../utils/features/helpers';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
@@ -273,18 +273,17 @@ export class UserImageService {
 
   async updateImage(
     currentUser: CoreUserDto,
-    imageId: number,
     editImage: EditImageDto,
-  ): Promise<UserImageDto> {
+  ): Promise<UserImageDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
       );
 
-      const imageEntity = await this.userImageRepository.findOne({
+      const imageEntities = await this.userImageRepository.find({
         where: {
           user: activeCoreUser,
-          id: imageId,
+          id: In(editImage.imageIds),
         },
         relations: ['personalRooms', 'user'],
       });
@@ -313,28 +312,37 @@ export class UserImageService {
         editImage.personalRoomIds,
       );
 
-      imageEntity.personalRooms = roomEntities;
-      imageEntity.userTags = [...existingTags, ...newTags];
-      const savedImageEntity = await this.userImageRepository.save(imageEntity);
-      const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-        const { user, ...userTagNoUser } = userTag;
-        return userTagNoUser;
-      });
-      const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
+      const updatedImages = await Promise.all(
+        imageEntities.map(async (imageEntity) => {
+          imageEntity.personalRooms = roomEntities;
+          imageEntity.userTags = [...existingTags, ...newTags];
+          const savedImageEntity = await this.userImageRepository.save(
+            imageEntity,
+          );
+          const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
+            const { user, ...userTagNoUser } = userTag;
+            return userTagNoUser;
+          });
+          const { user, personalRooms, ...imageEntityNoUser } =
+            savedImageEntity;
 
-      return {
-        ...imageEntityNoUser,
-        ownerInitals: getUserInitials(savedImageEntity.user),
-        isOwner: activeCoreUser.id === savedImageEntity.user.id,
-        personalRooms: roomEntities.map((personalRoom) => {
           return {
-            id: personalRoom.id,
-            iconId: personalRoom.iconId,
-            title: personalRoom.title,
+            ...imageEntityNoUser,
+            ownerInitals: getUserInitials(savedImageEntity.user),
+            isOwner: activeCoreUser.id === savedImageEntity.user.id,
+            personalRooms: roomEntities.map((personalRoom) => {
+              return {
+                id: personalRoom.id,
+                iconId: personalRoom.iconId,
+                title: personalRoom.title,
+              };
+            }),
+            userTags: userTagsNoUser,
           };
         }),
-        userTags: userTagsNoUser,
-      };
+      );
+
+      return updatedImages;
     } catch (error) {
       throw new HttpException(
         {
