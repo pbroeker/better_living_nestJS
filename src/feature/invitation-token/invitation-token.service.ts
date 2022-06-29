@@ -66,8 +66,8 @@ export class InvitationTokenService {
         if (foundInvitationToken.inviter.id === activeCoreUser.id) {
           throw new HttpException(
             {
-              title: 'invitation_token.error.expired.title',
-              text: 'invitation_token.error.expired.message',
+              title: 'invitation_token.error.self_invite.title',
+              text: 'invitation_token.error.self_invite.message',
             },
             HttpStatus.FORBIDDEN,
           );

@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { plainToClass } from 'class-transformer';
@@ -23,7 +23,7 @@ export class AtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: TokenPayload) {
     // Check if access_token expired
     if (payload.exp < Date.now() / 1000) {
-      throw new ForbiddenException({
+      throw new UnauthorizedException({
         title: 'login.error.expired_access_token.title',
         text: 'login.error.expired_access_token.title',
       });
