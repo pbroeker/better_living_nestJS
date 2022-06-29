@@ -54,6 +54,12 @@ export class UserImageDto {
   userTags?: UserTagResDto[];
 }
 
+export class ImageFilterDto {
+  tagIds?: number[];
+  roomIds?: number[];
+  userIds?: number[];
+}
+
 export class EditImageDto {
   @ApiProperty({ type: [Number] })
   imageIds: number[];

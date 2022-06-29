@@ -16,6 +16,7 @@ import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
   EditImageDto,
+  ImageFilterDto,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -48,8 +49,13 @@ export class UserImageController {
   async getImagesCount(
     @User() user: CoreUserDto,
     @Param('page', ParseIntPipe) page: number,
+    @Body() imageFilterDto?: ImageFilterDto,
   ): Promise<PaginatedImagesResDto> {
-    return await this.imageService.getUserImagesCount(user, page);
+    return await this.imageService.getUserImagesCount(
+      user,
+      page,
+      imageFilterDto,
+    );
   }
 
   @ApiResponse({
