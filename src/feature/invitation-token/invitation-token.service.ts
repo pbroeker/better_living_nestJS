@@ -69,7 +69,7 @@ export class InvitationTokenService {
               title: 'invitation_token.error.self_invite.title',
               text: 'invitation_token.error.self_invite.message',
             },
-            HttpStatus.BAD_REQUEST,
+            HttpStatus.FORBIDDEN,
           );
         }
 
