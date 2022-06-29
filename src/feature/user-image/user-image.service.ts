@@ -11,6 +11,7 @@ import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
   EditImageDto,
+  ImageFilterDto,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -18,7 +19,6 @@ import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
-
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -150,27 +150,54 @@ export class UserImageService {
   async getUserImagesCount(
     currentUser: CoreUserDto,
     page: number,
+    filterObject?: ImageFilterDto,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (page - 1) * imageCount;
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
+        { guests: true },
       );
-      const countedUserImages = await this.userImageRepository.findAndCount({
-        where: { user: activeCoreUser },
+
+      const guestIds = activeCoreUser.guests.map((guest) => guest.id);
+
+      const userImages = await this.userImageRepository.find({
+        where: {
+          user: filterObject.userIds.length
+            ? { id: In(filterObject.userIds) }
+            : { id: In([...guestIds, activeCoreUser.id]) },
+        },
         order: { createdAt: 'DESC' },
         take: imageCount,
         skip: skip,
         relations: ['personalRooms', 'userTags', 'user'],
       });
 
-      if (countedUserImages) {
-        const total = countedUserImages[1];
+      // filterByRooms
+      const roomFilteredImages = filterObject.roomIds.length
+        ? userImages.filter((image) => {
+            return image.personalRooms.some((room) =>
+              filterObject.roomIds.includes(room.id),
+            );
+          })
+        : userImages;
+
+      // filterByTags
+      const tagFilteredImages = filterObject.tagIds.length
+        ? roomFilteredImages.filter((image) => {
+            return image.userTags.some((tag) =>
+              filterObject.tagIds.includes(tag.id),
+            );
+          })
+        : roomFilteredImages;
+
+      if (tagFilteredImages) {
+        const total = tagFilteredImages.length;
         const lastPage = Math.ceil(total / imageCount);
         const nextPage = page + 1 > lastPage ? null : page + 1;
         const prevPage = page - 1 < 1 ? null : page - 1;
-        const countedUserImageDtos = countedUserImages[0].map(
+        const countedUserImageDtos = tagFilteredImages.map(
           (userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
             const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
