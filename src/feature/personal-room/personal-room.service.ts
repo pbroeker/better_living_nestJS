@@ -220,16 +220,16 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(roomId: number): Promise<boolean> {
+  async deleteRoom(user: CoreUserDto, roomId: number): Promise<boolean> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne({
-        where: { id: roomId },
-        relations: { personalArea: true },
-      });
-
-      const deleteResult = await this.personalRoomRepository.delete(
-        personalRoomEntity.id,
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
       );
+
+      const deleteResult = await this.personalRoomRepository.delete({
+        user: { id: activeCoreUser.id },
+        id: roomId,
+      });
 
       return deleteResult.affected > 0;
     } catch (error) {
