@@ -11,7 +11,7 @@ import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
   EditImageDto,
-  ImageFilterDto,
+  ImageFilterQuery,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -150,7 +150,7 @@ export class UserImageService {
   async getUserImagesCount(
     currentUser: CoreUserDto,
     page: number,
-    filterObject?: ImageFilterDto,
+    filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (page - 1) * imageCount;
@@ -162,10 +162,9 @@ export class UserImageService {
 
       const guestIds = activeCoreUser.guests.map((guest) => guest.id);
       const hostIds = activeCoreUser.hosts.map((host) => host.id);
-
       const userImages = await this.userImageRepository.find({
         where: {
-          user: filterObject.userIds.length
+          user: filterObject.userIds
             ? { id: In(filterObject.userIds) }
             : { id: In([...guestIds, ...hostIds, activeCoreUser.id]) },
         },
@@ -176,7 +175,7 @@ export class UserImageService {
       });
 
       // filterByRooms
-      const roomFilteredImages = filterObject.roomIds.length
+      const roomFilteredImages = filterObject.roomIds
         ? userImages.filter((image) => {
             return image.personalRooms.some((room) =>
               filterObject.roomIds.includes(room.id),
@@ -185,7 +184,7 @@ export class UserImageService {
         : userImages;
 
       // filterByTags
-      const tagFilteredImages = filterObject.tagIds.length
+      const tagFilteredImages = filterObject.tagIds
         ? roomFilteredImages.filter((image) => {
             return image.userTags.some((tag) =>
               filterObject.tagIds.includes(tag.id),
