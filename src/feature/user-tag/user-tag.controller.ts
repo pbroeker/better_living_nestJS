@@ -63,8 +63,9 @@ export class UserTagsController {
   })
   @Delete('/:tagId')
   async deleteTag(
+    @User() user: CoreUserDto,
     @Param('tagId', ParseIntPipe) tagId: number,
   ): Promise<boolean> {
-    return await this.userTagService.deleteTag(tagId);
+    return await this.userTagService.deleteTag(user, tagId);
   }
 }
