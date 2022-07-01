@@ -84,9 +84,15 @@ export class UserTagService {
     }
   }
 
-  async deleteTag(tagId: number): Promise<boolean> {
+  async deleteTag(user: CoreUserDto, tagId: number): Promise<boolean> {
     try {
-      const deleteResult = await this.userTagRepository.delete(tagId);
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+      const deleteResult = await this.userTagRepository.delete({
+        user: { id: activeCoreUser.id },
+        id: tagId,
+      });
       return deleteResult.affected > 0;
     } catch (error) {
       throw new HttpException(

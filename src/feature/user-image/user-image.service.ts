@@ -157,16 +157,17 @@ export class UserImageService {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
-        { guests: true },
+        { guests: true, hosts: true },
       );
 
       const guestIds = activeCoreUser.guests.map((guest) => guest.id);
+      const hostIds = activeCoreUser.hosts.map((host) => host.id);
 
       const userImages = await this.userImageRepository.find({
         where: {
           user: filterObject.userIds.length
             ? { id: In(filterObject.userIds) }
-            : { id: In([...guestIds, activeCoreUser.id]) },
+            : { id: In([...guestIds, ...hostIds, activeCoreUser.id]) },
         },
         order: { createdAt: 'DESC' },
         take: imageCount,
