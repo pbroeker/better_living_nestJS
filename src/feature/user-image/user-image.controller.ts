@@ -45,7 +45,7 @@ export class UserImageController {
     status: HttpStatus.OK,
     description: 'Returning paginated user images',
   })
-  @Post('/:page')
+  @Post('page/:page')
   async getImagesCount(
     @User() user: CoreUserDto,
     @Param('page', ParseIntPipe) page: number,
