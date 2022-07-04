@@ -57,6 +57,8 @@ export class UserImageDto {
 
 export class ImageFilterQuery {
   @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
   @IsNumber({}, { each: true })
   @Transform(({ value }) => {
     if (typeof value === 'number') {
@@ -69,6 +71,8 @@ export class ImageFilterQuery {
   tagIds?: number[];
 
   @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
   @IsNumber({}, { each: true })
   @Transform(({ value }) => {
     if (typeof value === 'number') {
@@ -81,6 +85,8 @@ export class ImageFilterQuery {
   roomIds?: number[];
 
   @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
   @IsNumber({}, { each: true })
   @Transform(({ value }) => {
     if (typeof value === 'number') {
