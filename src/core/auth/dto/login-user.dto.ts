@@ -6,6 +6,7 @@ import {
   IsDateString,
   MinLength,
   IsEmail,
+  IsBoolean,
 } from 'class-validator';
 
 export class LoginUserReqDto {
@@ -43,6 +44,11 @@ export class RegisterUserReqDto {
   @IsOptional()
   @IsDateString()
   birthday?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  news_consent?: boolean;
 }
 
 export class LoginUserResDto {
@@ -72,4 +78,9 @@ export class LoginUserResDto {
   @ApiProperty()
   @IsString()
   refresh_token: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  news_consent?: boolean;
 }

@@ -14,6 +14,9 @@ export class CoreUser extends IdentifiableEntity {
   @Column()
   first_name: string;
 
+  @Column({ default: false })
+  news_consent: boolean;
+
   @Column({ nullable: true })
   last_name?: string;
 

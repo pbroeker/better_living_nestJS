@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsNumber,
@@ -29,6 +30,11 @@ export class CoreUserDto {
   @IsOptional()
   @IsDateString()
   birthday?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  news_consent?: boolean;
 }
 
 export class CoreUserWithRefreshTokenDto extends CoreUserDto {
