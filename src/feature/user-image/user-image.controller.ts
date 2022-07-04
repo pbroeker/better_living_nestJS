@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   Res,
 } from '@nestjs/common';
@@ -16,7 +17,7 @@ import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
   EditImageDto,
-  ImageFilterDto,
+  ImageFilterQuery,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -45,17 +46,13 @@ export class UserImageController {
     status: HttpStatus.OK,
     description: 'Returning paginated user images',
   })
-  @Post('page/:page')
+  @Get('/:page')
   async getImagesCount(
     @User() user: CoreUserDto,
     @Param('page', ParseIntPipe) page: number,
-    @Body() imageFilterDto?: ImageFilterDto,
+    @Query() queryParams?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
-    return await this.imageService.getUserImagesCount(
-      user,
-      page,
-      imageFilterDto,
-    );
+    return await this.imageService.getUserImagesCount(user, page, queryParams);
   }
 
   @ApiResponse({

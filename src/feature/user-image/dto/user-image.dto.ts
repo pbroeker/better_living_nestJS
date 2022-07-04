@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -54,12 +55,47 @@ export class UserImageDto {
   userTags?: UserTagResDto[];
 }
 
-export class ImageFilterDto {
+export class ImageFilterQuery {
   @ApiProperty({ type: [Number] })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
   tagIds?: number[];
+
   @ApiProperty({ type: [Number] })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
   roomIds?: number[];
+
   @ApiProperty({ type: [Number] })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
   userIds?: number[];
 }
 
