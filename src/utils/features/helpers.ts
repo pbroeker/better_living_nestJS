@@ -19,16 +19,16 @@ export const removeUser = <T extends HasUser>(
 
 export const getUserInitials = (user: CoreUser): string => {
   if (user.first_name && user.last_name) {
-    return `${user.first_name.charAt(0).toUpperCase()}.${user.last_name
+    return `${user.first_name.charAt(0).toUpperCase()}${user.last_name
       .charAt(0)
-      .toUpperCase()}.`;
+      .toUpperCase()}`;
   } else if (user.first_name) {
-    return `${user.first_name.charAt(0).toUpperCase()}.${user.first_name
+    return `${user.first_name.charAt(0).toUpperCase()}${user.first_name
       .charAt(1)
-      .toUpperCase()}.`;
+      .toUpperCase()}`;
   } else {
-    return `${user.user_email.charAt(0).toUpperCase()}.${user.user_email
+    return `${user.user_email.charAt(0).toUpperCase()}${user.user_email
       .charAt(1)
-      .toUpperCase()}.`;
+      .toUpperCase()}`;
   }
 };

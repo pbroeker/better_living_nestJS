@@ -163,4 +163,28 @@ export class InvitationTokenService {
       } as PendingInvitationResDto;
     });
   }
+
+  async deleteInvitationToken(
+    user: CoreUserDto,
+    tokenId: number,
+  ): Promise<boolean> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+      const deleteResult = await this.invitationTokenRepo.delete({
+        inviter: { id: activeCoreUser.id },
+        id: tokenId,
+      });
+      return deleteResult.affected > 0;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'user_tag.error.delete_invitation.title',
+          text: 'user_tag.error.delete_invitation.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

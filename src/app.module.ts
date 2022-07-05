@@ -5,8 +5,18 @@ import { CoreModule } from './core/core.module';
 import { FeatureModule } from './feature/feature.module';
 import { SharedModule } from './shared/shared.module';
 import { WellKnownMiddleware } from './utils/customMiddleware/wellknownMiddleware';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
 @Module({
-  imports: [CoreModule, FeatureModule, SharedModule],
+  imports: [
+    CoreModule,
+    FeatureModule,
+    SharedModule,
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(__dirname, 'assets'),
+      exclude: ['/api*'],
+    }),
+  ],
   controllers: [],
   providers: [
     {

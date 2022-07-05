@@ -1,4 +1,12 @@
-import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
@@ -58,6 +66,17 @@ export class InvitationTokenController {
     return await this.invitationTokenService.checkInvitationToken(
       user,
       invitationReqDto.invitationToken,
+    );
+  }
+
+  @Delete('/:tokenId')
+  async deleteInvitationToken(
+    @User() user: CoreUserDto,
+    @Param('tokenId') tokenId: number,
+  ): Promise<boolean> {
+    return await this.invitationTokenService.deleteInvitationToken(
+      user,
+      tokenId,
     );
   }
 }
