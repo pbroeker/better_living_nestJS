@@ -9,9 +9,12 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { removeUser } from '../../utils/features/helpers';
+import { getUserInitials, removeUser } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
-import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
+import {
+  ImageFilterQuery,
+  PaginatedImagesResDto,
+} from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
 @Injectable()
 export class PersonalRoomService {
@@ -64,42 +67,74 @@ export class PersonalRoomService {
   }
 
   async getRoomImages(
+    currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
+    filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
     try {
-      const roomEntity = await this.personalRoomRepository.findOne({
-        where: { id: roomId },
-      });
-
-      const roomImages = await this.sharedImageService.findRoomImages(
-        roomEntity,
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+        { guests: true, hosts: true },
       );
 
-      const userImagesNoRooms = roomImages.map((roomImage) => {
-        const { personalRooms, user, ...imageNoRooms } = roomImage;
-        return imageNoRooms;
-      });
+      const guestIds = activeCoreUser.guests.map((guest) => guest.id);
+      const hostIds = activeCoreUser.hosts.map((host) => host.id);
 
-      // create paginationData
-      const total = roomImages.length;
-      const lastPage = Math.ceil(total / imageCount);
-      const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
-      const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+      if (!filterObject.userIds || !filterObject.userIds.length) {
+        filterObject.userIds = [...guestIds, ...hostIds, activeCoreUser.id];
+      }
 
-      const paginatedImages = {
-        total,
-        currentPage,
-        lastPage,
-        nextPage,
-        prevPage,
-        images: userImagesNoRooms.slice(skip, skip + imageCount),
-      };
+      const roomImages = await this.sharedImageService.findRoomImages(
+        roomId,
+        imageCount,
+        skip,
+        filterObject,
+      );
 
-      return paginatedImages;
+      if (roomImages) {
+        // create paginationData
+        const total = roomImages.length;
+        const lastPage = Math.ceil(total / imageCount);
+        const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
+        const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+        const countedUserImageDtos = roomImages.map((userImageEntity) => {
+          const imageEntityNoUser = removeUser(userImageEntity);
+          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+          return {
+            ...imageEntityNoRooms,
+            isOwner: activeCoreUser.id === userImageEntity.user.id,
+            ownerInitals: getUserInitials(userImageEntity.user),
+            personalRooms: imageEntityNoUser.personalRooms.map(
+              (personalRoom) => {
+                return {
+                  id: personalRoom.id,
+                  iconId: personalRoom.iconId,
+                  title: personalRoom.title,
+                };
+              },
+            ),
+            userTags: imageEntityNoUser.userTags.map((userTag) => {
+              const { ...tagNoDates } = userTag;
+              return tagNoDates;
+            }),
+          };
+        });
+        return {
+          total,
+          currentPage,
+          lastPage,
+          nextPage,
+          prevPage,
+          images: countedUserImageDtos,
+        };
+      } else {
+        return {} as PaginatedImagesResDto;
+      }
     } catch (error) {
+      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_room_images.title',
