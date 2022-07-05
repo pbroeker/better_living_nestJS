@@ -134,7 +134,6 @@ export class PersonalRoomService {
         return {} as PaginatedImagesResDto;
       }
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_room_images.title',
