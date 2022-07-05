@@ -25,6 +25,7 @@ export class GuestUserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user guests',
+    type: [GuestUserResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -38,6 +39,7 @@ export class GuestUserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user hosts',
+    type: [GuestUserResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -51,6 +53,7 @@ export class GuestUserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Host user successfully deleted',
+    type: Boolean,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -67,6 +70,7 @@ export class GuestUserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Guest removed',
+    type: Boolean,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,

@@ -12,7 +12,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
@@ -36,6 +36,7 @@ export class UserImageController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user images',
+    type: [UserImageDto],
   })
   @Get('/all')
   async getImages(@User() user: CoreUserDto): Promise<UserImageDto[]> {
@@ -45,19 +46,27 @@ export class UserImageController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning paginated user images',
+    type: PaginatedImagesResDto,
+  })
+  @ApiQuery({
+    name: 'imageFilter',
+    type: ImageFilterQuery,
+    description: 'Filter for the images',
+    required: false,
   })
   @Get('/:page')
   async getImagesCount(
     @User() user: CoreUserDto,
     @Param('page', ParseIntPipe) page: number,
-    @Query() queryParams?: ImageFilterQuery,
+    @Query() imageFilter?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
-    return await this.imageService.getUserImagesCount(user, page, queryParams);
+    return await this.imageService.getUserImagesCount(user, page, imageFilter);
   }
 
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning image details',
+    type: UserImageDto,
   })
   @Get('/detail/:imageId')
   async getImage(
@@ -83,6 +92,7 @@ export class UserImageController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Add relations to room',
+    type: [UserImageDto],
   })
   @Patch()
   async updateImage(
@@ -95,6 +105,7 @@ export class UserImageController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Delete User Image',
+    type: Boolean,
   })
   @Delete('/:imageId')
   async deleteImage(

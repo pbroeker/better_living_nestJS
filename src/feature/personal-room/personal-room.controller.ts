@@ -46,6 +46,7 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Rooms could not be loaded',
+    type: [PersonalRoomResDto],
   })
   @ApiQuery({
     name: 'imageCount',
@@ -64,29 +65,37 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning rooms images',
+    type: PaginatedImagesResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Images could not be loaded',
+  })
+  @ApiQuery({
+    name: 'imageFilter',
+    type: ImageFilterQuery,
+    description: 'Filter for the images',
+    required: false,
   })
   @Get('/images/:roomId/:page')
   async getRoomImages(
     @User() user: CoreUserDto,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('page', ParseIntPipe) page: number,
-    @Query() queryParams?: ImageFilterQuery,
+    @Query() imageFilter?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     return await this.personalRoomService.getRoomImages(
       user,
       roomId,
       page,
-      queryParams,
+      imageFilter,
     );
   }
 
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Personal Rooms created',
+    type: [PersonalRoomResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -110,6 +119,7 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Name edited',
+    type: PersonalRoomResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -126,6 +136,7 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Room deleted',
+    type: Boolean,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
