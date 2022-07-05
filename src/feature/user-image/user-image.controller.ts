@@ -48,12 +48,6 @@ export class UserImageController {
     description: 'Returning paginated user images',
     type: PaginatedImagesResDto,
   })
-  @ApiQuery({
-    name: 'imageFilter',
-    type: ImageFilterQuery,
-    description: 'Filter for the images',
-    required: false,
-  })
   @Get('/:page')
   async getImagesCount(
     @User() user: CoreUserDto,

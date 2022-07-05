@@ -48,12 +48,6 @@ export class PersonalRoomController {
     description: 'Rooms could not be loaded',
     type: [PersonalRoomResDto],
   })
-  @ApiQuery({
-    name: 'imageCount',
-    type: Number,
-    description: 'Amount of images to be included in rooms',
-    required: false,
-  })
   @Get()
   async getAllRooms(
     @User() user: CoreUserDto,
