@@ -48,6 +48,12 @@ export class PersonalRoomController {
     description: 'Rooms could not be loaded',
     type: [PersonalRoomResDto],
   })
+  @ApiQuery({
+    name: 'imageCount',
+    type: Number,
+    description: 'Amount of images to be included in rooms',
+    required: false,
+  })
   @Get()
   async getAllRooms(
     @User() user: CoreUserDto,
@@ -64,12 +70,6 @@ export class PersonalRoomController {
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Images could not be loaded',
-  })
-  @ApiQuery({
-    name: 'imageFilter',
-    type: ImageFilterQuery,
-    description: 'Filter for the images',
-    required: false,
   })
   @Get('/images/:roomId/:page')
   async getRoomImages(
