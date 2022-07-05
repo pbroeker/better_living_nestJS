@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
-import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
+import { ImageFilterQuery } from 'src/feature/user-image/dto/user-image.dto';
 
 @Injectable()
 export class SharedImageService {
@@ -34,19 +34,33 @@ export class SharedImageService {
     });
   }
 
-  async findRoomImages(room: PersonalRoom): Promise<UserImage[]> {
-    // nestjs/typeorm just supports typeorm 0.2
-    // use "ArrayContains" as soon as it supports the actual version 0.3
+  async findRoomImages(
+    roomId: number,
+    imageCount: number,
+    skip: number,
+    filterObject: ImageFilterQuery,
+  ): Promise<UserImage[]> {
     const foundImages = await this.userImageRepository.find({
-      relations: ['personalRooms'],
+      where: {
+        user: { id: In(filterObject.userIds) },
+        personalRooms: { id: roomId },
+      },
+      relations: ['personalRooms', 'userTags', 'user'],
       order: { updatedAt: 'DESC' },
+      take: imageCount,
+      skip: skip,
     });
 
-    const filteredImages = await foundImages.filter((image) =>
-      image.personalRooms.some((imageRoom) => imageRoom.id === room.id),
-    );
+    // filterByTags
+    const tagFilteredImages = filterObject.tagIds
+      ? foundImages.filter((image) => {
+          return image.userTags.some((tag) =>
+            filterObject.tagIds.includes(tag.id),
+          );
+        })
+      : foundImages;
 
-    return filteredImages;
+    return tagFilteredImages;
   }
 
   async removeRoomsFromImages(user: CoreUser, roomIds: number[]) {

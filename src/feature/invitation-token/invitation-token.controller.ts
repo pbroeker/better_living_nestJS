@@ -31,6 +31,7 @@ export class InvitationTokenController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning pending invitations',
+    type: [PendingInvitationResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -46,6 +47,7 @@ export class InvitationTokenController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning invitation token',
+    type: InvitationTokenResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -58,6 +60,15 @@ export class InvitationTokenController {
     return await this.invitationTokenService.createInvitationToken(user);
   }
 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Successfully added as guest',
+    type: GuestUserResDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Adding as guest failed',
+  })
   @Post()
   async checkInvitationToken(
     @User() user: CoreUserDto,
@@ -69,6 +80,15 @@ export class InvitationTokenController {
     );
   }
 
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invitationtoken deleted',
+    type: Boolean,
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Invitationtoken could not be deleted',
+  })
   @Delete('/:tokenId')
   async deleteInvitationToken(
     @User() user: CoreUserDto,

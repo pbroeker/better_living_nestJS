@@ -23,6 +23,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully logged in',
+    type: LoginUserResDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -48,6 +49,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'User created',
+    type: LoginUserResDto,
   })
   @Post('/register')
   async register(
@@ -59,6 +61,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Access token refreshed',
+    type: LoginUserResDto,
   })
   @SkipAuth()
   @UseGuards(RtGuard)
@@ -72,6 +75,7 @@ export class AuthController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully logged out',
+    type: Boolean,
   })
   @Post('/logout')
   async logout(@User() user: CoreUserDto): Promise<boolean> {
