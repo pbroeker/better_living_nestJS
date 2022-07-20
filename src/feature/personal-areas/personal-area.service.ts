@@ -116,7 +116,7 @@ export class PersonalAreaService {
       const { users, owner, ...areaWithoutUsers } = savedPersonalAreaEntity;
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutUsers,
-        ownerInitals: getUserInitials(savedPersonalAreaEntity.owner),
+        ownerInitials: getUserInitials(savedPersonalAreaEntity.owner),
         personalRooms: savedPersonalAreaEntity.personalRooms.map(
           (personalRoom) => {
             const currentRoomNoUser = removeUser(personalRoom);
@@ -221,7 +221,7 @@ export class PersonalAreaService {
         savedPersonalAreaEntityWithOwner;
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutUsers,
-        ownerInitals: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
+        ownerInitials: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
         personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
           const currentRoomNoUser = removeUser(personalRoom);
           const { personalArea, ...currentRoomDto } = currentRoomNoUser;
@@ -313,7 +313,7 @@ export class PersonalAreaService {
           id: currentArea.id,
           title: currentArea.title,
           isOwner: currentArea.owner.id === currentUserId,
-          ownerInitals: getUserInitials(currentArea.owner),
+          ownerInitials: getUserInitials(currentArea.owner),
         };
 
         const newRoomDtos: PersonalRoomResDto[] = personalRooms

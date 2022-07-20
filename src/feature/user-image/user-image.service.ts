@@ -70,7 +70,7 @@ export class UserImageService {
             const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
               ...imageEntityNoRooms,
-              ownerInitals: getUserInitials(userImageEntity.user),
+              ownerInitials: getUserInitials(userImageEntity.user),
               isOwner: activeCoreUser.id === userImageEntity.user.id,
               personalRooms: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => {
@@ -123,7 +123,7 @@ export class UserImageService {
       return {
         ...imageDtoNoRooms,
         isOwner: activeCoreUser.id === imageEntity.user.id,
-        ownerInitals: getUserInitials(imageEntity.user),
+        ownerInitials: getUserInitials(imageEntity.user),
         personalRooms: imageDtoNoUser.personalRooms.map((personalRoom) => {
           return {
             id: personalRoom.id,
@@ -202,7 +202,7 @@ export class UserImageService {
             return {
               ...imageEntityNoRooms,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              ownerInitals: getUserInitials(userImageEntity.user),
+              ownerInitials: getUserInitials(userImageEntity.user),
               personalRooms: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => {
                   return {
@@ -353,7 +353,7 @@ export class UserImageService {
 
           return {
             ...imageEntityNoUser,
-            ownerInitals: getUserInitials(savedImageEntity.user),
+            ownerInitials: getUserInitials(savedImageEntity.user),
             isOwner: activeCoreUser.id === savedImageEntity.user.id,
             personalRooms: roomEntities.map((personalRoom) => {
               return {

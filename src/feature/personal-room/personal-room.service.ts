@@ -106,7 +106,7 @@ export class PersonalRoomService {
           return {
             ...imageEntityNoRooms,
             isOwner: activeCoreUser.id === userImageEntity.user.id,
-            ownerInitals: getUserInitials(userImageEntity.user),
+            ownerInitials: getUserInitials(userImageEntity.user),
             personalRooms: imageEntityNoUser.personalRooms.map(
               (personalRoom) => {
                 return {
