@@ -36,7 +36,7 @@ export class PersonalAreaResDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  ownerInitals?: string;
+  ownerInitials?: string;
 
   @ApiProperty({ type: [PersonalRoomResDto] })
   @IsOptional()

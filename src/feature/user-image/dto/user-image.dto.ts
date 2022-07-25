@@ -32,7 +32,7 @@ export class UserImageDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  ownerInitals?: string;
+  ownerInitials?: string;
 
   @ApiProperty()
   @IsString()
