@@ -13,6 +13,11 @@ export class PersonalRoomReqDto {
   @IsOptional()
   @IsNumber()
   iconId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  areaId: number;
 }
 export class PersonalRoomResDto {
   @ApiProperty()

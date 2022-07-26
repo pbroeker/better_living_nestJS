@@ -16,6 +16,7 @@ import {
   PaginatedImagesResDto,
 } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
+import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -154,45 +155,53 @@ export class PersonalRoomService {
       );
 
       // Check if unassignedArea exists
-      const existingPersonalArea = await this.sharedAreaService.findByTitle(
+      const existingDefaultArea = await this.sharedAreaService.findByTitle(
         activeCoreUser,
         PersonalAreaTitle.DEFAULT,
       );
 
-      let newPersonalRoomEntities: PersonalRoom[];
-      if (existingPersonalArea) {
-        // Adding to existing area
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
-          return this.personalRoomRepository.create({
-            user: activeCoreUser,
-            title: personalRoom.title,
-            personalArea: existingPersonalArea,
-            iconId: personalRoom.iconId,
-          });
-        });
+      let defaultArea: PersonalArea;
+      if (existingDefaultArea) {
+        defaultArea = existingDefaultArea;
       } else {
         const guestsOfUser = await this.sharedUserService.findGuestsByHost(
           activeCoreUser,
         );
         // Creating new unassigned area
-        const newPersonalArea = await this.sharedAreaService.createNewArea(
+        defaultArea = await this.sharedAreaService.createNewArea(
           activeCoreUser,
           guestsOfUser,
         );
-
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
-          return this.personalRoomRepository.create({
-            user: activeCoreUser,
-            title: personalRoom.title,
-            iconId: personalRoom.iconId,
-            personalArea: newPersonalArea,
-          });
-        });
       }
+
+      const createdRoomEntities = await Promise.all(
+        personalRoomDtos.map(async (personalRoomDto) => {
+          if (personalRoomDto.areaId) {
+            const personalArea = await this.sharedAreaService.findById(
+              activeCoreUser,
+              personalRoomDto.areaId,
+            );
+
+            return this.personalRoomRepository.create({
+              user: activeCoreUser,
+              title: personalRoomDto.title,
+              personalArea: personalArea,
+              iconId: personalRoomDto.iconId,
+            });
+          } else {
+            return this.personalRoomRepository.create({
+              user: activeCoreUser,
+              title: personalRoomDto.title,
+              personalArea: defaultArea,
+              iconId: personalRoomDto.iconId,
+            });
+          }
+        }),
+      );
 
       // Saving to existing or new area
       const savedPersonalRooms = await this.personalRoomRepository.save(
-        newPersonalRoomEntities,
+        createdRoomEntities,
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {

@@ -52,6 +52,13 @@ export class SharedAreaService {
     return foundArea;
   }
 
+  async findById(currentUser: CoreUser, areaId: number): Promise<PersonalArea> {
+    const foundAreas = await this.personalAreaRepository.findOne({
+      where: { owner: currentUser, id: areaId },
+    });
+    return foundAreas;
+  }
+
   async removeUserFromArea(areas: PersonalArea[], guestId: number) {
     const updatedPersonalAreas = areas.map((personalArea) => {
       personalArea.users = personalArea.users.filter(
