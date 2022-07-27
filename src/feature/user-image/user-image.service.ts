@@ -20,6 +20,7 @@ import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
 import { SharedImageService } from 'src/shared/shared-image.service';
+import * as _ from 'lodash';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -180,6 +181,22 @@ export class UserImageService {
         relations: ['personalRooms', 'userTags', 'user'],
       });
 
+      const allUserImages = await this.userImageRepository.find({
+        where: { user: { id: activeCoreUser.id } },
+        order: { createdAt: 'DESC' },
+        relations: ['personalRooms', 'userTags', 'user'],
+      });
+
+      const roomFilterOptions = _.uniqBy(
+        allUserImages.flatMap((userimage) => userimage.personalRooms),
+        'id',
+      );
+
+      const tagFilterOptions = _.uniqBy(
+        allUserImages.flatMap((userimage) => userimage.userTags),
+        'id',
+      );
+
       // filterByRooms
       const roomFilteredImages = filterObject.roomIds
         ? userImages.filter((image) => {
@@ -234,6 +251,7 @@ export class UserImageService {
           nextPage: nextPage,
           prevPage: prevPage,
           images: countedUserImageDtos,
+          filterOptions: { rooms: roomFilterOptions, tags: tagFilterOptions },
         };
       } else {
         return {} as PaginatedImagesResDto;
