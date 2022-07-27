@@ -5,12 +5,14 @@ import { CoreUser } from '../core/users/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 import { ImageFilterQuery } from 'src/feature/user-image/dto/user-image.dto';
-
+import sizeOf from 'image-size';
+import { HttpService } from '@nestjs/axios';
 @Injectable()
 export class SharedImageService {
   constructor(
     @InjectRepository(UserImage)
     private userImageRepository: Repository<UserImage>,
+    private readonly httpService: HttpService,
   ) {}
 
   async findByIds(currentUser: CoreUser, ids: number[]): Promise<UserImage[]> {
@@ -74,5 +76,40 @@ export class SharedImageService {
 
     await this.userImageRepository.save(updatedGuestImages);
     return updatedGuestImages;
+  }
+
+  async checkAndAddImageDimensions(imageIds: number[]) {
+    const imageEntities = await this.userImageRepository.find({
+      where: { id: In(imageIds), width: null, height: null },
+    });
+
+    if (imageEntities) {
+      const newImageEntites = await Promise.all(
+        imageEntities.map(async (image) => {
+          const imageData = await this.httpService.axiosRef.get(image.src, {
+            responseType: 'arraybuffer',
+          });
+          const width = sizeOf(Buffer.from(imageData.data, 'base64')).width;
+          const height = sizeOf(Buffer.from(imageData.data, 'base64')).height;
+
+          return {
+            ...image,
+            width: width,
+            height: height,
+          };
+        }),
+      );
+      console.log('newImageEntites ', newImageEntites);
+      this.userImageRepository.save(newImageEntites);
+    }
+  }
+
+  async getImageDimensions(src: string) {
+    const imageData = await this.httpService.axiosRef.get(src, {
+      responseType: 'arraybuffer',
+    });
+    const width = sizeOf(Buffer.from(imageData.data, 'base64')).width;
+    const height = sizeOf(Buffer.from(imageData.data, 'base64')).height;
+    return { width, height };
   }
 }
