@@ -99,7 +99,6 @@ export class SharedImageService {
           };
         }),
       );
-      console.log('newImageEntites ', newImageEntites);
       this.userImageRepository.save(newImageEntites);
     }
   }
