@@ -67,9 +67,7 @@ export class UserImageService {
         relations: ['personalRooms', 'userTags', 'user'],
       });
 
-      const allImages = await this.userImageRepository.find();
-
-      const allImageIds = allImages.map((image) => image.id);
+      const allImageIds = allUserImages.map((image) => image.id);
 
       await this.sharedImageService.checkAndAddImageDimensions(allImageIds);
       if (allUserImages) {
