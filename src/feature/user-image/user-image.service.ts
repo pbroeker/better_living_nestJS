@@ -19,6 +19,7 @@ import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
+import { SharedImageService } from 'src/shared/shared-image.service';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -46,6 +47,7 @@ export class UserImageService {
     private sharedUserService: SharedUserService,
     private sharedRoomService: SharedRoomService,
     private sharedTagService: SharedTagService,
+    private sharedImageService: SharedImageService,
   ) {
     AWS.config.update({
       accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
@@ -63,6 +65,12 @@ export class UserImageService {
         where: { user: activeCoreUser },
         relations: ['personalRooms', 'userTags', 'user'],
       });
+
+      const allImages = await this.userImageRepository.find();
+
+      const allImageIds = allImages.map((image) => image.id);
+
+      await this.sharedImageService.checkAndAddImageDimensions(allImageIds);
       if (allUserImages) {
         const allUserImageDtos: UserImageDto[] = allUserImages.map(
           (userImageEntity) => {
@@ -249,10 +257,16 @@ export class UserImageService {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
     );
+
+    const { width, height } = await this.sharedImageService.getImageDimensions(
+      imagePath,
+    );
     const imageEntity = this.userImageRepository.create({
       src: imagePath,
       key: imageKey,
       user: activeCoreUser,
+      width: width,
+      height: height,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
     const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
