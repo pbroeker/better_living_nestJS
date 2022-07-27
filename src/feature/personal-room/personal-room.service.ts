@@ -17,6 +17,8 @@ import {
 } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
+import * as _ from 'lodash';
+
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -95,6 +97,25 @@ export class PersonalRoomService {
         filterObject,
       );
 
+      const allRoomImages = await this.sharedImageService.findAllRoomImages(
+        roomId,
+      );
+
+      const tagFilterOptions = _.uniqBy(
+        allRoomImages.flatMap((roomImage) => roomImage.userTags),
+        'id',
+      );
+
+      const userFilterOptions = _.uniqBy(
+        allRoomImages.flatMap((roomImage) => {
+          return {
+            first_name: roomImage.user.first_name,
+            id: roomImage.user.id,
+          };
+        }),
+        'id',
+      );
+
       if (roomImages) {
         // create paginationData
         const total = roomImages.length;
@@ -130,6 +151,7 @@ export class PersonalRoomService {
           nextPage,
           prevPage,
           images: countedUserImageDtos,
+          filterOptions: { users: userFilterOptions, tags: tagFilterOptions },
         };
       } else {
         return {} as PaginatedImagesResDto;

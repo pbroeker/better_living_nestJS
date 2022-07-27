@@ -65,6 +65,16 @@ export class SharedImageService {
     return tagFilteredImages;
   }
 
+  async findAllRoomImages(roomId: number): Promise<UserImage[]> {
+    const foundImages = await this.userImageRepository.find({
+      where: {
+        personalRooms: { id: roomId },
+      },
+      relations: ['personalRooms', 'userTags', 'user'],
+    });
+    return foundImages;
+  }
+
   async removeRoomsFromImages(user: CoreUser, roomIds: number[]) {
     const userImages = await this.findAllOwned(user, ['personalRooms']);
     const updatedGuestImages = userImages.map((guestImage) => {
