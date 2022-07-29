@@ -167,7 +167,7 @@ export class UserImageService {
         { guests: true, hosts: true },
       );
 
-      const userImages = await this.userImageRepository.find({
+      const userImages = await this.userImageRepository.findAndCount({
         where: {
           user: filterObject.userIds
             ? { id: In(filterObject.userIds) }
@@ -197,12 +197,12 @@ export class UserImageService {
 
       // filterByRooms
       const roomFilteredImages = filterObject.roomIds
-        ? userImages.filter((image) => {
+        ? userImages[0].filter((image) => {
             return image.personalRooms.some((room) =>
               filterObject.roomIds.includes(room.id),
             );
           })
-        : userImages;
+        : userImages[0];
 
       // filterByTags
       const tagFilteredImages = filterObject.tagIds
@@ -212,9 +212,8 @@ export class UserImageService {
             );
           })
         : roomFilteredImages;
-
       if (tagFilteredImages) {
-        const total = tagFilteredImages.length;
+        const total = userImages[1];
         const lastPage = Math.ceil(total / imageCount);
         const nextPage = page + 1 > lastPage ? null : page + 1;
         const prevPage = page - 1 < 1 ? null : page - 1;
