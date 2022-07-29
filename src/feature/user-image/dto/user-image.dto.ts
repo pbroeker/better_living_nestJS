@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsNumber,
   IsOptional,
@@ -8,15 +10,30 @@ import {
 } from 'class-validator';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
+import { ImageFilterOptions } from 'src/types/classes';
 export class UserImageDto {
   @ApiProperty()
   @IsOptional()
-  @IsString()
+  @IsNumber()
   id: number;
 
   @ApiProperty()
   @IsString()
   src: string;
+
+  @ApiProperty()
+  @IsString()
+  key: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  isOwner?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  ownerInitials?: string;
 
   @ApiProperty()
   @IsString()
@@ -39,14 +56,61 @@ export class UserImageDto {
   userTags?: UserTagResDto[];
 }
 
+export class ImageFilterQuery {
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
+  tagIds?: number[];
+
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
+  roomIds?: number[];
+
+  @ApiProperty({ type: [Number], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Transform(({ value }) => {
+    if (typeof value === 'number') {
+      return [value];
+    } else {
+      return value;
+    }
+  })
+  @Type(() => Number)
+  userIds?: number[];
+}
+
 export class EditImageDto {
+  @ApiProperty({ type: [Number] })
+  imageIds: number[];
+
   @ApiProperty({ type: [Number] })
   personalRoomIds: number[];
 
   @ApiProperty({ type: [Number] })
   usertagIds: number[];
 
-  @ApiProperty()
+  @ApiProperty({ type: [String] })
   @IsArray()
   newUsertags: string[];
 }
@@ -75,4 +139,9 @@ export class PaginatedImagesResDto {
   @ApiProperty()
   @IsNumber()
   prevPage?: number;
+
+  @ApiProperty({ type: ImageFilterOptions })
+  @IsArray()
+  @IsOptional()
+  filterOptions: ImageFilterOptions;
 }

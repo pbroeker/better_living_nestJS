@@ -1,18 +1,32 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard';
+import { AtGuard } from './core/auth/guards/at.guard';
 import { CoreModule } from './core/core.module';
 import { FeatureModule } from './feature/feature.module';
 import { SharedModule } from './shared/shared.module';
-
+import { WellKnownMiddleware } from './utils/customMiddleware/wellknownMiddleware';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
 @Module({
-  imports: [CoreModule, FeatureModule, SharedModule],
+  imports: [
+    CoreModule,
+    FeatureModule,
+    SharedModule,
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(__dirname, 'assets'),
+      exclude: ['/api*'],
+    }),
+  ],
   controllers: [],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,
+      useClass: AtGuard,
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(WellKnownMiddleware).forRoutes('*');
+  }
+}

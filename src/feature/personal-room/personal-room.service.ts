@@ -9,10 +9,16 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { removeUser, removeDateStrings } from 'src/utils/features/helpers';
+import { getUserInitials, removeUser } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
-import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
+import {
+  ImageFilterQuery,
+  PaginatedImagesResDto,
+} from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
+import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
+import * as _ from 'lodash';
+
 @Injectable()
 export class PersonalRoomService {
   constructor(
@@ -33,13 +39,14 @@ export class PersonalRoomService {
       );
 
       const personalRoomEntities = await this.personalRoomRepository.find({
-        where: { user: activeCoreUser },
-        relations: ['userImages'],
+        where: { user: { id: activeCoreUser.id } },
+        relations: {
+          userImages: true,
+        },
       });
 
       const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoDates = removeDateStrings(roomEntity);
-        const roomNoUser = removeUser(roomNoDates);
+        const roomNoUser = removeUser(roomEntity);
         // reducing amount of images included in room depending on queryParam
         const imagesSlices = imageCount
           ? roomNoUser.userImages.slice(0, imageCount)
@@ -66,44 +73,89 @@ export class PersonalRoomService {
     currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
+    filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
+        { guests: true, hosts: true },
       );
 
-      const roomEntity = await this.personalRoomRepository.findOne({
-        where: { user: activeCoreUser, id: roomId },
-      });
+      const guestIds = activeCoreUser.guests.map((guest) => guest.id);
+      const hostIds = activeCoreUser.hosts.map((host) => host.id);
+
+      if (!filterObject.userIds || !filterObject.userIds.length) {
+        filterObject.userIds = [...guestIds, ...hostIds, activeCoreUser.id];
+      }
 
       const roomImages = await this.sharedImageService.findRoomImages(
-        activeCoreUser,
-        roomEntity,
+        roomId,
+        imageCount,
+        skip,
+        filterObject,
       );
 
-      const userImagesNoRooms = roomImages.map((roomImage) => {
-        const { personalRooms, user, ...imageNoRooms } = roomImage;
-        return imageNoRooms;
-      });
+      const allRoomImages = await this.sharedImageService.findAllRoomImages(
+        roomId,
+      );
 
-      // create paginationData
-      const total = roomImages.length;
-      const lastPage = Math.ceil(total / imageCount);
-      const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
-      const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+      const tagFilterOptions = _.uniqBy(
+        allRoomImages.flatMap((roomImage) => roomImage.userTags),
+        'id',
+      );
 
-      const paginatedImages = {
-        total,
-        currentPage,
-        lastPage,
-        nextPage,
-        prevPage,
-        images: userImagesNoRooms.slice(skip, imageCount),
-      };
+      const userFilterOptions = _.uniqBy(
+        allRoomImages.flatMap((roomImage) => {
+          return {
+            first_name: roomImage.user.first_name,
+            id: roomImage.user.id,
+          };
+        }),
+        'id',
+      );
 
-      return paginatedImages;
+      if (roomImages) {
+        // create paginationData
+        const total = roomImages.length;
+        const lastPage = Math.ceil(total / imageCount);
+        const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
+        const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+        const countedUserImageDtos = roomImages.map((userImageEntity) => {
+          const imageEntityNoUser = removeUser(userImageEntity);
+          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+          return {
+            ...imageEntityNoRooms,
+            isOwner: activeCoreUser.id === userImageEntity.user.id,
+            ownerInitials: getUserInitials(userImageEntity.user),
+            personalRooms: imageEntityNoUser.personalRooms.map(
+              (personalRoom) => {
+                return {
+                  id: personalRoom.id,
+                  iconId: personalRoom.iconId,
+                  title: personalRoom.title,
+                };
+              },
+            ),
+            userTags: imageEntityNoUser.userTags.map((userTag) => {
+              const { ...tagNoDates } = userTag;
+              return tagNoDates;
+            }),
+          };
+        });
+        return {
+          total,
+          currentPage,
+          lastPage,
+          nextPage,
+          prevPage,
+          images: countedUserImageDtos,
+          filterOptions: { users: userFilterOptions, tags: tagFilterOptions },
+        };
+      } else {
+        return {} as PaginatedImagesResDto;
+      }
     } catch (error) {
       throw new HttpException(
         {
@@ -125,51 +177,61 @@ export class PersonalRoomService {
       );
 
       // Check if unassignedArea exists
-      const existingPersonalArea = await this.sharedAreaService.findByTitle(
+      const existingDefaultArea = await this.sharedAreaService.findByTitle(
         activeCoreUser,
         PersonalAreaTitle.DEFAULT,
       );
 
-      let newPersonalRoomEntities: PersonalRoom[];
-      if (existingPersonalArea) {
-        // Adding to existing area
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
-          return this.personalRoomRepository.create({
-            user: activeCoreUser,
-            title: personalRoom.title,
-            personalArea: existingPersonalArea,
-            iconId: personalRoom.iconId,
-          });
-        });
+      let defaultArea: PersonalArea;
+      if (existingDefaultArea) {
+        defaultArea = existingDefaultArea;
       } else {
-        // Creating new unassigned area
-        const newPersonalArea = await this.sharedAreaService.createNewArea(
+        const guestsOfUser = await this.sharedUserService.findGuestsByHost(
           activeCoreUser,
         );
-
-        newPersonalRoomEntities = personalRoomDtos.map((personalRoom) => {
-          return this.personalRoomRepository.create({
-            user: activeCoreUser,
-            title: personalRoom.title,
-            iconId: personalRoom.iconId,
-            personalArea: newPersonalArea,
-          });
-        });
+        // Creating new unassigned area
+        defaultArea = await this.sharedAreaService.createNewArea(
+          activeCoreUser,
+          guestsOfUser,
+        );
       }
+
+      const createdRoomEntities = await Promise.all(
+        personalRoomDtos.map(async (personalRoomDto) => {
+          if (personalRoomDto.areaId) {
+            const personalArea = await this.sharedAreaService.findById(
+              activeCoreUser,
+              personalRoomDto.areaId,
+            );
+
+            return this.personalRoomRepository.create({
+              user: activeCoreUser,
+              title: personalRoomDto.title,
+              personalArea: personalArea,
+              iconId: personalRoomDto.iconId,
+            });
+          } else {
+            return this.personalRoomRepository.create({
+              user: activeCoreUser,
+              title: personalRoomDto.title,
+              personalArea: defaultArea,
+              iconId: personalRoomDto.iconId,
+            });
+          }
+        }),
+      );
 
       // Saving to existing or new area
       const savedPersonalRooms = await this.personalRoomRepository.save(
-        newPersonalRoomEntities,
+        createdRoomEntities,
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomNoDates = removeDateStrings(newRoomEntity);
-        const roomNoUser = removeUser(roomNoDates);
-        const areaNoDates = removeDateStrings(roomNoUser.personalArea);
-        const areaNoUser = removeUser(areaNoDates);
+        const roomNoUser = removeUser(newRoomEntity);
+        const { users, owner, ...areaNoUsers } = roomNoUser.personalArea;
         return {
           ...roomNoUser,
-          personalArea: areaNoUser,
+          personalArea: areaNoUsers,
         };
       });
 
@@ -190,19 +252,17 @@ export class PersonalRoomService {
     editData: PersonalRoomReqDto,
   ): Promise<PersonalRoomResDto> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne(
-        roomId,
-        { relations: ['personalArea'] },
-      );
+      const personalRoomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: { personalArea: true },
+      });
 
       if (personalRoomEntity) {
         const savedPersonalRoomEntity = await this.personalRoomRepository.save({
           ...personalRoomEntity,
           ...editData,
         });
-
-        const roomNoDates = removeDateStrings(savedPersonalRoomEntity);
-        const roomNoUser = removeUser(roomNoDates);
+        const roomNoUser = removeUser(savedPersonalRoomEntity);
 
         return roomNoUser;
       } else {
@@ -225,18 +285,18 @@ export class PersonalRoomService {
     }
   }
 
-  async deleteRoom(roomId: number): Promise<PersonalRoomResDto> {
+  async deleteRoom(user: CoreUserDto, roomId: number): Promise<boolean> {
     try {
-      const personalRoomEntity = await this.personalRoomRepository.findOne(
-        roomId,
-        { relations: ['personalArea'] },
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
       );
 
-      await this.personalRoomRepository.delete(personalRoomEntity.id);
+      const deleteResult = await this.personalRoomRepository.delete({
+        user: { id: activeCoreUser.id },
+        id: roomId,
+      });
 
-      const roomNoDates = removeDateStrings(personalRoomEntity);
-      const roomNoUser = removeUser(roomNoDates);
-      return roomNoUser;
+      return deleteResult.affected > 0;
     } catch (error) {
       throw new HttpException(
         {

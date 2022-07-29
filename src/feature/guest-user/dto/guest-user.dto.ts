@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsDateString,
   IsEmail,
   IsNumber,
@@ -8,14 +7,28 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CoreUserDto {
+export class GuestUserResDto {
   @ApiProperty()
   @IsNumber()
-  userId: number;
+  id: number;
+
+  @ApiProperty({ type: [Number] })
+  @IsOptional()
+  guestIds?: number[];
+
+  @ApiProperty({ type: [Number] })
+  @IsOptional()
+  hostIds?: number[];
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
+  userInitials?: string;
+
+  @ApiProperty()
+  @IsOptional()
   @IsEmail()
-  email: string;
+  email?: string;
 
   @ApiProperty()
   @IsString()
@@ -30,14 +43,4 @@ export class CoreUserDto {
   @IsOptional()
   @IsDateString()
   birthday?: string;
-
-  @ApiProperty()
-  @IsOptional()
-  @IsBoolean()
-  news_consent?: boolean;
-}
-
-export class CoreUserWithRefreshTokenDto extends CoreUserDto {
-  @IsString()
-  refreshToken: string;
 }

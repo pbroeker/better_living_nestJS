@@ -11,10 +11,12 @@ import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entit
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { SharedImageService } from './shared-image.service';
 import { SharedTagService } from './shared-tag.service';
-import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
+import { UserTag } from '../feature/user-tag/entity/userTags.entity';
+import { HttpModule } from '@nestjs/axios';
 @Module({
   imports: [
     ConfigModule,
+    HttpModule,
     TypeOrmModule.forFeature([
       CoreUser,
       PersonalArea,

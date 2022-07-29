@@ -2,11 +2,6 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "assets": [
-      {
-        "include": "**/*.json",
-        "watchAssets": true
-      }
-    ]
+    "assets": ["**/apple-app-site-association", "**/*.json", "assets/*.html"]
   }
 }

@@ -5,12 +5,13 @@ import * as AWS from 'aws-sdk';
 import * as multer from 'multer';
 import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from '../../shared/shared-room.service';
-import { removeUser } from '../../utils/features/helpers';
-import { Repository } from 'typeorm';
+import { getUserInitials, removeUser } from '../../utils/features/helpers';
+import { In, Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
   EditImageDto,
+  ImageFilterQuery,
   PaginatedImagesResDto,
   UserImageDto,
 } from './dto/user-image.dto';
@@ -18,7 +19,8 @@ import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
-
+import { SharedImageService } from 'src/shared/shared-image.service';
+import * as _ from 'lodash';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -46,6 +48,7 @@ export class UserImageService {
     private sharedUserService: SharedUserService,
     private sharedRoomService: SharedRoomService,
     private sharedTagService: SharedTagService,
+    private sharedImageService: SharedImageService,
   ) {
     AWS.config.update({
       accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
@@ -58,32 +61,40 @@ export class UserImageService {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
       );
+
       const allUserImages = await this.userImageRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalRooms', 'userTags'],
+        relations: ['personalRooms', 'userTags', 'user'],
       });
-      if (allUserImages) {
-        const allUserImageDtos = allUserImages.map((userImageEntity) => {
-          const imageEntityNoUser = removeUser(userImageEntity);
-          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
 
-          return {
-            ...imageEntityNoRooms,
-            personalRooms: imageEntityNoUser.personalRooms.map(
-              (personalRoom) => {
-                return {
-                  id: personalRoom.id,
-                  iconId: personalRoom.iconId,
-                  title: personalRoom.title,
-                };
-              },
-            ),
-            userTags: imageEntityNoRooms.userTags.map((userTag) => {
-              const { createdAt, updatedAt, ...tagNoDates } = userTag;
-              return tagNoDates;
-            }),
-          };
-        });
+      const allImageIds = allUserImages.map((image) => image.id);
+
+      await this.sharedImageService.checkAndAddImageDimensions(allImageIds);
+      if (allUserImages) {
+        const allUserImageDtos: UserImageDto[] = allUserImages.map(
+          (userImageEntity) => {
+            const imageEntityNoUser = removeUser(userImageEntity);
+            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+            return {
+              ...imageEntityNoRooms,
+              ownerInitials: getUserInitials(userImageEntity.user),
+              isOwner: activeCoreUser.id === userImageEntity.user.id,
+              personalRooms: imageEntityNoUser.personalRooms.map(
+                (personalRoom) => {
+                  return {
+                    id: personalRoom.id,
+                    iconId: personalRoom.iconId,
+                    title: personalRoom.title,
+                  };
+                },
+              ),
+              userTags: imageEntityNoRooms.userTags.map((userTag) => {
+                const { ...tagNoDates } = userTag;
+                return tagNoDates;
+              }),
+            };
+          },
+        );
         return allUserImageDtos;
       } else {
         return [];
@@ -103,13 +114,14 @@ export class UserImageService {
     currentUser: CoreUserDto,
     imageId: number,
   ): Promise<UserImageDto> {
+    const activeCoreUser = await this.sharedUserService.findByEmail(
+      currentUser.email,
+    );
+
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        currentUser.email,
-      );
       const imageEntity = await this.userImageRepository.findOne({
-        where: { user: activeCoreUser, id: imageId },
-        relations: ['personalRooms', 'userTags'],
+        where: { id: imageId },
+        relations: ['personalRooms', 'userTags', 'user'],
       });
 
       const imageDtoNoUser = removeUser(imageEntity);
@@ -117,6 +129,8 @@ export class UserImageService {
 
       return {
         ...imageDtoNoRooms,
+        isOwner: activeCoreUser.id === imageEntity.user.id,
+        ownerInitials: getUserInitials(imageEntity.user),
         personalRooms: imageDtoNoUser.personalRooms.map((personalRoom) => {
           return {
             id: personalRoom.id,
@@ -125,7 +139,7 @@ export class UserImageService {
           };
         }),
         userTags: imageDtoNoRooms.userTags.map((userTag) => {
-          const { createdAt, updatedAt, ...tagNoDates } = userTag;
+          const { ...tagNoDates } = userTag;
           return tagNoDates;
         }),
       };
@@ -143,32 +157,74 @@ export class UserImageService {
   async getUserImagesCount(
     currentUser: CoreUserDto,
     page: number,
+    filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (page - 1) * imageCount;
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
+        { guests: true, hosts: true },
       );
-      const countedUserImages = await this.userImageRepository.findAndCount({
-        where: { user: activeCoreUser },
+
+      const userImages = await this.userImageRepository.findAndCount({
+        where: {
+          user: filterObject.userIds
+            ? { id: In(filterObject.userIds) }
+            : { id: In([activeCoreUser.id]) },
+        },
         order: { createdAt: 'DESC' },
         take: imageCount,
         skip: skip,
-        relations: ['personalRooms', 'userTags'],
+        relations: ['personalRooms', 'userTags', 'user'],
       });
 
-      if (countedUserImages) {
-        const total = countedUserImages[1];
+      const allUserImages = await this.userImageRepository.find({
+        where: { user: { id: activeCoreUser.id } },
+        order: { createdAt: 'DESC' },
+        relations: ['personalRooms', 'userTags', 'user'],
+      });
+
+      const roomFilterOptions = _.uniqBy(
+        allUserImages.flatMap((userimage) => userimage.personalRooms),
+        'id',
+      );
+
+      const tagFilterOptions = _.uniqBy(
+        allUserImages.flatMap((userimage) => userimage.userTags),
+        'id',
+      );
+
+      // filterByRooms
+      const roomFilteredImages = filterObject.roomIds
+        ? userImages[0].filter((image) => {
+            return image.personalRooms.some((room) =>
+              filterObject.roomIds.includes(room.id),
+            );
+          })
+        : userImages[0];
+
+      // filterByTags
+      const tagFilteredImages = filterObject.tagIds
+        ? roomFilteredImages.filter((image) => {
+            return image.userTags.some((tag) =>
+              filterObject.tagIds.includes(tag.id),
+            );
+          })
+        : roomFilteredImages;
+      if (tagFilteredImages) {
+        const total = userImages[1];
         const lastPage = Math.ceil(total / imageCount);
         const nextPage = page + 1 > lastPage ? null : page + 1;
         const prevPage = page - 1 < 1 ? null : page - 1;
-        const countedUserImageDtos = countedUserImages[0].map(
+        const countedUserImageDtos = tagFilteredImages.map(
           (userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
             const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
               ...imageEntityNoRooms,
+              isOwner: activeCoreUser.id === userImageEntity.user.id,
+              ownerInitials: getUserInitials(userImageEntity.user),
               personalRooms: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => {
                   return {
@@ -179,7 +235,7 @@ export class UserImageService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { createdAt, updatedAt, ...tagNoDates } = userTag;
+                const { ...tagNoDates } = userTag;
                 return tagNoDates;
               }),
             };
@@ -192,6 +248,7 @@ export class UserImageService {
           nextPage: nextPage,
           prevPage: prevPage,
           images: countedUserImageDtos,
+          filterOptions: { rooms: roomFilterOptions, tags: tagFilterOptions },
         };
       } else {
         return {} as PaginatedImagesResDto;
@@ -207,13 +264,24 @@ export class UserImageService {
     }
   }
 
-  async saveUserImage(imagePath: string, currentUser: CoreUserDto) {
+  async saveUserImage(
+    imagePath: string,
+    imageKey: string,
+    currentUser: CoreUserDto,
+  ) {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
     );
+
+    const { width, height } = await this.sharedImageService.getImageDimensions(
+      imagePath,
+    );
     const imageEntity = this.userImageRepository.create({
       src: imagePath,
+      key: imageKey,
       user: activeCoreUser,
+      width: width,
+      height: height,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
     const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
@@ -230,10 +298,12 @@ export class UserImageService {
             text: 'my_pictures.error.upload_image.message',
           });
         }
-        if (req.files.length) {
+        if (req.files && req.files.length) {
           const imagePath = req.files[0].location as string;
+          const imageKey = req.files[0].key as string;
           const savedUserImageEntity = await this.saveUserImage(
             imagePath,
+            imageKey,
             user,
           );
           return res.status(201).json(savedUserImageEntity);
@@ -257,20 +327,19 @@ export class UserImageService {
 
   async updateImage(
     currentUser: CoreUserDto,
-    imageId: number,
     editImage: EditImageDto,
-  ): Promise<UserImageDto> {
+  ): Promise<UserImageDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
       );
 
-      const imageEntity = await this.userImageRepository.findOne({
+      const imageEntities = await this.userImageRepository.find({
         where: {
           user: activeCoreUser,
-          id: imageId,
+          id: In(editImage.imageIds),
         },
-        relations: ['personalRooms'],
+        relations: ['personalRooms', 'user'],
       });
 
       // getPresentTagEntities
@@ -293,36 +362,91 @@ export class UserImageService {
         newTags.push(...newUserTags);
       }
 
-      const roomEntities = await this.sharedRoomService.findByIds(
-        activeCoreUser,
+      const roomEntities = await this.sharedRoomService.findAnyByIds(
         editImage.personalRoomIds,
       );
 
-      imageEntity.personalRooms = roomEntities;
-      imageEntity.userTags = [...existingTags, ...newTags];
-      const savedImageEntity = await this.userImageRepository.save(imageEntity);
-      const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-        const { user, createdAt, updatedAt, ...userTagNoUser } = userTag;
-        return userTagNoUser;
-      });
-      const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
+      const updatedImages = await Promise.all(
+        imageEntities.map(async (imageEntity) => {
+          imageEntity.personalRooms = roomEntities;
+          imageEntity.userTags = [...existingTags, ...newTags];
+          const savedImageEntity = await this.userImageRepository.save(
+            imageEntity,
+          );
+          const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
+            const { user, ...userTagNoUser } = userTag;
+            return userTagNoUser;
+          });
+          const { user, personalRooms, ...imageEntityNoUser } =
+            savedImageEntity;
 
-      return {
-        ...imageEntityNoUser,
-        personalRooms: roomEntities.map((personalRoom) => {
           return {
-            id: personalRoom.id,
-            iconId: personalRoom.iconId,
-            title: personalRoom.title,
+            ...imageEntityNoUser,
+            ownerInitials: getUserInitials(savedImageEntity.user),
+            isOwner: activeCoreUser.id === savedImageEntity.user.id,
+            personalRooms: roomEntities.map((personalRoom) => {
+              return {
+                id: personalRoom.id,
+                iconId: personalRoom.iconId,
+                title: personalRoom.title,
+              };
+            }),
+            userTags: userTagsNoUser,
           };
         }),
-        userTags: userTagsNoUser,
-      };
+      );
+
+      return updatedImages;
     } catch (error) {
       throw new HttpException(
         {
           title: 'my_pictures.error.edit_images.title',
           text: 'my_pictures.error.edit_images.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteImage(currentUser: CoreUserDto, imageId: number) {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        currentUser.email,
+      );
+
+      const imageEntity = await this.userImageRepository.findOne({
+        where: {
+          user: activeCoreUser,
+          id: imageId,
+        },
+      });
+      if (imageEntity) {
+        this.s3.deleteObject(
+          {
+            Bucket: this.AWS_S3_BUCKET_NAME,
+            Key: imageEntity.key,
+          },
+          (err) => {
+            if (err) {
+              console.error(err);
+              throw new HttpException(
+                {
+                  title: 'my_pictures.error.delete_images.title',
+                  text: 'my_pictures.error.delete_images.message',
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              );
+            }
+          },
+        );
+      }
+      await this.userImageRepository.remove(imageEntity);
+      return true;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.delete_images.title',
+          text: 'my_pictures.error.delete_images.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );

@@ -38,6 +38,7 @@ export class PersonalAreaController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning personal areas',
+    type: [PersonalAreaResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -60,6 +61,7 @@ export class PersonalAreaController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'Personal area created',
+    type: PersonalAreaResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -79,6 +81,7 @@ export class PersonalAreaController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Personal area edited',
+    type: PersonalAreaResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -103,6 +106,7 @@ export class PersonalAreaController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Area deleted',
+    type: Boolean,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -112,7 +116,7 @@ export class PersonalAreaController {
   async deleteArea(
     @User() user: CoreUserDto,
     @Param('areaId', ParseIntPipe) areaId: number,
-  ): Promise<PersonalAreaResDto> {
+  ): Promise<boolean> {
     return await this.personalAreaService.deleteArea(user, areaId);
   }
 }

@@ -27,6 +27,7 @@ export class UserTagsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user tags',
+    type: [UserTagResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -40,6 +41,7 @@ export class UserTagsController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'User tag created',
+    type: [UserTagResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -56,6 +58,7 @@ export class UserTagsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Tag deleted',
+    type: Boolean,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -63,8 +66,9 @@ export class UserTagsController {
   })
   @Delete('/:tagId')
   async deleteTag(
+    @User() user: CoreUserDto,
     @Param('tagId', ParseIntPipe) tagId: number,
   ): Promise<boolean> {
-    return await this.userTagService.deleteTag(tagId);
+    return await this.userTagService.deleteTag(user, tagId);
   }
 }

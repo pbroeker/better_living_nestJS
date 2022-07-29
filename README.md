@@ -88,6 +88,15 @@ $ docker rm siegenia-api-prod
 $ docker-compose up -d
 ```
 
+6. Check functionality: Sometimes the link-files from assets are not correctly copied
+```bash
+//Get into the newly build server
+$ docker exec -it siegenia-api-prod bash
+//Check that all files are in the dist/assets
+$ cd dist/assets
+```
+
+
 ## Staging DB
 - In order to connect to the staging db you have to open the docker container:
   ```bash
