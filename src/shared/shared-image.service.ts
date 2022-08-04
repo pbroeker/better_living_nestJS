@@ -36,40 +36,12 @@ export class SharedImageService {
     });
   }
 
-  async findRoomImages(
-    roomId: number,
-    imageCount: number,
-    skip: number,
-    filterObject: ImageFilterQuery,
-  ): Promise<UserImage[]> {
-    const foundImages = await this.userImageRepository.find({
-      where: {
-        user: { id: In(filterObject.userIds) },
-        personalRooms: { id: roomId },
-      },
-      relations: ['personalRooms', 'userTags', 'user'],
-      order: { updatedAt: 'DESC' },
-      take: imageCount,
-      skip: skip,
-    });
-
-    // filterByTags
-    const tagFilteredImages = filterObject.tagIds
-      ? foundImages.filter((image) => {
-          return image.userTags.some((tag) =>
-            filterObject.tagIds.includes(tag.id),
-          );
-        })
-      : foundImages;
-
-    return tagFilteredImages;
-  }
-
   async findAllRoomImages(roomId: number): Promise<UserImage[]> {
     const foundImages = await this.userImageRepository.find({
       where: {
         personalRooms: { id: roomId },
       },
+      order: { createdAt: 'DESC' },
       relations: ['personalRooms', 'userTags', 'user'],
     });
     return foundImages;

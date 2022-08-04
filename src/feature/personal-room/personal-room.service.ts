@@ -83,19 +83,11 @@ export class PersonalRoomService {
         { guests: true, hosts: true },
       );
 
-      const guestIds = activeCoreUser.guests.map((guest) => guest.id);
       const hostIds = activeCoreUser.hosts.map((host) => host.id);
 
       if (!filterObject.userIds || !filterObject.userIds.length) {
-        filterObject.userIds = [...guestIds, ...hostIds, activeCoreUser.id];
+        filterObject.userIds = [...hostIds, activeCoreUser.id];
       }
-
-      const roomImages = await this.sharedImageService.findRoomImages(
-        roomId,
-        imageCount,
-        skip,
-        filterObject,
-      );
 
       const allRoomImages = await this.sharedImageService.findAllRoomImages(
         roomId,
@@ -116,34 +108,50 @@ export class PersonalRoomService {
         'id',
       );
 
-      if (roomImages) {
+      // filterByUsers
+      const userFilteredImages = allRoomImages.filter((image) => {
+        return filterObject.userIds.includes(image.user.id);
+      });
+
+      // filterByTags
+      const tagFilteredImages = filterObject.tagIds
+        ? userFilteredImages.filter((image) => {
+            return image.userTags.some((tag) =>
+              filterObject.tagIds.includes(tag.id),
+            );
+          })
+        : userFilteredImages;
+
+      if (tagFilteredImages) {
         // create paginationData
-        const total = roomImages.length;
+        const total = tagFilteredImages.length;
         const lastPage = Math.ceil(total / imageCount);
         const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
         const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
-        const countedUserImageDtos = roomImages.map((userImageEntity) => {
-          const imageEntityNoUser = removeUser(userImageEntity);
-          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
-          return {
-            ...imageEntityNoRooms,
-            isOwner: activeCoreUser.id === userImageEntity.user.id,
-            ownerInitials: getUserInitials(userImageEntity.user),
-            personalRooms: imageEntityNoUser.personalRooms.map(
-              (personalRoom) => {
-                return {
-                  id: personalRoom.id,
-                  iconId: personalRoom.iconId,
-                  title: personalRoom.title,
-                };
-              },
-            ),
-            userTags: imageEntityNoUser.userTags.map((userTag) => {
-              const { ...tagNoDates } = userTag;
-              return tagNoDates;
-            }),
-          };
-        });
+        const countedUserImageDtos = tagFilteredImages
+          .slice(skip, currentPage * imageCount)
+          .map((userImageEntity) => {
+            const imageEntityNoUser = removeUser(userImageEntity);
+            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+            return {
+              ...imageEntityNoRooms,
+              isOwner: activeCoreUser.id === userImageEntity.user.id,
+              ownerInitials: getUserInitials(userImageEntity.user),
+              personalRooms: imageEntityNoUser.personalRooms.map(
+                (personalRoom) => {
+                  return {
+                    id: personalRoom.id,
+                    iconId: personalRoom.iconId,
+                    title: personalRoom.title,
+                  };
+                },
+              ),
+              userTags: imageEntityNoUser.userTags.map((userTag) => {
+                const { ...tagNoDates } = userTag;
+                return tagNoDates;
+              }),
+            };
+          });
         return {
           total,
           currentPage,

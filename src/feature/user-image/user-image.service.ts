@@ -156,31 +156,23 @@ export class UserImageService {
 
   async getUserImagesCount(
     currentUser: CoreUserDto,
-    page: number,
+    currentPage: number,
     filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
-    const skip = (page - 1) * imageCount;
+    const skip = (currentPage - 1) * imageCount;
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
         { guests: true, hosts: true },
       );
 
-      const userImages = await this.userImageRepository.findAndCount({
+      const allUserImages = await this.userImageRepository.find({
         where: {
           user: filterObject.userIds
             ? { id: In(filterObject.userIds) }
             : { id: In([activeCoreUser.id]) },
         },
-        order: { createdAt: 'DESC' },
-        take: imageCount,
-        skip: skip,
-        relations: ['personalRooms', 'userTags', 'user'],
-      });
-
-      const allUserImages = await this.userImageRepository.find({
-        where: { user: { id: activeCoreUser.id } },
         order: { createdAt: 'DESC' },
         relations: ['personalRooms', 'userTags', 'user'],
       });
@@ -197,12 +189,12 @@ export class UserImageService {
 
       // filterByRooms
       const roomFilteredImages = filterObject.roomIds
-        ? userImages[0].filter((image) => {
+        ? allUserImages.filter((image) => {
             return image.personalRooms.some((room) =>
               filterObject.roomIds.includes(room.id),
             );
           })
-        : userImages[0];
+        : allUserImages;
 
       // filterByTags
       const tagFilteredImages = filterObject.tagIds
@@ -212,13 +204,16 @@ export class UserImageService {
             );
           })
         : roomFilteredImages;
+
       if (tagFilteredImages) {
-        const total = userImages[1];
+        const total = tagFilteredImages.length;
         const lastPage = Math.ceil(total / imageCount);
-        const nextPage = page + 1 > lastPage ? null : page + 1;
-        const prevPage = page - 1 < 1 ? null : page - 1;
-        const countedUserImageDtos = tagFilteredImages.map(
-          (userImageEntity) => {
+        const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
+        const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+
+        const countedUserImageDtos = tagFilteredImages
+          .slice(skip, currentPage * imageCount)
+          .map((userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
             const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
@@ -239,10 +234,9 @@ export class UserImageService {
                 return tagNoDates;
               }),
             };
-          },
-        );
+          });
         return {
-          currentPage: page,
+          currentPage: currentPage,
           total: total,
           lastPage: lastPage,
           nextPage: nextPage,
