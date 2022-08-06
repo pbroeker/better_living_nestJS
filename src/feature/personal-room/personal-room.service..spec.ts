@@ -160,7 +160,6 @@ describe('AuthService', () => {
         }
         if (token === SharedImageService) {
           return {
-            findRoomImages: jest.fn().mockResolvedValue([mockUserImage]),
             findAllRoomImages: jest.fn().mockResolvedValue([mockUserImage]),
           };
         }
@@ -235,10 +234,8 @@ describe('AuthService', () => {
         await personalRoomService.getRoomImages(mockCoreUserDto, 1, 1),
       ).toStrictEqual(expectedRoomImages);
 
-      expect(sharedImageService.findRoomImages).toHaveBeenCalledTimes(1);
-      expect(sharedImageService.findRoomImages).toHaveBeenCalledWith(1, 10, 0, {
-        userIds: [mockCoreUser.id],
-      });
+      expect(sharedImageService.findAllRoomImages).toHaveBeenCalledTimes(1);
+      expect(sharedImageService.findAllRoomImages).toHaveBeenCalledWith(1);
     });
 
     it('throws an internal error if anything goes wrong', async () => {

@@ -73,7 +73,7 @@ export class PersonalRoomService {
     currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
-    filterObject?: ImageFilterQuery,
+    filterObject: ImageFilterQuery = {},
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
@@ -165,6 +165,7 @@ export class PersonalRoomService {
         return {} as PaginatedImagesResDto;
       }
     } catch (error) {
+      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_room_images.title',
@@ -211,7 +212,6 @@ export class PersonalRoomService {
               activeCoreUser,
               personalRoomDto.areaId,
             );
-
             return this.personalRoomRepository.create({
               user: activeCoreUser,
               title: personalRoomDto.title,
