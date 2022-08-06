@@ -36,6 +36,16 @@ export class UserImageDto {
   ownerInitials?: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  height?: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  width?: number;
+
+  @ApiProperty()
   @IsString()
   @IsDateString()
   createdAt: Date;

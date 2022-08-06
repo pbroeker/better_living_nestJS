@@ -71,12 +71,12 @@ describe('UserService', () => {
 
       try {
         await userService.createUser(shortPwData);
-      } catch (e) {
+      } catch (error) {
         expect(coreUserRepository.create).toHaveBeenCalledTimes(1);
         expect(coreUserRepository.save).toHaveBeenCalledTimes(1);
-        expect(e).toBeInstanceOf(HttpException);
-        expect(e.response.title).toBe('login.error.short_pw.title');
-        expect(e.status).toBe(500);
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.response.title).toBe('login.error.short_pw.title');
+        expect(error.status).toBe(500);
       }
     });
   });
