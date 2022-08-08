@@ -19,7 +19,7 @@ import { UserImage } from './entity/user-image.entity';
 import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
-import { SharedImageService } from 'src/shared/shared-image.service';
+import { SharedImageService } from '../../shared/shared-image.service';
 import * as _ from 'lodash';
 @Injectable()
 export class UserImageService {

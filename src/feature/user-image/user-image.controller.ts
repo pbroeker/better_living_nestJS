@@ -12,7 +12,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
@@ -63,7 +63,7 @@ export class UserImageController {
     type: UserImageDto,
   })
   @Get('/detail/:imageId')
-  async getImage(
+  async getUserImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
   ): Promise<UserImageDto> {

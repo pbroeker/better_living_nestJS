@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
-import { ImageFilterOptions } from 'src/types/classes';
+import { ImageFilterOptions } from '../../../types/classes';
 export class UserImageDto {
   @ApiProperty()
   @IsOptional()

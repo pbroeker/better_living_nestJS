@@ -8,7 +8,7 @@ import {
   mockPaginatedImagesResDto,
   mockPersonalRoomReqDto,
 } from '../../../test/mocks/personalRoomMocks';
-import { mockImageFilter1 } from 'test/mocks/userImageMocks';
+import { mockImageFilter1 } from '../../../test/mocks/userImageMocks';
 
 const moduleMocker = new ModuleMocker(global);
 describe('personal-room-controller', () => {
