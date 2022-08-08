@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { SharedAreaService } from 'src/shared/shared-area.service';
-import { SharedImageService } from 'src/shared/shared-image.service';
+import { SharedAreaService } from '../../shared/shared-area.service';
+import { SharedImageService } from '../../shared/shared-image.service';
 import { GuestUserResDto } from './dto/guest-user.dto';
-import { getUserInitials } from 'src/utils/features/helpers';
+import { getUserInitials } from '../../utils/features/helpers';
 
 @Injectable()
 export class GuestUserService {

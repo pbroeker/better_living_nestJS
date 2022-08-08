@@ -1,41 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  LoginUserResDto,
-  RegisterUserReqDto,
-} from '../auth/dto/login-user.dto';
 import { AuthController } from './auth.controller';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { AuthService } from './auth.service';
+
 import {
-  CoreUserDto,
-  CoreUserWithRefreshTokenDto,
-} from '../users/dto/core-user.dto';
-
-const fakeCoreUser: CoreUserDto = {
-  email: 'fakemail@dropmail.cc',
-  userId: 1,
-  first_name: 'first_fake_name',
-};
-
-const mockLoginUserRes: LoginUserResDto = {
-  first_name: 'testFirstName',
-  news_consent: false,
-  access_token: 'testAccessToken',
-  refresh_token: 'testRefreshToken',
-  email: 'testEmail',
-};
-
-const fakeUserData: RegisterUserReqDto = {
-  email: 'fakemail@dropmail.cc',
-  password: 'fakePassword123',
-  first_name: 'first_fake_name',
-};
-
-const refreshTokenDto: CoreUserWithRefreshTokenDto = {
-  ...mockLoginUserRes,
-  userId: 1,
-  refreshToken: 'fakeRefreshToken',
-};
+  mockCoreUserDto,
+  fakeUserData,
+  mockLoginUserRes,
+  refreshTokenDto,
+} from '../../../test/mocks/coreMocks';
 
 const moduleMocker = new ModuleMocker(global);
 describe('AuthController', () => {
@@ -104,9 +77,9 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('calls refresh with correct arguments', async () => {
-      expect(await authController.logout(fakeCoreUser)).toBe(true);
+      expect(await authController.logout(mockCoreUserDto)).toBe(true);
       expect(authService.logout).toHaveBeenCalledTimes(1);
-      expect(authService.logout).toHaveBeenCalledWith(fakeCoreUser.userId);
+      expect(authService.logout).toHaveBeenCalledWith(mockCoreUserDto.userId);
     });
   });
 });
