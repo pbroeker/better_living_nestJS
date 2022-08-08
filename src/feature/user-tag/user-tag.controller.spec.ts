@@ -3,14 +3,14 @@ import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { UserTagService } from './user-tag.service';
 import { UserTagsController } from './user-tag.controller';
 import {
-  mockCoreUserDto,
   mockUserTagReqDto1,
   mockUserTagResDto1,
-} from '../../../test/mocks/mocks';
+} from '../../../test/mocks/userTagMocks';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 
 const moduleMocker = new ModuleMocker(global);
 
-describe('personal-Area', () => {
+describe('user-tags', () => {
   let userTagsController: UserTagsController;
   let userTagService: UserTagService;
 

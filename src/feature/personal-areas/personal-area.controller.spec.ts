@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { PersonalAreaController } from './personal-area.controller';
 import { PersonalAreaService } from './personal-area.service';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 import {
-  mockCoreUserDto,
   mockPersonalAreaReqDto,
   mockPersonalAreaResDto,
-} from '../../../test/mocks/mocks';
+} from '../../../test/mocks/personalAreaMocks';
 
 const moduleMocker = new ModuleMocker(global);
 

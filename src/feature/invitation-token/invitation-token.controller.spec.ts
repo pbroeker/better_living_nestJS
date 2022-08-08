@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { InvitationTokenController } from './invitation-token.controller';
 import { InvitationTokenService } from './invitation-token.service';
-import { mockCoreUserDto } from '../../../test/mocks/mocks';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 import { mockGuestUserResDto } from '../../../test/mocks/guestUserMocks';
 import {
   mockInvitationTokenReqDto,

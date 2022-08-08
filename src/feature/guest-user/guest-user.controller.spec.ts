@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { GuestUserController } from './guest-user.controller';
 import { GuestUserService } from './guest-user.service';
-import { mockCoreUserDto } from '../../../test/mocks/mocks';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 import { mockGuestUserResDto } from '../../../test/mocks/guestUserMocks';
 
 const moduleMocker = new ModuleMocker(global);

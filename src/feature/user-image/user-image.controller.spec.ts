@@ -2,14 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { UserImageController } from './user-image.controller';
 import { UserImageService } from './user-image.service';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 import {
-  mockCoreUserDto,
-  mockImageFilter1,
   mockUserImageDto,
   mockEditImageDto,
   mockUploadImageResponse,
   mockUploadImageRequest,
-} from '../../../test/mocks/mocks';
+  mockImageFilter1,
+} from '../../../test/mocks/userImageMocks';
 
 const moduleMocker = new ModuleMocker(global);
 describe('user-image-controller', () => {

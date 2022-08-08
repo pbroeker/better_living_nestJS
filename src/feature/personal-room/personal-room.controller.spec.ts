@@ -2,13 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
 import { PersonalRoomController } from './personal-room.controller';
 import { PersonalRoomService } from './personal-room.service';
+import { mockCoreUserDto } from '../../../test/mocks/coreMocks';
 import {
-  mockCoreUserDto,
-  mockImageFilter1,
   mockPersonalRoomResDto1,
   mockPaginatedImagesResDto,
   mockPersonalRoomReqDto,
-} from '../../../test/mocks/mocks';
+} from '../../../test/mocks/personalRoomMocks';
+import { mockImageFilter1 } from 'test/mocks/userImageMocks';
 
 const moduleMocker = new ModuleMocker(global);
 describe('personal-room-controller', () => {
