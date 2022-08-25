@@ -10,6 +10,7 @@ import {
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
 import { getUserInitials, removeUser } from '../../utils/features/helpers';
+import { commentsToCommentsDtos } from './helpers/transform-functions';
 import { SharedImageService } from '../../shared/shared-image.service';
 import {
   ImageFilterQuery,
@@ -42,21 +43,30 @@ export class PersonalRoomService {
         where: { user: { id: activeCoreUser.id } },
         relations: {
           userImages: true,
+          userComments: true,
         },
       });
 
-      const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoUser = removeUser(roomEntity);
-        // reducing amount of images included in room depending on queryParam
-        const imagesSlices = imageCount
-          ? roomNoUser.userImages.slice(0, imageCount)
-          : roomNoUser.userImages;
-        return {
-          ...roomNoUser,
-          userImages: imagesSlices,
-          totalImages: roomNoUser.userImages.length,
-        };
-      });
+      const personalRoomDtos: PersonalRoomResDto[] = personalRoomEntities.map(
+        (roomEntity) => {
+          // reducing amount of images included in room depending on queryParam
+          const imagesSlices = imageCount
+            ? roomEntity.userImages.slice(0, imageCount)
+            : roomEntity.userImages;
+
+          return {
+            id: roomEntity.id,
+            title: roomEntity.title,
+            iconId: roomEntity.iconId,
+            userComments: commentsToCommentsDtos(
+              activeCoreUser,
+              roomEntity.userComments,
+            ),
+            userImages: imagesSlices,
+            totalImages: roomEntity.userImages.length,
+          };
+        },
+      );
       return personalRoomDtos;
     } catch (error) {
       throw new HttpException(
@@ -236,10 +246,13 @@ export class PersonalRoomService {
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
         const roomNoUser = removeUser(newRoomEntity);
-        const { users, owner, ...areaNoUsers } = roomNoUser.personalArea;
+        const { users, owner, personalRooms, ...areaNoUsers } =
+          roomNoUser.personalArea;
         return {
           ...roomNoUser,
           personalArea: areaNoUsers,
+          userComments: [],
+          userImages: [],
         };
       });
 
@@ -270,9 +283,16 @@ export class PersonalRoomService {
           ...personalRoomEntity,
           ...editData,
         });
-        const roomNoUser = removeUser(savedPersonalRoomEntity);
 
-        return roomNoUser;
+        return {
+          id: savedPersonalRoomEntity.id,
+          title: savedPersonalRoomEntity.title,
+          iconId: savedPersonalRoomEntity.iconId,
+          personalArea: {
+            title: personalRoomEntity.personalArea.title,
+            id: personalRoomEntity.personalArea.id,
+          },
+        };
       } else {
         throw new HttpException(
           {

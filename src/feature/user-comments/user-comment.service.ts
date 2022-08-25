@@ -1,12 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUserDto } from 'src/core/users/dto/core-user.dto';
-import { SharedImageService } from 'src/shared/shared-image.service';
-import { SharedUserService } from 'src/shared/shared-user.service';
+import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { SharedImageService } from '../../shared/shared-image.service';
+import { SharedUserService } from '../../shared/shared-user.service';
 import { Repository } from 'typeorm';
-import { UserCommentReqDto } from './dto/user-comment.dto';
+import { UserCommentReqDto, UserCommentResDto } from './dto/user-comment.dto';
 import { UserComment } from './entity/userComment.entity';
 import { SharedRoomService } from '../../shared/shared-room.service';
+import { getUserInitials } from '../../utils/features/helpers';
 
 @Injectable()
 export class UserCommentService {
@@ -18,16 +19,33 @@ export class UserCommentService {
     private sharedRoomService: SharedRoomService,
   ) {}
 
-  async getAllUserComments(user: CoreUserDto) {
+  async getAllUserComments(user: CoreUserDto): Promise<UserCommentResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
       );
-      const userComments = await this.userCommentRepository.find({
+      const userCommentEntitites = await this.userCommentRepository.find({
         where: { user: activeCoreUser },
+        relations: {
+          personalRoom: true,
+          userImage: true,
+        },
       });
 
-      return userComments as UserComment[];
+      const userCommentDtos: UserCommentResDto[] = userCommentEntitites.map(
+        (userComment) => {
+          return {
+            content: userComment.content,
+            ownerInitials: getUserInitials(activeCoreUser),
+            ownerName: `${activeCoreUser.first_name} ${activeCoreUser.last_name}`,
+            createdAt: userComment.createdAt,
+            roomId: userComment.personalRoom.id,
+            imageId: userComment.userImage.id,
+          };
+        },
+      );
+
+      return userCommentDtos;
     } catch (error) {
       throw new HttpException(
         {
@@ -42,7 +60,7 @@ export class UserCommentService {
   async createUserComment(
     user: CoreUserDto,
     userCommentDto: UserCommentReqDto,
-  ) {
+  ): Promise<UserCommentResDto> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
@@ -61,7 +79,14 @@ export class UserCommentService {
         personalRoom: personalRoomEntity[0],
       });
 
-      return userComment as UserComment;
+      return {
+        content: userComment.content,
+        ownerInitials: getUserInitials(activeCoreUser),
+        ownerName: `${activeCoreUser.first_name} ${activeCoreUser.last_name}`,
+        createdAt: userComment.createdAt,
+        roomId: userComment.personalRoom.id,
+        imageId: userComment.userImage.id,
+      };
     } catch (error) {
       throw new HttpException(
         {

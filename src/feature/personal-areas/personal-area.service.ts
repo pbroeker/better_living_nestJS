@@ -120,7 +120,8 @@ export class PersonalAreaService {
         personalRooms: savedPersonalAreaEntity.personalRooms.map(
           (personalRoom) => {
             const currentRoomNoUser = removeUser(personalRoom);
-            const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+            const { personalArea, userComments, ...currentRoomDto } =
+              currentRoomNoUser;
             return currentRoomDto;
           },
         ),
@@ -224,7 +225,8 @@ export class PersonalAreaService {
         ownerInitials: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
         personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
           const currentRoomNoUser = removeUser(personalRoom);
-          const { personalArea, ...currentRoomDto } = currentRoomNoUser;
+          const { personalArea, userComments, ...currentRoomDto } =
+            currentRoomNoUser;
           return currentRoomDto;
         }),
         isOwner:
@@ -325,7 +327,8 @@ export class PersonalAreaService {
               ? personalRoom.userImages.slice(0, imageCount)
               : personalRoom.userImages;
 
-            const { personalArea, user, ...personalRoomNoArea } = personalRoom;
+            const { personalArea, userComments, user, ...personalRoomNoArea } =
+              personalRoom;
             return {
               ...personalRoomNoArea,
               userImages: userImagesSlice,
