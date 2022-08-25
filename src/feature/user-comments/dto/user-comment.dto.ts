@@ -39,8 +39,9 @@ export class UserCommentResDto {
 
   @ApiProperty()
   @IsNotEmpty()
+  @IsOptional()
   @IsDate()
-  updatedAt: Date;
+  updatedAt?: Date;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -51,4 +52,14 @@ export class UserCommentResDto {
   @IsNotEmpty()
   @IsNumber()
   imageId: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  ownerInitials: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  ownerName: string;
 }

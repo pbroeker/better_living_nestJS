@@ -3,7 +3,7 @@ import { EntityWithDates } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
 import { UserTag } from '../../user-tag/entity/userTags.entity';
-import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
+import { UserComment } from '../../../feature/user-comments/entity/userComment.entity';
 
 @Entity({ name: 'user-image' })
 export class UserImage extends EntityWithDates {
@@ -27,9 +27,7 @@ export class UserImage extends EntityWithDates {
   })
   userTags: UserTag[];
 
-  @OneToMany(() => UserComment, (userComment) => userComment.userImage, {
-    cascade: ['insert', 'update'],
-  })
+  @OneToMany(() => UserComment, (userComment) => userComment.userImage)
   userComments: UserComment[];
 
   @ManyToOne(() => CoreUser, (user) => user.images, {

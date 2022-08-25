@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer';
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { UserImage } from '../../user-image/entity/user-image.entity';
-import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
+import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
