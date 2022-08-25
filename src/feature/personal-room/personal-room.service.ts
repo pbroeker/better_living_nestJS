@@ -43,7 +43,11 @@ export class PersonalRoomService {
         where: { user: { id: activeCoreUser.id } },
         relations: {
           userImages: true,
-          userComments: true,
+          userComments: {
+            userImage: true,
+            user: true,
+            personalRoom: true,
+          },
         },
       });
 
@@ -69,6 +73,7 @@ export class PersonalRoomService {
       );
       return personalRoomDtos;
     } catch (error) {
+      console.log('error" ==== ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_personal_room.title',
