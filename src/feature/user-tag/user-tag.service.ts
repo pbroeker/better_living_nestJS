@@ -55,7 +55,7 @@ export class UserTagService {
 
       let userImageEntities: UserImage[] = [];
       if (userTagDto.userImageIds) {
-        userImageEntities = await this.sharedImageService.findByIds(
+        userImageEntities = await this.sharedImageService.findOwnedByIds(
           activeCoreUser,
           userTagDto.userImageIds,
         );

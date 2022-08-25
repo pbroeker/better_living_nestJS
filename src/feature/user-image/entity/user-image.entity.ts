@@ -1,8 +1,9 @@
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';
-import { Column, Entity, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
 import { UserTag } from '../../user-tag/entity/userTags.entity';
+import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
 
 @Entity({ name: 'user-image' })
 export class UserImage extends EntityWithDates {
@@ -25,6 +26,11 @@ export class UserImage extends EntityWithDates {
     cascade: ['insert', 'update'],
   })
   userTags: UserTag[];
+
+  @OneToMany(() => UserComment, (userComment) => userComment.userImage, {
+    cascade: ['insert', 'update'],
+  })
+  userComments: UserComment[];
 
   @ManyToOne(() => CoreUser, (user) => user.images, {
     onDelete: 'CASCADE',
