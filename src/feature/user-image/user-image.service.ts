@@ -64,7 +64,16 @@ export class UserImageService {
 
       const allUserImages = await this.userImageRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          userTags: true,
+          user: true,
+          userComments: {
+            user: true,
+            personalRoom: true,
+            userImage: true,
+          },
+        },
       });
 
       const allImageIds = allUserImages.map((image) => image.id);
@@ -74,11 +83,23 @@ export class UserImageService {
         const allUserImageDtos: UserImageDto[] = allUserImages.map(
           (userImageEntity) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoRooms,
+              ...imageEntityNoUser,
               ownerInitials: getUserInitials(userImageEntity.user),
               isOwner: activeCoreUser.id === userImageEntity.user.id,
+              userComments: imageEntityNoUser.userComments.map(
+                (userComment) => {
+                  return {
+                    id: userComment.id,
+                    content: userComment.content,
+                    createdAt: userComment.createdAt,
+                    roomId: userComment.personalRoom.id,
+                    imageId: userComment.userImage.id,
+                    ownerInitials: userComment.user.first_name,
+                    ownerName: `${userComment.user.first_name} ${userComment.user.last_name}`,
+                  };
+                },
+              ),
               personalRooms: imageEntityNoUser.personalRooms.map(
                 (personalRoom) => {
                   return {
@@ -88,9 +109,8 @@ export class UserImageService {
                   };
                 },
               ),
-              userTags: imageEntityNoRooms.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
+              userTags: userImageEntity.userTags.map((userTag) => {
+                return { title: userTag.title, id: userTag.id };
               }),
             };
           },
@@ -113,6 +133,7 @@ export class UserImageService {
   async getUserImage(
     currentUser: CoreUserDto,
     imageId: number,
+    roomId?: number,
   ): Promise<UserImageDto> {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
@@ -121,26 +142,49 @@ export class UserImageService {
     try {
       const imageEntity = await this.userImageRepository.findOne({
         where: { id: imageId },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+          userTags: true,
+          userComments: {
+            user: true,
+            userImage: true,
+            personalRoom: true,
+          },
+        },
       });
 
-      const imageDtoNoUser = removeUser(imageEntity);
-      const { personalRooms, ...imageDtoNoRooms } = imageDtoNoUser;
-
+      const imageEntityNoUser = removeUser(imageEntity);
       return {
-        ...imageDtoNoRooms,
+        ...imageEntityNoUser,
         isOwner: activeCoreUser.id === imageEntity.user.id,
         ownerInitials: getUserInitials(imageEntity.user),
-        personalRooms: imageDtoNoUser.personalRooms.map((personalRoom) => {
+        personalRooms: imageEntityNoUser.personalRooms.map((personalRoom) => {
           return {
             id: personalRoom.id,
             iconId: personalRoom.iconId,
             title: personalRoom.title,
           };
         }),
-        userTags: imageDtoNoRooms.userTags.map((userTag) => {
-          const { ...tagNoDates } = userTag;
-          return tagNoDates;
+        userComments: roomId
+          ? imageEntityNoUser.userComments
+              .filter((userComment) => {
+                return userComment.personalRoom.id === roomId;
+              })
+              .map((userComment) => {
+                return {
+                  id: userComment.id,
+                  content: userComment.content,
+                  createdAt: userComment.createdAt,
+                  roomId: userComment.personalRoom.id,
+                  imageId: userComment.userImage.id,
+                  ownerInitials: userComment.user.first_name,
+                  ownerName: `${userComment.user.first_name} ${userComment.user.last_name}`,
+                };
+              })
+          : [],
+        userTags: imageEntityNoUser.userTags.map((userTag) => {
+          return { title: userTag.title, id: userTag.id };
         }),
       };
     } catch (error) {
@@ -213,11 +257,10 @@ export class UserImageService {
 
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
-          .map((userImageEntity) => {
+          .map((userImageEntity: Omit<UserImage, 'userComments'>) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoRooms,
+              ...imageEntityNoUser,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
               ownerInitials: getUserInitials(userImageEntity.user),
               personalRooms: imageEntityNoUser.personalRooms.map(
@@ -230,8 +273,7 @@ export class UserImageService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
+                return { title: userTag.title, id: userTag.id };
               }),
             };
           });
@@ -367,12 +409,9 @@ export class UserImageService {
           const savedImageEntity = await this.userImageRepository.save(
             imageEntity,
           );
-          const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-            const { user, ...userTagNoUser } = userTag;
-            return userTagNoUser;
-          });
-          const { user, personalRooms, ...imageEntityNoUser } =
-            savedImageEntity;
+          const imageEntityNoUser = removeUser(
+            savedImageEntity as Omit<UserImage, 'userComments'>,
+          );
 
           return {
             ...imageEntityNoUser,
@@ -385,7 +424,12 @@ export class UserImageService {
                 title: personalRoom.title,
               };
             }),
-            userTags: userTagsNoUser,
+            userTags: savedImageEntity.userTags.map((userTag) => {
+              return {
+                title: userTag.title,
+                id: userTag.id,
+              };
+            }),
           };
         }),
       );

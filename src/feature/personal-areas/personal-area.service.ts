@@ -14,6 +14,7 @@ import { removeUser, getUserInitials } from '../../utils/features/helpers';
 import { PersonalAreaTitle } from '../../types/enums';
 import * as _ from 'lodash';
 import { PersonalRoomResDto } from '../personal-room/dto/personal-room.dto';
+import { UserImage } from '../user-image/entity/user-image.entity';
 
 @Injectable()
 export class PersonalAreaService {
@@ -118,11 +119,14 @@ export class PersonalAreaService {
         ...areaWithoutUsers,
         ownerInitials: getUserInitials(savedPersonalAreaEntity.owner),
         personalRooms: savedPersonalAreaEntity.personalRooms.map(
-          (personalRoom) => {
+          (
+            personalRoom: Omit<
+              PersonalRoom,
+              'userComments' | 'personalArea' | 'userImages'
+            >,
+          ) => {
             const currentRoomNoUser = removeUser(personalRoom);
-            const { personalArea, userComments, ...currentRoomDto } =
-              currentRoomNoUser;
-            return currentRoomDto;
+            return currentRoomNoUser;
           },
         ),
         isOwner: savedPersonalAreaEntity.owner.id === activeCoreUser.id,
@@ -223,12 +227,17 @@ export class PersonalAreaService {
       const areaDto: PersonalAreaResDto = {
         ...areaWithoutUsers,
         ownerInitials: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
-        personalRooms: areaWithoutUsers.personalRooms.map((personalRoom) => {
-          const currentRoomNoUser = removeUser(personalRoom);
-          const { personalArea, userComments, ...currentRoomDto } =
-            currentRoomNoUser;
-          return currentRoomDto;
-        }),
+        personalRooms: areaWithoutUsers.personalRooms.map(
+          (
+            personalRoom: Omit<
+              PersonalRoom,
+              'userComments' | 'personalArea' | 'userImages'
+            >,
+          ) => {
+            const currentRoomNoUser = removeUser(personalRoom);
+            return currentRoomNoUser;
+          },
+        ),
         isOwner:
           savedPersonalAreaEntityWithOwner.owner.id === activeCoreUser.id,
       };
@@ -324,8 +333,16 @@ export class PersonalAreaService {
           )
           .map((personalRoom) => {
             const userImagesSlice = imageCount
-              ? personalRoom.userImages.slice(0, imageCount)
-              : personalRoom.userImages;
+              ? (
+                  personalRoom.userImages as Omit<
+                    UserImage,
+                    'userComments' | 'userTags'
+                  >[]
+                ).slice(0, imageCount)
+              : (personalRoom.userImages as Omit<
+                  UserImage,
+                  'userComments' | 'userTags'
+                >[]);
 
             const { personalArea, userComments, user, ...personalRoomNoArea } =
               personalRoom;

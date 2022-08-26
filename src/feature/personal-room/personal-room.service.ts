@@ -19,6 +19,7 @@ import {
 import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
+import { UserImage } from '../user-image/entity/user-image.entity';
 
 @Injectable()
 export class PersonalRoomService {
@@ -55,8 +56,16 @@ export class PersonalRoomService {
         (roomEntity) => {
           // reducing amount of images included in room depending on queryParam
           const imagesSlices = imageCount
-            ? roomEntity.userImages.slice(0, imageCount)
-            : roomEntity.userImages;
+            ? (
+                roomEntity.userImages as Omit<
+                  UserImage,
+                  'userComments' | 'userTags'
+                >[]
+              ).slice(0, imageCount)
+            : (roomEntity.userImages as Omit<
+                UserImage,
+                'userComments' | 'userTags'
+              >[]);
 
           return {
             id: roomEntity.id,
@@ -145,11 +154,10 @@ export class PersonalRoomService {
         const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
-          .map((userImageEntity) => {
+          .map((userImageEntity: Omit<UserImage, 'userComments'>) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoRooms,
+              ...imageEntityNoUser,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
               ownerInitials: getUserInitials(userImageEntity.user),
               personalRooms: imageEntityNoUser.personalRooms.map(
@@ -162,8 +170,7 @@ export class PersonalRoomService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
+                return { title: userTag.title, id: userTag.id };
               }),
             };
           });
