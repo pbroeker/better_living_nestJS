@@ -66,8 +66,9 @@ export class UserImageController {
   async getUserImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
+    @Query('roomId') roomId: number | undefined,
   ): Promise<UserImageDto> {
-    return await this.imageService.getUserImage(user, imageId);
+    return await this.imageService.getUserImage(user, imageId, roomId);
   }
 
   @ApiResponse({
