@@ -5,6 +5,7 @@ import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { PersonalRoom } from './../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTag } from './../../../feature/user-tag/entity/userTags.entity';
 import { InvitationToken } from './../../../feature/invitation-token/entity/invitation-token.entity';
+import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
 
 @Entity({ name: 'core-user' })
 export class CoreUser extends IdentifiableEntity {
@@ -51,6 +52,9 @@ export class CoreUser extends IdentifiableEntity {
 
   @OneToMany(() => UserTag, (userTag) => userTag.user)
   userTags: UserTag[];
+
+  @OneToMany(() => UserComment, (userComment) => userComment.user)
+  userComment: UserComment[];
 
   @OneToMany(() => InvitationToken, (token) => token.inviter)
   invitationTokens: InvitationToken[];
