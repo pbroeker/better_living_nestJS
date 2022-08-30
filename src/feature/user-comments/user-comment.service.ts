@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { UserCommentReqDto, UserCommentResDto } from './dto/user-comment.dto';
 import { UserComment } from './entity/userComment.entity';
 import { SharedRoomService } from '../../shared/shared-room.service';
-import { getUserInitials } from '../../utils/features/helpers';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserCommentService {
@@ -29,21 +29,19 @@ export class UserCommentService {
         relations: {
           personalRoom: true,
           userImage: true,
+          user: true,
         },
       });
 
-      const userCommentDtos: UserCommentResDto[] = userCommentEntitites.map(
-        (userComment) => {
-          return {
-            content: userComment.content,
-            ownerInitials: getUserInitials(activeCoreUser),
-            ownerName: `${activeCoreUser.first_name} ${activeCoreUser.last_name}`,
-            createdAt: userComment.createdAt,
-            roomId: userComment.personalRoom.id,
-            imageId: userComment.userImage.id,
-          };
-        },
-      );
+      const userCommentDtos = userCommentEntitites.map((userCommentEntity) => {
+        return plainToInstance(
+          UserCommentResDto,
+          instanceToPlain(userCommentEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
 
       return userCommentDtos;
     } catch (error) {
@@ -72,21 +70,20 @@ export class UserCommentService {
       const userImageEntity = await this.sharedImageService.findAnyByIds([
         userCommentDto.imageId,
       ]);
-      const userComment = await this.userCommentRepository.save({
+      const userCommentEntity = await this.userCommentRepository.save({
         user: activeCoreUser,
         content: userCommentDto.content,
         userImage: userImageEntity[0],
         personalRoom: personalRoomEntity[0],
       });
 
-      return {
-        content: userComment.content,
-        ownerInitials: getUserInitials(activeCoreUser),
-        ownerName: `${activeCoreUser.first_name} ${activeCoreUser.last_name}`,
-        createdAt: userComment.createdAt,
-        roomId: userComment.personalRoom.id,
-        imageId: userComment.userImage.id,
-      };
+      return plainToInstance(
+        UserCommentResDto,
+        instanceToPlain(userCommentEntity),
+        {
+          excludeExtraneousValues: true,
+        },
+      );
     } catch (error) {
       throw new HttpException(
         {
