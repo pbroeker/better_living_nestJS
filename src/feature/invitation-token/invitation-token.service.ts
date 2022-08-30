@@ -10,7 +10,8 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationToken } from './entity/invitation-token.entity';
-import { GuestUserResDto } from '../guest-user/dto/guest-user.dto';
+import { GuestUserFullResDto } from '../guest-user/dto/guest-user.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class InvitationTokenService {
@@ -50,7 +51,7 @@ export class InvitationTokenService {
   async checkInvitationToken(
     invitedUser: CoreUserDto,
     invitationToken: string,
-  ): Promise<GuestUserResDto> {
+  ): Promise<GuestUserFullResDto> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         invitedUser.email,
@@ -82,12 +83,13 @@ export class InvitationTokenService {
         // Only adding guest if it doesn't exist yet
         const guestIds = hostEntity.guests.map((guest) => guest.id);
         if (guestIds.includes(activeCoreUser.id)) {
-          return {
-            ...activeCoreUser,
-            guestIds: activeCoreUser.guests.map((guest) => guest.id),
-            hostIds: activeCoreUser.hosts.map((host) => host.id),
-            id: activeCoreUser.id,
-          };
+          return plainToInstance(
+            GuestUserFullResDto,
+            instanceToPlain(activeCoreUser),
+            {
+              excludeExtraneousValues: true,
+            },
+          );
         } else {
           const newActiveCoreUser = await this.sharedUserService.addGuest(
             hostEntity,
@@ -97,19 +99,13 @@ export class InvitationTokenService {
           await this.addGuestToInviterAreas(hostEntity, newActiveCoreUser);
           // Deleting used invitationToken
           await this.invitationTokenRepo.delete(foundInvitationToken.id);
-          const {
-            currentHashedRefreshToken,
-            user_password,
-            hosts,
-            guests,
-            ...newActiveCoreUserNoPW
-          } = newActiveCoreUser;
-          return {
-            ...newActiveCoreUserNoPW,
-            guestIds: newActiveCoreUser.guests.map((guest) => guest.id),
-            hostIds: newActiveCoreUser.hosts.map((host) => host.id),
-            id: newActiveCoreUser.id,
-          };
+          return plainToInstance(
+            GuestUserFullResDto,
+            instanceToPlain(newActiveCoreUser),
+            {
+              excludeExtraneousValues: true,
+            },
+          );
         }
       } else {
         throw new HttpException(
