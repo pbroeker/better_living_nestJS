@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
+import { UserCommentResDto } from 'src/feature/user-comments/dto/user-comment.dto';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
 import { ImageFilterOptions } from '../../../types/classes';
@@ -15,7 +16,7 @@ export class UserImageDto {
   @ApiProperty()
   @IsOptional()
   @IsNumber()
-  id: number;
+  id?: number;
 
   @ApiProperty()
   @IsString()
@@ -59,6 +60,11 @@ export class UserImageDto {
   @IsOptional()
   @IsArray()
   personalRooms?: Partial<PersonalRoom>[];
+
+  @ApiProperty({ type: [UserCommentResDto] })
+  @IsOptional()
+  @IsArray()
+  userComments?: UserCommentResDto[];
 
   @ApiProperty({ type: [UserTagResDto] })
   @IsOptional()

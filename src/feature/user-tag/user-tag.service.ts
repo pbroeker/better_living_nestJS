@@ -30,7 +30,14 @@ export class UserTagService {
       });
 
       const userTagDtos = userTagEntities.map((usertag) => {
-        return usertag;
+        return {
+          title: usertag.title,
+          id: usertag.id,
+          userImages: usertag.userImages as Omit<
+            UserImage,
+            'userTags' | 'personalRooms' | 'userComments'
+          >[],
+        };
       });
       return userTagDtos;
     } catch (error) {
@@ -55,7 +62,7 @@ export class UserTagService {
 
       let userImageEntities: UserImage[] = [];
       if (userTagDto.userImageIds) {
-        userImageEntities = await this.sharedImageService.findByIds(
+        userImageEntities = await this.sharedImageService.findOwnedByIds(
           activeCoreUser,
           userTagDto.userImageIds,
         );
@@ -70,7 +77,9 @@ export class UserTagService {
       });
 
       const savedTagEntity = await this.userTagRepository.save(userTagEntity);
-      const tagNoUser = removeUser(savedTagEntity);
+      const tagNoUser = removeUser(
+        savedTagEntity as Omit<UserTag, 'userImages'>,
+      );
 
       return tagNoUser;
     } catch (error) {

@@ -19,6 +19,8 @@ import { UserTag } from '../user-tag/entity/userTags.entity';
 import { PaginatedImagesResDto } from '../user-image/dto/user-image.dto';
 import { getUserInitials } from '../../utils/features/helpers';
 import { HttpException } from '@nestjs/common';
+import { UserComment } from '../user-comments/entity/userComment.entity';
+import { UserCommentResDto } from '../user-comments/dto/user-comment.dto';
 
 const mockCoreUserDto: CoreUserDto = {
   userId: 1,
@@ -49,6 +51,7 @@ const mockRoom: PersonalRoom = {
   user: mockCoreUser,
   userImages: [],
   personalArea: {} as PersonalArea,
+  userComments: [] as UserComment[],
 };
 
 const mockRoomResDto: PersonalRoomResDto = {
@@ -56,8 +59,8 @@ const mockRoomResDto: PersonalRoomResDto = {
   iconId: mockRoom.iconId,
   id: mockRoom.id,
   totalImages: 0,
-  personalArea: {} as PersonalArea,
   userImages: [],
+  userComments: [] as UserCommentResDto[],
 };
 const mockUserImage: UserImage = {
   id: 1,
@@ -70,6 +73,7 @@ const mockUserImage: UserImage = {
   createdAt: new Date(),
   updatedAt: new Date(),
   userTags: [] as UserTag[],
+  userComments: [],
 };
 
 const mockPaginatedImageResDto: PaginatedImagesResDto = {
@@ -114,6 +118,7 @@ const mockPersonalRoom: PersonalRoom = {
   personalArea: mockPersonalArea,
   user: mockCoreUser,
   userImages: [],
+  userComments: [],
 };
 
 const PersonalRoomRepositoryFake = {
@@ -126,7 +131,7 @@ const PersonalRoomRepositoryFake = {
 
 const moduleMocker = new ModuleMocker(global);
 
-describe('AuthService', () => {
+describe('RoomService', () => {
   let personalRoomService: PersonalRoomService;
   let personalRoomRepository: Repository<PersonalRoom>;
   let sharedAreaService: SharedAreaService;

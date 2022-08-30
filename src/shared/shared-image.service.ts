@@ -4,7 +4,6 @@ import { In, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
-import { ImageFilterQuery } from 'src/feature/user-image/dto/user-image.dto';
 import sizeOf from 'image-size';
 import { HttpService } from '@nestjs/axios';
 @Injectable()
@@ -15,7 +14,10 @@ export class SharedImageService {
     private readonly httpService: HttpService,
   ) {}
 
-  async findByIds(currentUser: CoreUser, ids: number[]): Promise<UserImage[]> {
+  async findOwnedByIds(
+    currentUser: CoreUser,
+    ids: number[],
+  ): Promise<UserImage[]> {
     if (!ids.length) {
       return [];
     }
@@ -92,5 +94,13 @@ export class SharedImageService {
     const width = sizeOf(Buffer.from(imageData.data, 'base64')).width;
     const height = sizeOf(Buffer.from(imageData.data, 'base64')).height;
     return { width, height };
+  }
+
+  async findAnyByIds(ids: number[]): Promise<UserImage[]> {
+    if (!ids.length) {
+      return [];
+    }
+
+    return await this.userImageRepository.find({ where: { id: In(ids) } });
   }
 }

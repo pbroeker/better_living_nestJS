@@ -10,6 +10,7 @@ import {
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
 import { getUserInitials, removeUser } from '../../utils/features/helpers';
+import { commentsToCommentsDtos } from './helpers/transform-functions';
 import { SharedImageService } from '../../shared/shared-image.service';
 import {
   ImageFilterQuery,
@@ -18,6 +19,7 @@ import {
 import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
+import { UserImage } from '../user-image/entity/user-image.entity';
 
 @Injectable()
 export class PersonalRoomService {
@@ -42,23 +44,45 @@ export class PersonalRoomService {
         where: { user: { id: activeCoreUser.id } },
         relations: {
           userImages: true,
+          userComments: {
+            userImage: true,
+            user: true,
+            personalRoom: true,
+          },
         },
       });
 
-      const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoUser = removeUser(roomEntity);
-        // reducing amount of images included in room depending on queryParam
-        const imagesSlices = imageCount
-          ? roomNoUser.userImages.slice(0, imageCount)
-          : roomNoUser.userImages;
-        return {
-          ...roomNoUser,
-          userImages: imagesSlices,
-          totalImages: roomNoUser.userImages.length,
-        };
-      });
+      const personalRoomDtos: PersonalRoomResDto[] = personalRoomEntities.map(
+        (roomEntity) => {
+          // reducing amount of images included in room depending on queryParam
+          const imagesSlices = imageCount
+            ? (
+                roomEntity.userImages as Omit<
+                  UserImage,
+                  'userComments' | 'userTags'
+                >[]
+              ).slice(0, imageCount)
+            : (roomEntity.userImages as Omit<
+                UserImage,
+                'userComments' | 'userTags'
+              >[]);
+
+          return {
+            id: roomEntity.id,
+            title: roomEntity.title,
+            iconId: roomEntity.iconId,
+            userComments: commentsToCommentsDtos(
+              activeCoreUser,
+              roomEntity.userComments,
+            ),
+            userImages: imagesSlices,
+            totalImages: roomEntity.userImages.length,
+          };
+        },
+      );
       return personalRoomDtos;
     } catch (error) {
+      console.log('error" ==== ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_personal_room.title',
@@ -130,11 +154,10 @@ export class PersonalRoomService {
         const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
-          .map((userImageEntity) => {
+          .map((userImageEntity: Omit<UserImage, 'userComments'>) => {
             const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
             return {
-              ...imageEntityNoRooms,
+              ...imageEntityNoUser,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
               ownerInitials: getUserInitials(userImageEntity.user),
               personalRooms: imageEntityNoUser.personalRooms.map(
@@ -147,8 +170,7 @@ export class PersonalRoomService {
                 },
               ),
               userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
+                return { title: userTag.title, id: userTag.id };
               }),
             };
           });
@@ -236,10 +258,13 @@ export class PersonalRoomService {
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
         const roomNoUser = removeUser(newRoomEntity);
-        const { users, owner, ...areaNoUsers } = roomNoUser.personalArea;
+        const { users, owner, personalRooms, ...areaNoUsers } =
+          roomNoUser.personalArea;
         return {
           ...roomNoUser,
           personalArea: areaNoUsers,
+          userComments: [],
+          userImages: [],
         };
       });
 
@@ -270,9 +295,16 @@ export class PersonalRoomService {
           ...personalRoomEntity,
           ...editData,
         });
-        const roomNoUser = removeUser(savedPersonalRoomEntity);
 
-        return roomNoUser;
+        return {
+          id: savedPersonalRoomEntity.id,
+          title: savedPersonalRoomEntity.title,
+          iconId: savedPersonalRoomEntity.iconId,
+          personalArea: {
+            title: personalRoomEntity.personalArea.title,
+            id: personalRoomEntity.personalArea.id,
+          },
+        };
       } else {
         throw new HttpException(
           {
