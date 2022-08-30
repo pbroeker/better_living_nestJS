@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedImageService } from '../../shared/shared-image.service';
-import { removeUser } from '../../utils/features/helpers';
 import { Repository } from 'typeorm';
 import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
 import { UserTag } from './entity/userTags.entity';
 import { UserImage } from '../user-image/entity/user-image.entity';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserTagService {
@@ -29,16 +29,12 @@ export class UserTagService {
         where: { user: activeCoreUser },
       });
 
-      const userTagDtos = userTagEntities.map((usertag) => {
-        return {
-          title: usertag.title,
-          id: usertag.id,
-          userImages: usertag.userImages as Omit<
-            UserImage,
-            'userTags' | 'personalRooms' | 'userComments'
-          >[],
-        };
+      const userTagDtos = userTagEntities.map((entity) => {
+        return plainToInstance(UserTagResDto, instanceToPlain(entity), {
+          excludeExtraneousValues: true,
+        });
       });
+
       return userTagDtos;
     } catch (error) {
       throw new HttpException(
@@ -77,11 +73,10 @@ export class UserTagService {
       });
 
       const savedTagEntity = await this.userTagRepository.save(userTagEntity);
-      const tagNoUser = removeUser(
-        savedTagEntity as Omit<UserTag, 'userImages'>,
-      );
 
-      return tagNoUser;
+      return plainToInstance(UserTagResDto, instanceToPlain(savedTagEntity), {
+        excludeExtraneousValues: true,
+      });
     } catch (error) {
       throw new HttpException(
         {
