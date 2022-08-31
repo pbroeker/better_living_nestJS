@@ -8,12 +8,15 @@ import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
 import { UserTag } from './entity/userTags.entity';
 import { UserImage } from '../user-image/entity/user-image.entity';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
+import { SharedRoomService } from 'src/shared/shared-room.service';
 
 @Injectable()
 export class UserTagService {
   constructor(
     private sharedUserService: SharedUserService,
     private sharedImageService: SharedImageService,
+    private sharedRoomService: SharedRoomService,
     @InjectRepository(UserTag)
     private userTagRepository: Repository<UserTag>,
   ) {}
@@ -25,13 +28,14 @@ export class UserTagService {
       );
 
       const userTagEntities = await this.userTagRepository.find({
-        relations: ['userImages'],
+        relations: { userImages: true, personalRooms: true },
         where: { user: activeCoreUser },
       });
 
       const userTagDtos = userTagEntities.map((entity) => {
         return plainToInstance(UserTagResDto, instanceToPlain(entity), {
           excludeExtraneousValues: true,
+          groups: ['getCompleteTag'],
         });
       });
 
@@ -58,24 +62,33 @@ export class UserTagService {
 
       let userImageEntities: UserImage[] = [];
       if (userTagDto.userImageIds) {
-        userImageEntities = await this.sharedImageService.findOwnedByIds(
-          activeCoreUser,
+        userImageEntities = await this.sharedImageService.findAnyByIds(
           userTagDto.userImageIds,
         );
       } else {
         userImageEntities = [];
+      }
+      let personalRoomEntities: PersonalRoom[] = [];
+      if (userTagDto.personalRoomIds) {
+        personalRoomEntities = await this.sharedRoomService.findAnyByIds(
+          userTagDto.personalRoomIds,
+        );
+      } else {
+        personalRoomEntities = [];
       }
 
       const userTagEntity = this.userTagRepository.create({
         user: activeCoreUser,
         title: userTagDto.title,
         userImages: userImageEntities,
+        personalRooms: personalRoomEntities,
       });
 
       const savedTagEntity = await this.userTagRepository.save(userTagEntity);
 
       return plainToInstance(UserTagResDto, instanceToPlain(savedTagEntity), {
         excludeExtraneousValues: true,
+        groups: ['getCompleteTag'],
       });
     } catch (error) {
       throw new HttpException(
