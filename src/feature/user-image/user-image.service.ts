@@ -71,8 +71,6 @@ export class UserImageService {
           user: true,
           userComments: {
             user: true,
-            personalRoom: true,
-            userImage: true,
           },
         },
       });
@@ -129,7 +127,6 @@ export class UserImageService {
           userTags: true,
           userComments: {
             user: true,
-            userImage: true,
             personalRoom: true,
           },
         },

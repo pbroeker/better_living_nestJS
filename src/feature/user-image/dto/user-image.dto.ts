@@ -105,10 +105,18 @@ export class UserImageDto {
   @Expose()
   @IsOptional()
   @IsArray()
-  @Transform(({ value }: { value: UserComment }) => {
-    return plainToInstance(UserCommentResDto, instanceToPlain(value), {
-      excludeExtraneousValues: true,
-    });
+  @Transform(({ value }: { value: UserComment[] }) => {
+    if (value) {
+      return value.map((userCommentEntity) => {
+        return plainToInstance(
+          UserCommentResDto,
+          instanceToPlain(userCommentEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
+    }
   })
   userComments?: UserCommentResDto[];
 
