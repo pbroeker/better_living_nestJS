@@ -51,7 +51,7 @@ export class UserCommentResDto {
   createdAt: Date;
 
   @ApiProperty()
-  @Expose()
+  @Expose({ groups: ['allComments'] })
   @IsNotEmpty()
   @IsNumber()
   @Transform(({ obj }: { obj: UserComment }) => {
@@ -60,7 +60,7 @@ export class UserCommentResDto {
   roomId: number;
 
   @ApiProperty()
-  @Expose()
+  @Expose({ groups: ['allComments'] })
   @IsNotEmpty()
   @IsNumber()
   @Transform(({ obj }: { obj: UserComment }) => {

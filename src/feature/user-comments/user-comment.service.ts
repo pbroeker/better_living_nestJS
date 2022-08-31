@@ -39,6 +39,7 @@ export class UserCommentService {
           instanceToPlain(userCommentEntity),
           {
             excludeExtraneousValues: true,
+            groups: ['allComments'],
           },
         );
       });
@@ -82,6 +83,7 @@ export class UserCommentService {
         instanceToPlain(userCommentEntity),
         {
           excludeExtraneousValues: true,
+          groups: ['allComments'],
         },
       );
     } catch (error) {
