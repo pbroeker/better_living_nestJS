@@ -22,6 +22,7 @@ import { SharedImageService } from '../../shared/shared-image.service';
 import * as _ from 'lodash';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserCommentResDto } from '../user-comments/dto/user-comment.dto';
+import { UserTagResDto } from '../user-tag/dto/user-tag.dto';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -124,7 +125,7 @@ export class UserImageService {
         relations: {
           personalRooms: true,
           user: true,
-          userTags: true,
+          userTags: { personalRooms: true },
           userComments: {
             user: true,
             personalRoom: true,
@@ -152,6 +153,23 @@ export class UserImageService {
                 return plainToInstance(
                   UserCommentResDto,
                   instanceToPlain(userComment),
+                  {
+                    excludeExtraneousValues: true,
+                  },
+                );
+              })
+          : [],
+        userTags: roomId
+          ? imageEntity.userTags
+              .filter((userTag) => {
+                return userTag.personalRooms
+                  .map((personalRoom) => personalRoom.id)
+                  .includes(roomId);
+              })
+              .map((userTag) => {
+                return plainToInstance(
+                  UserTagResDto,
+                  instanceToPlain(userTag),
                   {
                     excludeExtraneousValues: true,
                   },
@@ -193,7 +211,6 @@ export class UserImageService {
         relations: {
           personalRooms: true,
           user: true,
-          userTags: true,
         },
       });
 

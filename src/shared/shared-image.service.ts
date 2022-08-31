@@ -42,13 +42,12 @@ export class SharedImageService {
     const foundImages = await this.userImageRepository.find({
       where: {
         personalRooms: { id: roomId },
-        userComments: { personalRoom: { id: roomId } },
       },
       order: { createdAt: 'DESC' },
       relations: {
         personalRooms: true,
         user: true,
-        userTags: true,
+        userTags: { personalRooms: true },
         userComments: { user: true, personalRoom: true },
       },
     });
