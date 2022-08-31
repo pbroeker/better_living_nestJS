@@ -18,6 +18,8 @@ import {
 } from 'class-transformer';
 import { UserImage } from 'src/feature/user-image/entity/user-image.entity';
 import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
+import { UserTagResDto } from 'src/feature/user-tag/dto/user-tag.dto';
+import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
 
 export class PersonalRoomReqDto {
   @ApiProperty()
@@ -74,14 +76,38 @@ export class PersonalRoomResDto {
   @Expose()
   @IsOptional()
   @IsArray()
-  @Transform(({ value }: { value: UserComment }) => {
-    return plainToInstance(UserCommentResDto, instanceToPlain(value), {
-      excludeExtraneousValues: true,
-    });
+  @Transform(({ value }: { value: UserComment[] }) => {
+    if (value) {
+      return value.map((userCommentEntity) => {
+        return plainToInstance(
+          UserCommentResDto,
+          instanceToPlain(userCommentEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
+    }
   })
   userComments?: UserCommentResDto[];
 
+  @ApiProperty({ type: [UserTagResDto] })
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }: { value: UserTag[] }) => {
+    if (value) {
+      return value.map((userTagEntity) => {
+        return plainToInstance(UserTagResDto, instanceToPlain(userTagEntity), {
+          excludeExtraneousValues: true,
+        });
+      });
+    }
+  })
+  userTags?: UserTagResDto[];
+
   @ApiProperty()
+  @IsOptional()
   @Expose()
   get totalImages() {
     return this.userImages.length;

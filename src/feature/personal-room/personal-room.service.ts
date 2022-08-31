@@ -19,6 +19,7 @@ import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserTagResDto } from '../user-tag/dto/user-tag.dto';
 
 @Injectable()
 export class PersonalRoomService {
@@ -44,10 +45,9 @@ export class PersonalRoomService {
         relations: {
           userImages: { user: true },
           userComments: {
-            userImage: true,
             user: true,
-            personalRoom: true,
           },
+          userTags: true,
         },
       });
 
@@ -74,6 +74,11 @@ export class PersonalRoomService {
                   excludeExtraneousValues: true,
                 },
               );
+            }),
+            userTags: roomEntity.userTags.map((userTag) => {
+              return plainToInstance(UserTagResDto, instanceToPlain(userTag), {
+                excludeExtraneousValues: true,
+              });
             }),
             totalImages: roomEntity.userImages.length,
           };
@@ -153,9 +158,24 @@ export class PersonalRoomService {
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
           .map((userImageEntity) => {
+            const filteredTags = userImageEntity.userTags.filter((userTag) => {
+              return userTag.personalRooms
+                .map((room) => room.id)
+                .includes(roomId);
+            });
+            const filteredComments = userImageEntity.userComments.filter(
+              (userComment) => {
+                return userComment.personalRoom.id === roomId;
+              },
+            );
+            const roomEntityWithFilteredTags = {
+              ...userImageEntity,
+              userTags: filteredTags,
+              userComments: filteredComments,
+            };
             const userImageDto = plainToInstance(
               UserImageDto,
-              instanceToPlain(userImageEntity),
+              instanceToPlain(roomEntityWithFilteredTags),
               {
                 excludeExtraneousValues: true,
               },
