@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import {
+  Exclude,
+  Expose,
+  instanceToPlain,
+  plainToInstance,
+  Transform,
+  Type,
+} from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -7,22 +14,32 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
+import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
 import { UserCommentResDto } from 'src/feature/user-comments/dto/user-comment.dto';
+import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
+import { getUserInitials } from 'src/utils/features/helpers';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
 import { ImageFilterOptions } from '../../../types/classes';
+import { UserImage } from '../entity/user-image.entity';
+
+Exclude();
 export class UserImageDto {
   @ApiProperty()
+  @Expose()
   @IsOptional()
-  @IsNumber()
+  @IsUUID()
   id?: number;
 
   @ApiProperty()
+  @Expose()
   @IsString()
   src: string;
 
   @ApiProperty()
+  @Expose()
   @IsString()
   key: string;
 
@@ -32,41 +49,71 @@ export class UserImageDto {
   isOwner?: boolean;
 
   @ApiProperty()
-  @IsOptional()
+  @Expose()
   @IsString()
-  ownerInitials?: string;
+  @Transform(({ obj }: { obj: UserImage }) => {
+    if (obj.user) {
+      return getUserInitials(obj.user);
+    }
+  })
+  ownerInitials: string;
 
   @ApiProperty()
+  @Expose()
   @IsOptional()
   @IsNumber()
   height?: number;
 
   @ApiProperty()
+  @Expose()
   @IsOptional()
   @IsNumber()
   width?: number;
 
   @ApiProperty()
+  @Expose()
   @IsString()
   @IsDateString()
   createdAt: Date;
 
   @ApiProperty()
+  @Expose()
   @IsString()
   @IsDateString()
   updatedAt: Date;
 
   @ApiProperty()
+  @Expose()
   @IsOptional()
   @IsArray()
-  personalRooms?: Partial<PersonalRoom>[];
+  @Transform(({ value }: { value: PersonalRoom[] }) => {
+    if (value) {
+      return value.map((personalRoomEntity) => {
+        return plainToInstance(
+          PersonalRoomResDto,
+          instanceToPlain(personalRoomEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
+    }
+  })
+  personalRooms?: PersonalRoomResDto[];
 
   @ApiProperty({ type: [UserCommentResDto] })
+  @Expose()
   @IsOptional()
   @IsArray()
+  @Transform(({ value }: { value: UserComment }) => {
+    return plainToInstance(UserCommentResDto, instanceToPlain(value), {
+      excludeExtraneousValues: true,
+    });
+  })
   userComments?: UserCommentResDto[];
 
   @ApiProperty({ type: [UserTagResDto] })
+  @Expose()
   @IsOptional()
   @IsArray()
   userTags?: UserTagResDto[];
