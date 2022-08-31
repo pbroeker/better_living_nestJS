@@ -9,17 +9,16 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { getUserInitials, removeUser } from '../../utils/features/helpers';
-import { commentsToCommentsDtos } from './helpers/transform-functions';
 import { SharedImageService } from '../../shared/shared-image.service';
 import {
   ImageFilterQuery,
   PaginatedImagesResDto,
+  UserImageDto,
 } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
-import { UserImage } from '../user-image/entity/user-image.entity';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class PersonalRoomService {
@@ -43,7 +42,7 @@ export class PersonalRoomService {
       const personalRoomEntities = await this.personalRoomRepository.find({
         where: { user: { id: activeCoreUser.id } },
         relations: {
-          userImages: true,
+          userImages: { user: true },
           userComments: {
             userImage: true,
             user: true,
@@ -56,33 +55,32 @@ export class PersonalRoomService {
         (roomEntity) => {
           // reducing amount of images included in room depending on queryParam
           const imagesSlices = imageCount
-            ? (
-                roomEntity.userImages as Omit<
-                  UserImage,
-                  'userComments' | 'userTags'
-                >[]
-              ).slice(0, imageCount)
-            : (roomEntity.userImages as Omit<
-                UserImage,
-                'userComments' | 'userTags'
-              >[]);
-
+            ? roomEntity.userImages.slice(0, imageCount)
+            : roomEntity.userImages;
+          const roomDto = plainToInstance(
+            PersonalRoomResDto,
+            instanceToPlain(roomEntity),
+            {
+              excludeExtraneousValues: true,
+            },
+          );
           return {
-            id: roomEntity.id,
-            title: roomEntity.title,
-            iconId: roomEntity.iconId,
-            userComments: commentsToCommentsDtos(
-              activeCoreUser,
-              roomEntity.userComments,
-            ),
-            userImages: imagesSlices,
+            ...roomDto,
+            userImages: imagesSlices.map((userImageEntity) => {
+              return plainToInstance(
+                UserImageDto,
+                instanceToPlain(userImageEntity),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
             totalImages: roomEntity.userImages.length,
           };
         },
       );
       return personalRoomDtos;
     } catch (error) {
-      console.log('error" ==== ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_personal_room.title',
@@ -154,24 +152,17 @@ export class PersonalRoomService {
         const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
-          .map((userImageEntity: Omit<UserImage, 'userComments'>) => {
-            const imageEntityNoUser = removeUser(userImageEntity);
+          .map((userImageEntity) => {
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(userImageEntity),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
             return {
-              ...imageEntityNoUser,
+              ...userImageDto,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              ownerInitials: getUserInitials(userImageEntity.user),
-              personalRooms: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => {
-                  return {
-                    id: personalRoom.id,
-                    iconId: personalRoom.iconId,
-                    title: personalRoom.title,
-                  };
-                },
-              ),
-              userTags: imageEntityNoUser.userTags.map((userTag) => {
-                return { title: userTag.title, id: userTag.id };
-              }),
             };
           });
         return {
@@ -187,7 +178,6 @@ export class PersonalRoomService {
         return {} as PaginatedImagesResDto;
       }
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'personal_rooms.error.get_room_images.title',
@@ -257,15 +247,13 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomNoUser = removeUser(newRoomEntity);
-        const { users, owner, personalRooms, ...areaNoUsers } =
-          roomNoUser.personalArea;
-        return {
-          ...roomNoUser,
-          personalArea: areaNoUsers,
-          userComments: [],
-          userImages: [],
-        };
+        return plainToInstance(
+          PersonalRoomResDto,
+          instanceToPlain(newRoomEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
       });
 
       return newRoomDtos;
@@ -295,16 +283,13 @@ export class PersonalRoomService {
           ...personalRoomEntity,
           ...editData,
         });
-
-        return {
-          id: savedPersonalRoomEntity.id,
-          title: savedPersonalRoomEntity.title,
-          iconId: savedPersonalRoomEntity.iconId,
-          personalArea: {
-            title: personalRoomEntity.personalArea.title,
-            id: personalRoomEntity.personalArea.id,
+        return plainToInstance(
+          PersonalRoomResDto,
+          instanceToPlain(savedPersonalRoomEntity),
+          {
+            excludeExtraneousValues: true,
           },
-        };
+        );
       } else {
         throw new HttpException(
           {
