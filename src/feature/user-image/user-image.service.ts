@@ -5,7 +5,6 @@ import * as AWS from 'aws-sdk';
 import * as multer from 'multer';
 import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from '../../shared/shared-room.service';
-import { getUserInitials, removeUser } from '../../utils/features/helpers';
 import { In, Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
@@ -21,6 +20,8 @@ import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
 import { SharedImageService } from '../../shared/shared-image.service';
 import * as _ from 'lodash';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserCommentResDto } from '../user-comments/dto/user-comment.dto';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -82,36 +83,16 @@ export class UserImageService {
       if (allUserImages) {
         const allUserImageDtos: UserImageDto[] = allUserImages.map(
           (userImageEntity) => {
-            const imageEntityNoUser = removeUser(userImageEntity);
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(userImageEntity),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
             return {
-              ...imageEntityNoUser,
-              ownerInitials: getUserInitials(userImageEntity.user),
+              ...userImageDto,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              userComments: imageEntityNoUser.userComments.map(
-                (userComment) => {
-                  return {
-                    id: userComment.id,
-                    content: userComment.content,
-                    createdAt: userComment.createdAt,
-                    roomId: userComment.personalRoom.id,
-                    imageId: userComment.userImage.id,
-                    ownerInitials: userComment.user.first_name,
-                    ownerName: `${userComment.user.first_name} ${userComment.user.last_name}`,
-                  };
-                },
-              ),
-              personalRooms: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => {
-                  return {
-                    id: personalRoom.id,
-                    iconId: personalRoom.iconId,
-                    title: personalRoom.title,
-                  };
-                },
-              ),
-              userTags: userImageEntity.userTags.map((userTag) => {
-                return { title: userTag.title, id: userTag.id };
-              }),
             };
           },
         );
@@ -154,38 +135,32 @@ export class UserImageService {
         },
       });
 
-      const imageEntityNoUser = removeUser(imageEntity);
+      const imageDto = plainToInstance(
+        UserImageDto,
+        instanceToPlain(imageEntity),
+        {
+          excludeExtraneousValues: true,
+        },
+      );
+
       return {
-        ...imageEntityNoUser,
+        ...imageDto,
         isOwner: activeCoreUser.id === imageEntity.user.id,
-        ownerInitials: getUserInitials(imageEntity.user),
-        personalRooms: imageEntityNoUser.personalRooms.map((personalRoom) => {
-          return {
-            id: personalRoom.id,
-            iconId: personalRoom.iconId,
-            title: personalRoom.title,
-          };
-        }),
         userComments: roomId
-          ? imageEntityNoUser.userComments
+          ? imageEntity.userComments
               .filter((userComment) => {
                 return userComment.personalRoom.id === roomId;
               })
               .map((userComment) => {
-                return {
-                  id: userComment.id,
-                  content: userComment.content,
-                  createdAt: userComment.createdAt,
-                  roomId: userComment.personalRoom.id,
-                  imageId: userComment.userImage.id,
-                  ownerInitials: userComment.user.first_name,
-                  ownerName: `${userComment.user.first_name} ${userComment.user.last_name}`,
-                };
+                return plainToInstance(
+                  UserCommentResDto,
+                  instanceToPlain(userComment),
+                  {
+                    excludeExtraneousValues: true,
+                  },
+                );
               })
           : [],
-        userTags: imageEntityNoUser.userTags.map((userTag) => {
-          return { title: userTag.title, id: userTag.id };
-        }),
       };
     } catch (error) {
       throw new HttpException(
@@ -218,7 +193,11 @@ export class UserImageService {
             : { id: In([activeCoreUser.id]) },
         },
         order: { createdAt: 'DESC' },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+          userTags: true,
+        },
       });
 
       const roomFilterOptions = _.uniqBy(
@@ -257,24 +236,17 @@ export class UserImageService {
 
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
-          .map((userImageEntity: Omit<UserImage, 'userComments'>) => {
-            const imageEntityNoUser = removeUser(userImageEntity);
+          .map((userImageEntity) => {
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(userImageEntity),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
             return {
-              ...imageEntityNoUser,
+              ...userImageDto,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              ownerInitials: getUserInitials(userImageEntity.user),
-              personalRooms: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => {
-                  return {
-                    id: personalRoom.id,
-                    iconId: personalRoom.iconId,
-                    title: personalRoom.title,
-                  };
-                },
-              ),
-              userTags: imageEntityNoUser.userTags.map((userTag) => {
-                return { title: userTag.title, id: userTag.id };
-              }),
             };
           });
         return {
@@ -320,8 +292,9 @@ export class UserImageService {
       height: height,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
-    const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
-    return imageEntityNoUser;
+    return plainToInstance(UserImageDto, instanceToPlain(savedImageEntity), {
+      excludeExtraneousValues: true,
+    });
   }
 
   async imageUpload(req: any, res: any, user: CoreUserDto) {
@@ -375,7 +348,10 @@ export class UserImageService {
           user: activeCoreUser,
           id: In(editImage.imageIds),
         },
-        relations: ['personalRooms', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+        },
       });
 
       // getPresentTagEntities
@@ -409,28 +385,14 @@ export class UserImageService {
           const savedImageEntity = await this.userImageRepository.save(
             imageEntity,
           );
-          const imageEntityNoUser = removeUser(
-            savedImageEntity as Omit<UserImage, 'userComments'>,
-          );
 
-          return {
-            ...imageEntityNoUser,
-            ownerInitials: getUserInitials(savedImageEntity.user),
-            isOwner: activeCoreUser.id === savedImageEntity.user.id,
-            personalRooms: roomEntities.map((personalRoom) => {
-              return {
-                id: personalRoom.id,
-                iconId: personalRoom.iconId,
-                title: personalRoom.title,
-              };
-            }),
-            userTags: savedImageEntity.userTags.map((userTag) => {
-              return {
-                title: userTag.title,
-                id: userTag.id,
-              };
-            }),
-          };
+          return plainToInstance(
+            UserImageDto,
+            instanceToPlain(savedImageEntity),
+            {
+              excludeExtraneousValues: true,
+            },
+          );
         }),
       );
 
@@ -466,7 +428,6 @@ export class UserImageService {
           },
           (err) => {
             if (err) {
-              console.error(err);
               throw new HttpException(
                 {
                   title: 'my_pictures.error.delete_images.title',

@@ -10,11 +10,12 @@ import { PersonalArea } from './entity/personalArea.entity';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { PersonalRoom } from '../personal-room/entity/personalRoom.entity';
-import { removeUser, getUserInitials } from '../../utils/features/helpers';
+import { getUserInitials } from '../../utils/features/helpers';
 import { PersonalAreaTitle } from '../../types/enums';
 import * as _ from 'lodash';
 import { PersonalRoomResDto } from '../personal-room/dto/personal-room.dto';
-import { UserImage } from '../user-image/entity/user-image.entity';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserImageDto } from '../user-image/dto/user-image.dto';
 
 @Injectable()
 export class PersonalAreaService {
@@ -114,24 +115,18 @@ export class PersonalAreaService {
       const savedPersonalAreaEntity = await this.personalAreaRepository.save(
         newAreaEntity,
       );
-      const { users, owner, ...areaWithoutUsers } = savedPersonalAreaEntity;
-      const areaDto: PersonalAreaResDto = {
-        ...areaWithoutUsers,
-        ownerInitials: getUserInitials(savedPersonalAreaEntity.owner),
-        personalRooms: savedPersonalAreaEntity.personalRooms.map(
-          (
-            personalRoom: Omit<
-              PersonalRoom,
-              'userComments' | 'personalArea' | 'userImages'
-            >,
-          ) => {
-            const currentRoomNoUser = removeUser(personalRoom);
-            return currentRoomNoUser;
-          },
-        ),
+      const areaDto = plainToInstance(
+        PersonalAreaResDto,
+        instanceToPlain(savedPersonalAreaEntity),
+        {
+          excludeExtraneousValues: true,
+        },
+      );
+
+      return {
+        ...areaDto,
         isOwner: savedPersonalAreaEntity.owner.id === activeCoreUser.id,
       };
-      return areaDto;
     } catch (error) {
       throw new HttpException(
         {
@@ -222,27 +217,18 @@ export class PersonalAreaService {
           where: { id: savedPersonalAreaEntity.id },
           relations: { owner: true, personalRooms: true },
         });
-      const { users, owner, ...areaWithoutUsers } =
-        savedPersonalAreaEntityWithOwner;
-      const areaDto: PersonalAreaResDto = {
-        ...areaWithoutUsers,
-        ownerInitials: getUserInitials(savedPersonalAreaEntityWithOwner.owner),
-        personalRooms: areaWithoutUsers.personalRooms.map(
-          (
-            personalRoom: Omit<
-              PersonalRoom,
-              'userComments' | 'personalArea' | 'userImages'
-            >,
-          ) => {
-            const currentRoomNoUser = removeUser(personalRoom);
-            return currentRoomNoUser;
-          },
-        ),
+      const areaDto = plainToInstance(
+        PersonalAreaResDto,
+        instanceToPlain(savedPersonalAreaEntityWithOwner),
+        {
+          excludeExtraneousValues: true,
+        },
+      );
+      return {
+        ...areaDto,
         isOwner:
           savedPersonalAreaEntityWithOwner.owner.id === activeCoreUser.id,
       };
-
-      return areaDto;
     } catch (error) {
       throw new HttpException(
         {
@@ -333,23 +319,28 @@ export class PersonalAreaService {
           )
           .map((personalRoom) => {
             const userImagesSlice = imageCount
-              ? (
-                  personalRoom.userImages as Omit<
-                    UserImage,
-                    'userComments' | 'userTags'
-                  >[]
-                ).slice(0, imageCount)
-              : (personalRoom.userImages as Omit<
-                  UserImage,
-                  'userComments' | 'userTags'
-                >[]);
+              ? personalRoom.userImages.slice(0, imageCount)
+              : personalRoom.userImages;
+            const newRoomDto = plainToInstance(
+              PersonalRoomResDto,
+              instanceToPlain(personalRoom),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
 
-            const { personalArea, userComments, user, ...personalRoomNoArea } =
-              personalRoom;
             return {
-              ...personalRoomNoArea,
-              userImages: userImagesSlice,
-              totalImages: personalRoomNoArea.userImages.length,
+              ...newRoomDto,
+              userImages: userImagesSlice.map((userImageEntity) =>
+                plainToInstance(
+                  UserImageDto,
+                  instanceToPlain(userImageEntity),
+                  {
+                    excludeExtraneousValues: true,
+                  },
+                ),
+              ),
+              totalImages: personalRoom.userImages.length,
             };
           });
 
