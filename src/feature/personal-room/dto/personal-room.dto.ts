@@ -57,12 +57,12 @@ export class PersonalRoomResDto {
   id: number;
 
   @ApiProperty({ type: PersonalAreaResDto })
-  @Expose()
+  @Expose({ groups: ['withArea'] })
   @IsOptional()
   personalArea?: PersonalAreaResDto;
 
   @ApiProperty({ type: [UserImageDto] })
-  @Expose()
+  @Expose({ groups: ['withImages'] })
   @IsOptional()
   @IsArray()
   @Transform(({ value }: { value: UserImage }) => {

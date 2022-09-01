@@ -368,14 +368,29 @@ export class UserImageService {
         },
       });
 
+      const roomEntities = await this.sharedRoomService.findAnyByIds(
+        editImage.personalRoomIds,
+      );
+
       // getPresentTagEntities
       const existingTags: UserTag[] = [];
       if (editImage.usertagIds.length) {
         const existingTagEntitites = await this.sharedTagService.findByIds(
           activeCoreUser,
           editImage.usertagIds,
+          { personalRooms: true, userImages: true },
         );
-        existingTags.push(...existingTagEntitites);
+        const existingUpdatedWithRooms = existingTagEntitites.map(
+          (existingTag) => {
+            existingTag.personalRooms = [
+              ...existingTag.personalRooms,
+              ...roomEntities,
+            ];
+
+            return existingTag;
+          },
+        );
+        existingTags.push(...existingUpdatedWithRooms);
       }
 
       // createNewTagEntities
@@ -384,13 +399,10 @@ export class UserImageService {
         const newUserTags = await this.sharedTagService.createTags(
           activeCoreUser,
           editImage.newUsertags,
+          roomEntities,
         );
         newTags.push(...newUserTags);
       }
-
-      const roomEntities = await this.sharedRoomService.findAnyByIds(
-        editImage.personalRoomIds,
-      );
 
       const updatedImages = await Promise.all(
         imageEntities.map(async (imageEntity) => {

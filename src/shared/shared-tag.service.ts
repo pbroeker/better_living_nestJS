@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
+import { FindOptionsRelations, Repository } from 'typeorm';
 import { CoreUser } from '../core/users/entity/user.entity';
 import { UserTag } from '../feature/user-tag/entity/userTags.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
@@ -12,7 +13,17 @@ export class SharedTagService {
     private userTagRepository: Repository<UserTag>,
   ) {}
 
-  async findByIds(currentUser: CoreUser, ids: number[]): Promise<UserTag[]> {
+  async findAll(): Promise<UserTag[]> {
+    return await this.userTagRepository.find({
+      relations: { personalRooms: true, userImages: { personalRooms: true } },
+    });
+  }
+
+  async findByIds(
+    currentUser: CoreUser,
+    ids: number[],
+    relations: FindOptionsRelations<UserTag> = {},
+  ): Promise<UserTag[]> {
     if (!ids.length) {
       return [];
     }
@@ -22,18 +33,21 @@ export class SharedTagService {
 
     return await this.userTagRepository.find({
       where: findIdOptions,
+      relations: relations,
     });
   }
 
   async createTags(
     currentUser: CoreUser,
     newUsertagTitles: string[],
+    roomEntities: PersonalRoom[],
   ): Promise<UserTag[]> {
     try {
       const userTagEntities = newUsertagTitles.map((newUsertagTitle) => {
         const userTagEntity = this.userTagRepository.create({
           user: currentUser,
           title: newUsertagTitle,
+          personalRooms: roomEntities,
         });
         return userTagEntity;
       });

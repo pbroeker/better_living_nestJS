@@ -47,6 +47,7 @@ export class PersonalRoomService {
           userComments: {
             user: true,
           },
+          personalArea: true,
           userTags: true,
         },
       });
@@ -62,6 +63,7 @@ export class PersonalRoomService {
             instanceToPlain(roomEntity),
             {
               excludeExtraneousValues: true,
+              groups: ['withArea'],
             },
           );
           return {
@@ -272,6 +274,7 @@ export class PersonalRoomService {
           instanceToPlain(newRoomEntity),
           {
             excludeExtraneousValues: true,
+            groups: ['withArea'],
           },
         );
       });
@@ -308,6 +311,7 @@ export class PersonalRoomService {
           instanceToPlain(savedPersonalRoomEntity),
           {
             excludeExtraneousValues: true,
+            groups: ['withArea'],
           },
         );
       } else {
