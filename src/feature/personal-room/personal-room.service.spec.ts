@@ -249,7 +249,6 @@ describe('RoomService', () => {
       try {
         await personalRoomService.getRoomImages(mockCoreUserDto, 1, 1);
       } catch (error) {
-        console.log('error: ', error);
         expect(error).toBeInstanceOf(HttpException);
         expect(error.response.title).toBe(
           'personal_rooms.error.get_room_images.title',
