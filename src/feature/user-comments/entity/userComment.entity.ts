@@ -1,4 +1,3 @@
-import { Exclude } from 'class-transformer';
 import { CoreUser } from '../../../core/users/entity/user.entity';
 import { UserImage } from '../../user-image/entity/user-image.entity';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
@@ -10,7 +9,6 @@ export class UserComment extends EntityWithDates {
   @Column({ default: '' })
   content: string;
 
-  @Exclude()
   @ManyToOne(() => CoreUser, (user) => user.userTags, {
     onDelete: 'CASCADE',
   })
