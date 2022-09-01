@@ -89,8 +89,29 @@ export class UserCommentService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'user-comment.error.get_all_comments.title',
-          text: 'user-comment.error.get_all_comments.message',
+          title: 'user-comment.error.create_comment.title',
+          text: 'user-comment.error.create_comments.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteComment(user: CoreUserDto, commentId: number): Promise<boolean> {
+    try {
+      const activeCoreUser = await this.sharedUserService.findByEmail(
+        user.email,
+      );
+      const deleteResult = await this.userCommentRepository.delete({
+        user: { id: activeCoreUser.id },
+        id: commentId,
+      });
+      return deleteResult.affected > 0;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'user-comment.error.delete_user-comment.title',
+          text: 'user-comment.error.delete_user-comment.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
