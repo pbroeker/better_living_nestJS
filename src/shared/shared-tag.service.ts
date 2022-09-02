@@ -15,7 +15,11 @@ export class SharedTagService {
 
   async findAll(): Promise<UserTag[]> {
     return await this.userTagRepository.find({
-      relations: { personalRooms: true, userImages: { personalRooms: true } },
+      relations: {
+        personalRooms: true,
+        userImages: { personalRooms: true },
+        user: true,
+      },
     });
   }
 
@@ -58,6 +62,20 @@ export class SharedTagService {
         {
           title: 'user-tag.error.create_tag.title',
           text: 'user-tag.error.create_tag.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async editTags(tagEntities: UserTag[]): Promise<UserTag[]> {
+    try {
+      return await this.userTagRepository.save(tagEntities);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'user-tag.error.edit-tag.title',
+          text: 'user-tag.error.edit-tag.message',
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
