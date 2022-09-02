@@ -12,21 +12,24 @@ import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 import { UserImage } from 'src/feature/user-image/entity/user-image.entity';
 
+export class RoomImageCombination {
+  roomId: number;
+  imageId: number;
+}
 export class UserTagReqDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
   title: string;
 
-  @ApiProperty({ type: [Number] })
+  @ApiProperty({ type: [RoomImageCombination] })
   @IsOptional()
   @IsArray()
-  userImageIds?: number[];
+  roomImageCombinations: RoomImageCombination[];
+}
 
-  @ApiProperty({ type: [Number] })
-  @IsOptional()
-  @IsArray()
-  personalRoomIds?: number[];
+export class RemoveCombinationReqDto {
+  roomImageCombination: RoomImageCombination;
 }
 
 @Exclude()
@@ -73,4 +76,13 @@ export class UserTagResDto implements Readonly<UserTagResDto> {
     });
   })
   personalRooms?: PersonalRoomResDto[];
+
+  @ApiProperty({ type: [RoomImageCombination] })
+  @Expose()
+  @IsOptional()
+  @IsArray()
+  @Transform(({ value }: { value: string }) => {
+    return JSON.parse(value);
+  })
+  roomImageCombinations: RoomImageCombination[];
 }

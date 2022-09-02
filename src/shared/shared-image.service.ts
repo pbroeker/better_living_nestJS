@@ -47,7 +47,7 @@ export class SharedImageService {
       relations: {
         personalRooms: true,
         user: true,
-        userTags: { personalRooms: true },
+        userTags: true,
         userComments: { user: true, personalRoom: true },
       },
     });

@@ -22,7 +22,10 @@ import { SharedImageService } from '../../shared/shared-image.service';
 import * as _ from 'lodash';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserCommentResDto } from '../user-comments/dto/user-comment.dto';
-import { UserTagResDto } from '../user-tag/dto/user-tag.dto';
+import {
+  RoomImageCombination,
+  UserTagResDto,
+} from '../user-tag/dto/user-tag.dto';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -125,7 +128,7 @@ export class UserImageService {
         relations: {
           personalRooms: true,
           user: true,
-          userTags: { personalRooms: true },
+          userTags: true,
           userComments: {
             user: true,
             personalRoom: true,
@@ -141,41 +144,46 @@ export class UserImageService {
         },
       );
 
+      // creating userComments
+      const userCommentDtos = roomId
+        ? imageEntity.userComments
+            .filter((userComment) => {
+              return userComment.personalRoom.id === roomId;
+            })
+            .map((userComment) => {
+              return plainToInstance(
+                UserCommentResDto,
+                instanceToPlain(userComment),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            })
+        : [];
+
+      // creating userTags
+      const userTagDtos = roomId
+        ? imageEntity.userTags
+            .filter((userTag) => {
+              const combinationsObject = JSON.parse(
+                userTag.roomImageCombinations,
+              );
+              return (combinationsObject as RoomImageCombination[]).some(
+                (combination) => combination.roomId === roomId,
+              );
+            })
+            .map((userTag) => {
+              return plainToInstance(UserTagResDto, instanceToPlain(userTag), {
+                excludeExtraneousValues: true,
+              });
+            })
+        : [];
+
       return {
         ...imageDto,
         isOwner: activeCoreUser.id === imageEntity.user.id,
-        userComments: roomId
-          ? imageEntity.userComments
-              .filter((userComment) => {
-                return userComment.personalRoom.id === roomId;
-              })
-              .map((userComment) => {
-                return plainToInstance(
-                  UserCommentResDto,
-                  instanceToPlain(userComment),
-                  {
-                    excludeExtraneousValues: true,
-                  },
-                );
-              })
-          : [],
-        userTags: roomId
-          ? imageEntity.userTags
-              .filter((userTag) => {
-                return userTag.personalRooms
-                  .map((personalRoom) => personalRoom.id)
-                  .includes(roomId);
-              })
-              .map((userTag) => {
-                return plainToInstance(
-                  UserTagResDto,
-                  instanceToPlain(userTag),
-                  {
-                    excludeExtraneousValues: true,
-                  },
-                );
-              })
-          : [],
+        userComments: userCommentDtos,
+        userTags: userTagDtos,
       };
     } catch (error) {
       throw new HttpException(

@@ -19,7 +19,10 @@ import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { UserTagResDto } from '../user-tag/dto/user-tag.dto';
+import {
+  RoomImageCombination,
+  UserTagResDto,
+} from '../user-tag/dto/user-tag.dto';
 
 @Injectable()
 export class PersonalRoomService {
@@ -161,9 +164,12 @@ export class PersonalRoomService {
           .slice(skip, currentPage * imageCount)
           .map((userImageEntity) => {
             const filteredTags = userImageEntity.userTags.filter((userTag) => {
-              return userTag.personalRooms
-                .map((room) => room.id)
-                .includes(roomId);
+              const combinationsObject = JSON.parse(
+                userTag.roomImageCombinations,
+              );
+              return (combinationsObject as RoomImageCombination[]).some(
+                (combination) => combination.roomId === roomId,
+              );
             });
             const filteredComments = userImageEntity.userComments.filter(
               (userComment) => {

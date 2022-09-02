@@ -7,6 +7,9 @@ import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.enti
 
 @Entity({ name: 'user-tag' })
 export class UserTag extends IdentifiableEntity {
+  @Column({ nullable: true })
+  roomImageCombinations: string;
+
   @Column({ default: '' })
   title: string;
 
