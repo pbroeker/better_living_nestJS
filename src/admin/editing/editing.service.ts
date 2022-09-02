@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { AdminAccessDto } from './dto/password.dto';
 import { SharedTagService } from 'src/shared/shared-tag.service';
+import { RoomImageCombination } from 'src/feature/user-tag/dto/user-tag.dto';
 
 @Injectable()
 export class AdminEditingService {
@@ -13,34 +14,41 @@ export class AdminEditingService {
 
         const editedTagEntites = await Promise.all(
           tagEntities.map(async (tagEntity) => {
+            // Add personalRoomRelations to tags that just have imageRelations
             if (!tagEntity.personalRooms.length) {
               const roomsFromUserImages = tagEntity.userImages.flatMap(
                 (userImage) => userImage.personalRooms,
               );
               tagEntity.personalRooms = roomsFromUserImages;
 
-              // // console.log('tagEntity: ', tagEntity);
-              // console.log('roomsFromUserImages: ', roomsFromUserImages);
               return tagEntity;
-              //   return this.personalRoomRepository.create({
-              //     user: activeCoreUser,
-              //     title: personalRoomDto.title,
-              //     personalArea: personalArea,
-              //     iconId: personalRoomDto.iconId,
-              //   });
-              // } else {
-              //   return this.personalRoomRepository.create({
-              //     user: activeCoreUser,
-              //     title: personalRoomDto.title,
-              //     personalArea: defaultArea,
-              //     iconId: personalRoomDto.iconId,
-              //   });
             } else {
               return tagEntity;
             }
           }),
         );
-        return editedTagEntites as any;
+
+        const tagsWithCombination = editedTagEntites.map((tagEntity) => {
+          const roomIds = tagEntity.personalRooms.map((room) => room.id);
+          const imageIds = tagEntity.userImages.map((image) => image.id);
+
+          const roomImageCombinations = roomIds.flatMap((roomId) =>
+            imageIds.map((imageId) => {
+              const combination: RoomImageCombination = {
+                roomId: roomId,
+                imageId: imageId,
+              };
+              return combination;
+            }),
+          );
+          tagEntity.roomImageCombinations = JSON.stringify(
+            roomImageCombinations,
+          );
+          return tagEntity;
+        });
+
+        const result = this.sharedTagService.editTags(tagsWithCombination);
+        return result as any;
       } else {
         throw new HttpException(
           {
