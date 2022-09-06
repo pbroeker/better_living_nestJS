@@ -19,6 +19,7 @@ import {
 import { PersonalRoomResDto } from 'src/feature/personal-room/dto/personal-room.dto';
 import { UserCommentResDto } from 'src/feature/user-comments/dto/user-comment.dto';
 import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
+import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
 import { getUserInitials } from 'src/utils/features/helpers';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { UserTagResDto } from '../../../feature/user-tag/dto/user-tag.dto';
@@ -105,10 +106,18 @@ export class UserImageDto {
   @Expose()
   @IsOptional()
   @IsArray()
-  @Transform(({ value }: { value: UserComment }) => {
-    return plainToInstance(UserCommentResDto, instanceToPlain(value), {
-      excludeExtraneousValues: true,
-    });
+  @Transform(({ value }: { value: UserComment[] }) => {
+    if (value) {
+      return value.map((userCommentEntity) => {
+        return plainToInstance(
+          UserCommentResDto,
+          instanceToPlain(userCommentEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
+    }
   })
   userComments?: UserCommentResDto[];
 
@@ -116,6 +125,15 @@ export class UserImageDto {
   @Expose()
   @IsOptional()
   @IsArray()
+  @Transform(({ value }: { value: UserTag[] }) => {
+    if (value) {
+      return value.map((userTagEntity) => {
+        return plainToInstance(UserTagResDto, instanceToPlain(userTagEntity), {
+          excludeExtraneousValues: true,
+        });
+      });
+    }
+  })
   userTags?: UserTagResDto[];
 }
 

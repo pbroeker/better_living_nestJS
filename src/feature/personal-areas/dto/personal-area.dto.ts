@@ -65,6 +65,7 @@ export class PersonalAreaResDto {
         instanceToPlain(personalRoomEntity),
         {
           excludeExtraneousValues: true,
+          groups: ['withImages'],
         },
       );
     });

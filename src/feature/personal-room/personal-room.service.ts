@@ -19,6 +19,11 @@ import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import {
+  RoomImageCombination,
+  UserTagResDto,
+} from '../user-tag/dto/user-tag.dto';
+import { SharedTagService } from 'src/shared/shared-tag.service';
 
 @Injectable()
 export class PersonalRoomService {
@@ -28,6 +33,7 @@ export class PersonalRoomService {
     private sharedAreaService: SharedAreaService,
     private sharedUserService: SharedUserService,
     private sharedImageService: SharedImageService,
+    private sharedTagService: SharedTagService,
   ) {}
 
   async getAllRooms(
@@ -44,10 +50,10 @@ export class PersonalRoomService {
         relations: {
           userImages: { user: true },
           userComments: {
-            userImage: true,
             user: true,
-            personalRoom: true,
           },
+          personalArea: true,
+          userTags: true,
         },
       });
 
@@ -62,6 +68,7 @@ export class PersonalRoomService {
             instanceToPlain(roomEntity),
             {
               excludeExtraneousValues: true,
+              groups: ['withArea'],
             },
           );
           return {
@@ -74,6 +81,11 @@ export class PersonalRoomService {
                   excludeExtraneousValues: true,
                 },
               );
+            }),
+            userTags: roomEntity.userTags.map((userTag) => {
+              return plainToInstance(UserTagResDto, instanceToPlain(userTag), {
+                excludeExtraneousValues: true,
+              });
             }),
             totalImages: roomEntity.userImages.length,
           };
@@ -153,9 +165,27 @@ export class PersonalRoomService {
         const countedUserImageDtos = tagFilteredImages
           .slice(skip, currentPage * imageCount)
           .map((userImageEntity) => {
+            const filteredTags = userImageEntity.userTags.filter((userTag) => {
+              const combinationsObject = JSON.parse(
+                userTag.roomImageCombinations,
+              );
+              return (combinationsObject as RoomImageCombination[]).some(
+                (combination) => combination.roomId === roomId,
+              );
+            });
+            const filteredComments = userImageEntity.userComments.filter(
+              (userComment) => {
+                return userComment.personalRoom.id === roomId;
+              },
+            );
+            const roomEntityWithFilteredTags = {
+              ...userImageEntity,
+              userTags: filteredTags,
+              userComments: filteredComments,
+            };
             const userImageDto = plainToInstance(
               UserImageDto,
-              instanceToPlain(userImageEntity),
+              instanceToPlain(roomEntityWithFilteredTags),
               {
                 excludeExtraneousValues: true,
               },
@@ -252,6 +282,7 @@ export class PersonalRoomService {
           instanceToPlain(newRoomEntity),
           {
             excludeExtraneousValues: true,
+            groups: ['withArea'],
           },
         );
       });
@@ -288,6 +319,7 @@ export class PersonalRoomService {
           instanceToPlain(savedPersonalRoomEntity),
           {
             excludeExtraneousValues: true,
+            groups: ['withArea'],
           },
         );
       } else {
@@ -316,6 +348,39 @@ export class PersonalRoomService {
         user.email,
       );
 
+      const roomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: { userTags: { userImages: true, personalRooms: true } },
+      });
+
+      const userTags = roomEntity.userTags.map((userTag) => {
+        const imagesToKeepIds: number[] = [];
+
+        const newRoomCombinations = (
+          JSON.parse(userTag.roomImageCombinations) as RoomImageCombination[]
+        ).filter((combination) => {
+          if (combination.roomId === roomId) {
+            return false;
+          } else {
+            imagesToKeepIds.push(combination.imageId);
+            return true;
+          }
+        });
+
+        const newUserImages = userTag.userImages.filter((image) =>
+          imagesToKeepIds.includes(image.id),
+        );
+
+        const newPersonalRooms = userTag.personalRooms.filter(
+          (personalRoom) => personalRoom.id !== roomId,
+        );
+        userTag.userImages = newUserImages;
+        userTag.personalRooms = newPersonalRooms;
+        userTag.roomImageCombinations = JSON.stringify(newRoomCombinations);
+        return userTag;
+      });
+
+      await this.sharedTagService.editTags(userTags);
       const deleteResult = await this.personalRoomRepository.delete({
         user: { id: activeCoreUser.id },
         id: roomId,

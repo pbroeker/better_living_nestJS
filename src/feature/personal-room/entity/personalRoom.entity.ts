@@ -11,6 +11,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { UserComment } from '../../../feature/user-comments/entity/userComment.entity';
+import { UserTag } from 'src/feature/user-tag/entity/userTags.entity';
 
 @Entity({ name: 'personal-room' })
 export class PersonalRoom extends IdentifiableEntity {
@@ -34,4 +35,9 @@ export class PersonalRoom extends IdentifiableEntity {
   @ManyToMany(() => UserImage, (userImage) => userImage.personalRooms)
   @JoinTable()
   userImages: UserImage[];
+
+  @ManyToMany(() => UserTag, (userTag) => userTag.personalRooms, {
+    cascade: ['insert', 'update'],
+  })
+  userTags: UserTag[];
 }

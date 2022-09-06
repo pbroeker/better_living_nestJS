@@ -122,7 +122,6 @@ export class GuestUserService {
 
       return updatedUser ? true : false;
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'user-guest.error.delete_guest.title',

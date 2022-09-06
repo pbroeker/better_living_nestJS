@@ -6,12 +6,17 @@ import {
   HttpStatus,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { UserTagReqDto, UserTagResDto } from './dto/user-tag.dto';
+import {
+  RoomImageCombination,
+  UserTagReqDto,
+  UserTagResDto,
+} from './dto/user-tag.dto';
 import { UserTagService } from './user-tag.service';
 
 @ApiBearerAuth()
@@ -70,5 +75,23 @@ export class UserTagsController {
     @Param('tagId', ParseIntPipe) tagId: number,
   ): Promise<boolean> {
     return await this.userTagService.deleteTag(user, tagId);
+  }
+
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Removed tag from image/room',
+    type: Boolean,
+  })
+  @Patch('/remove/:tagId')
+  async removeTag(
+    @User() user: CoreUserDto,
+    @Param('tagId', ParseIntPipe) tagId: number,
+    @Body() roomImageCombination: RoomImageCombination,
+  ): Promise<boolean> {
+    return await this.userTagService.removeTag(
+      user,
+      tagId,
+      roomImageCombination,
+    );
   }
 }
