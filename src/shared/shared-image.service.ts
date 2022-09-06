@@ -75,11 +75,18 @@ export class SharedImageService {
     if (imageEntities) {
       const newImageEntites = await Promise.all(
         imageEntities.map(async (image) => {
-          const imageData = await this.httpService.axiosRef.get(image.src, {
-            responseType: 'arraybuffer',
-          });
-          const width = sizeOf(Buffer.from(imageData.data, 'base64')).width;
-          const height = sizeOf(Buffer.from(imageData.data, 'base64')).height;
+          let width;
+          let height;
+          try {
+            const imageData = await this.httpService.axiosRef.get(image.src, {
+              responseType: 'arraybuffer',
+            });
+            width = sizeOf(Buffer.from(imageData.data, 'base64')).width;
+            height = sizeOf(Buffer.from(imageData.data, 'base64')).height;
+          } catch (error) {
+            width = null;
+            height = null;
+          }
 
           return {
             ...image,

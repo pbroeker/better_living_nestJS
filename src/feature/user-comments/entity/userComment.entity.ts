@@ -17,6 +17,8 @@ export class UserComment extends EntityWithDates {
   @ManyToOne(() => UserImage, (userImage) => userImage.userComments)
   userImage: UserImage;
 
-  @ManyToOne(() => PersonalRoom, (personalRoom) => personalRoom.userComments)
+  @ManyToOne(() => PersonalRoom, (personalRoom) => personalRoom.userComments, {
+    onDelete: 'CASCADE',
+  })
   personalRoom: PersonalRoom;
 }

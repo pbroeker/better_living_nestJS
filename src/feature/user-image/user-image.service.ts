@@ -26,6 +26,7 @@ import {
   RoomImageCombination,
   UserTagResDto,
 } from '../user-tag/dto/user-tag.dto';
+import { createRoomImageCombinations } from 'src/utils/features/helpers';
 @Injectable()
 export class UserImageService {
   private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
@@ -82,6 +83,7 @@ export class UserImageService {
       const allImageIds = allUserImages.map((image) => image.id);
 
       await this.sharedImageService.checkAndAddImageDimensions(allImageIds);
+
       if (allUserImages) {
         const allUserImageDtos: UserImageDto[] = allUserImages.map(
           (userImageEntity) => {
@@ -98,6 +100,7 @@ export class UserImageService {
             };
           },
         );
+
         return allUserImageDtos;
       } else {
         return [];
@@ -367,12 +370,12 @@ export class UserImageService {
 
       const imageEntities = await this.userImageRepository.find({
         where: {
-          user: activeCoreUser,
           id: In(editImage.imageIds),
         },
         relations: {
           personalRooms: true,
           user: true,
+          userTags: { personalRooms: true, userImages: true },
         },
       });
 
@@ -380,26 +383,10 @@ export class UserImageService {
         editImage.personalRoomIds,
       );
 
-      // getPresentTagEntities
-      const existingTags: UserTag[] = [];
-      if (editImage.usertagIds.length) {
-        const existingTagEntitites = await this.sharedTagService.findByIds(
-          activeCoreUser,
-          editImage.usertagIds,
-          { personalRooms: true, userImages: true },
-        );
-        const existingUpdatedWithRooms = existingTagEntitites.map(
-          (existingTag) => {
-            existingTag.personalRooms = [
-              ...existingTag.personalRooms,
-              ...roomEntities,
-            ];
-
-            return existingTag;
-          },
-        );
-        existingTags.push(...existingUpdatedWithRooms);
-      }
+      const roomImageCombinations = createRoomImageCombinations(
+        editImage.personalRoomIds,
+        editImage.imageIds,
+      );
 
       // createNewTagEntities
       const newTags: UserTag[] = [];
@@ -408,14 +395,30 @@ export class UserImageService {
           activeCoreUser,
           editImage.newUsertags,
           roomEntities,
+          roomImageCombinations,
         );
         newTags.push(...newUserTags);
       }
 
       const updatedImages = await Promise.all(
         imageEntities.map(async (imageEntity) => {
+          // Edit existingTags
+          const combinationsToEdit = createRoomImageCombinations(
+            editImage.personalRoomIds,
+            [imageEntity.id],
+          );
+
+          const editedTags = await this.sharedTagService.removeCombinations(
+            imageEntity.userTags,
+            editImage.usertagIds,
+            combinationsToEdit,
+            roomEntities,
+          );
+
+          // Adding rooms and Tags
           imageEntity.personalRooms = roomEntities;
-          imageEntity.userTags = [...existingTags, ...newTags];
+          imageEntity.userTags = [...editedTags, ...newTags];
+
           const savedImageEntity = await this.userImageRepository.save(
             imageEntity,
           );
@@ -453,6 +456,7 @@ export class UserImageService {
           user: activeCoreUser,
           id: imageId,
         },
+        relations: { userTags: { personalRooms: true } },
       });
       if (imageEntity) {
         this.s3.deleteObject(
@@ -473,6 +477,29 @@ export class UserImageService {
           },
         );
       }
+
+      const userTags = imageEntity.userTags.map((userTag) => {
+        const roomsToKeepIds: number[] = [];
+        const newCombinations = (
+          JSON.parse(userTag.roomImageCombinations) as RoomImageCombination[]
+        ).filter((combination) => {
+          if (combination.imageId === imageId) {
+            return false;
+          } else {
+            roomsToKeepIds.push(combination.roomId);
+            return true;
+          }
+        });
+        const newPersonalRooms = userTag.personalRooms.filter((room) =>
+          roomsToKeepIds.includes(room.id),
+        );
+        userTag.personalRooms = newPersonalRooms;
+        userTag.roomImageCombinations = JSON.stringify(newCombinations);
+        return userTag;
+      });
+
+      await this.sharedTagService.editTags(userTags);
+
       await this.userImageRepository.remove(imageEntity);
       return true;
     } catch (error) {
