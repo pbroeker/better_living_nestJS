@@ -359,6 +359,13 @@ export class UserImageService {
     }
   }
 
+  async imageUpload2(file: Express.Multer.File, user: CoreUserDto) {
+    try {
+      console.log('user is: ', user);
+      console.log('file is: ', file);
+    } catch (error) {}
+  }
+
   async updateImage(
     currentUser: CoreUserDto,
     editImage: EditImageDto,
