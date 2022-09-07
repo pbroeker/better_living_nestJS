@@ -9,8 +9,6 @@ import {
   Patch,
   Post,
   Query,
-  Req,
-  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
@@ -83,10 +81,13 @@ export class UserImageController {
   async uploadImage(
     @User() user: CoreUserDto,
     @UploadedFile() file: Express.Multer.File,
-    // @Req() request: Express.Request,
-    // @Res() response: Express.Response,
   ) {
-    await this.imageService.imageUpload2(file, user);
+    const test = await this.imageService.reorientImage(
+      file.buffer,
+      file.originalname,
+      user,
+    );
+    return test;
   }
 
   @ApiResponse({
