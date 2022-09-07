@@ -118,9 +118,10 @@ export class PersonalRoomService {
       );
 
       const hostIds = activeCoreUser.hosts.map((host) => host.id);
+      const guestIds = activeCoreUser.hosts.map((guest) => guest.id);
 
       if (!filterObject.userIds || !filterObject.userIds.length) {
-        filterObject.userIds = [...hostIds, activeCoreUser.id];
+        filterObject.userIds = [...hostIds, ...guestIds, activeCoreUser.id];
       }
 
       const allRoomImages = await this.sharedImageService.findAllRoomImages(

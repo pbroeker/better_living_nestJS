@@ -77,7 +77,11 @@ export class SharedTagService {
         return userTagEntity;
       });
 
-      return userTagEntities;
+      const savedUserTagEntities = await this.userTagRepository.save(
+        userTagEntities,
+      );
+
+      return savedUserTagEntities;
     } catch (error) {
       throw new HttpException(
         {
