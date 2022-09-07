@@ -222,6 +222,7 @@ export class UserImageService {
         relations: {
           personalRooms: true,
           user: true,
+          userTags: true,
         },
       });
 
