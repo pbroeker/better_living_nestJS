@@ -282,7 +282,18 @@ export class UserImageService {
           nextPage: nextPage,
           prevPage: prevPage,
           images: countedUserImageDtos,
-          filterOptions: { rooms: roomFilterOptions, tags: tagFilterOptions },
+          filterOptions: {
+            rooms: roomFilterOptions,
+            tags: tagFilterOptions.map((filterTag) => {
+              return plainToInstance(
+                UserTagResDto,
+                instanceToPlain(filterTag),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
+          },
         };
       } else {
         return {} as PaginatedImagesResDto;
