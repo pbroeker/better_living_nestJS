@@ -369,6 +369,10 @@ export class UserImageService {
         currentUser.email,
       );
 
+      const allUserTags = await this.sharedTagService.findAllOwned(
+        activeCoreUser,
+      );
+
       const imageEntities = await this.userImageRepository.find({
         where: {
           id: In(editImage.imageIds),
@@ -392,9 +396,30 @@ export class UserImageService {
       // createNewTagEntities
       const newTags: UserTag[] = [];
       if (editImage.newUsertags.length) {
+        editImage.newUsertags.forEach((newUserTag) => {
+          const existingTitleTag = allUserTags.find(
+            (existingUsertag) => existingUsertag.title === newUserTag,
+          );
+          if (existingTitleTag) {
+            editImage.usertagIds.push(existingTitleTag.id);
+          }
+        });
+
+        const noDoubleUserTags = editImage.newUsertags.filter((newUserTag) => {
+          const doubleTag = allUserTags.find(
+            (existingUsertag) => existingUsertag.title === newUserTag,
+          );
+          if (doubleTag) {
+            editImage.usertagIds.push(doubleTag.id);
+            return false;
+          } else {
+            return true;
+          }
+        });
+
         const newUserTags = await this.sharedTagService.createTags(
           activeCoreUser,
-          editImage.newUsertags,
+          noDoubleUserTags,
           roomEntities,
           roomImageCombinations,
         );
