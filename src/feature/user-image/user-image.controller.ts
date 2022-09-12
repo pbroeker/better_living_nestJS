@@ -9,9 +9,10 @@ import {
   Patch,
   Post,
   Query,
-  Req,
-  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
@@ -75,13 +76,17 @@ export class UserImageController {
     status: HttpStatus.OK,
     description: 'Upload user image',
   })
+  @UseInterceptors(FileInterceptor('image'))
   @Post('/upload')
   async uploadImage(
     @User() user: CoreUserDto,
-    @Req() request: Express.Request,
-    @Res() response: Express.Response,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    await this.imageService.imageUpload(request, response, user);
+    return await this.imageService.reorientImage(
+      file.buffer,
+      file.originalname,
+      user,
+    );
   }
 
   @ApiResponse({

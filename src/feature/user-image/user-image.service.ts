@@ -1,9 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as AWS from 'aws-sdk';
-import * as multer from 'multer';
-import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { In, Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
@@ -15,7 +12,6 @@ import {
   UserImageDto,
 } from './dto/user-image.dto';
 import { UserImage } from './entity/user-image.entity';
-import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
 import { SharedImageService } from '../../shared/shared-image.service';
@@ -27,26 +23,10 @@ import {
   UserTagResDto,
 } from '../user-tag/dto/user-tag.dto';
 import { createRoomImageCombinations } from 'src/utils/features/helpers';
+import * as sharp from 'sharp';
+import { AmazonS3Service } from './aws-s3.service';
 @Injectable()
 export class UserImageService {
-  private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
-  private readonly s3 = new AWS.S3();
-  private upload: RequestHandler;
-
-  private createMulter(userId: string) {
-    return multer({
-      limits: { fieldSize: 25 * 1024 * 1024 },
-      storage: multerS3({
-        s3: this.s3,
-        bucket: this.AWS_S3_BUCKET_NAME,
-        acl: 'public-read',
-        key: function (request, file, cb) {
-          cb(null, `${userId}/${Date.now().toString()}-${file.originalname}`);
-        },
-      }),
-    }).array('image', 1);
-  }
-
   constructor(
     @InjectRepository(UserImage)
     private userImageRepository: Repository<UserImage>,
@@ -55,12 +35,8 @@ export class UserImageService {
     private sharedRoomService: SharedRoomService,
     private sharedTagService: SharedTagService,
     private sharedImageService: SharedImageService,
-  ) {
-    AWS.config.update({
-      accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
-    });
-  }
+    private amazonS3Service: AmazonS3Service,
+  ) {}
 
   async getAllImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
     try {
@@ -191,10 +167,14 @@ export class UserImageService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'my_pictures.error.load_images.title',
-          text: 'my_pictures.error.load_images.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.load_images.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.load_images.title',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -334,39 +314,64 @@ export class UserImageService {
     });
   }
 
-  async imageUpload(req: any, res: any, user: CoreUserDto) {
+  async imageUpload(imageBuffer: Buffer, fileName: string, user: CoreUserDto) {
     try {
-      this.upload = this.createMulter(String(user.userId));
-      this.upload(req, res, async (error: any) => {
-        if (error) {
-          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            title: 'my_pictures.error.upload_image.title',
-            text: 'my_pictures.error.upload_image.message',
-          });
-        }
-        if (req.files && req.files.length) {
-          const imagePath = req.files[0].location as string;
-          const imageKey = req.files[0].key as string;
-          const savedUserImageEntity = await this.saveUserImage(
-            imagePath,
-            imageKey,
-            user,
-          );
-          return res.status(201).json(savedUserImageEntity);
-        } else {
-          return res.status(HttpStatus.BAD_REQUEST).json({
-            title: 'my_pictures.error.upload_image.title',
-            text: 'my_pictures.error.upload_image.message',
-          });
-        }
-      });
+      const result = await this.amazonS3Service.uploadImageToS3(
+        imageBuffer,
+        user.userId,
+        fileName,
+      );
+
+      if (result) {
+        const imagePath = result.Location;
+        const imageKey = result.Key;
+        const savedUserImageEntity = await this.saveUserImage(
+          imagePath,
+          imageKey,
+          user,
+        );
+        return savedUserImageEntity;
+      }
     } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(
+      throw new HttpException(
         {
           title: 'my_pictures.error.upload_image.title',
           text: 'my_pictures.error.upload_image.message',
         },
-        user.userId,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async reorientImage(
+    imageBuffer: Buffer,
+    fileName: string,
+    user: CoreUserDto,
+  ) {
+    try {
+      if (!imageBuffer || !fileName) {
+        throw new HttpException(
+          {
+            title: 'my_pictures.error.upload_image.title',
+            text: 'my_pictures.error.upload_image.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const orientedImage = await sharp(imageBuffer).rotate().toBuffer();
+      return await this.imageUpload(orientedImage, fileName, user);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.upload_image.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.upload_image.message',
+        },
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -495,25 +500,8 @@ export class UserImageService {
         },
         relations: { userTags: { personalRooms: true } },
       });
-      if (imageEntity) {
-        this.s3.deleteObject(
-          {
-            Bucket: this.AWS_S3_BUCKET_NAME,
-            Key: imageEntity.key,
-          },
-          (err) => {
-            if (err) {
-              throw new HttpException(
-                {
-                  title: 'my_pictures.error.delete_images.title',
-                  text: 'my_pictures.error.delete_images.message',
-                },
-                HttpStatus.INTERNAL_SERVER_ERROR,
-              );
-            }
-          },
-        );
-      }
+
+      await this.amazonS3Service.deleteImageFromS3(imageEntity.key);
 
       const userTags = imageEntity.userTags.map((userTag) => {
         const roomsToKeepIds: number[] = [];
