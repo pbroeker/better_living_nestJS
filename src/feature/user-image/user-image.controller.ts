@@ -9,10 +9,11 @@ import {
   Patch,
   Post,
   Query,
-  Req,
-  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import {
@@ -63,24 +64,29 @@ export class UserImageController {
     type: UserImageDto,
   })
   @Get('/detail/:imageId')
-  async getImage(
+  async getUserImage(
     @User() user: CoreUserDto,
     @Param('imageId', ParseIntPipe) imageId: number,
+    @Query('roomId') roomId: number | undefined,
   ): Promise<UserImageDto> {
-    return await this.imageService.getUserImage(user, imageId);
+    return await this.imageService.getUserImage(user, imageId, roomId);
   }
 
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Upload user image',
   })
+  @UseInterceptors(FileInterceptor('image'))
   @Post('/upload')
   async uploadImage(
     @User() user: CoreUserDto,
-    @Req() request: Express.Request,
-    @Res() response: Express.Response,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    await this.imageService.imageUpload(request, response, user);
+    return await this.imageService.reorientImage(
+      file.buffer,
+      file.originalname,
+      user,
+    );
   }
 
   @ApiResponse({

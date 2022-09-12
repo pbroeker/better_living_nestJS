@@ -9,15 +9,21 @@ import {
 } from './dto/personal-room.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedAreaService } from '../../shared/shared-area.service';
-import { getUserInitials, removeUser } from '../../utils/features/helpers';
 import { SharedImageService } from '../../shared/shared-image.service';
 import {
   ImageFilterQuery,
   PaginatedImagesResDto,
+  UserImageDto,
 } from '../user-image/dto/user-image.dto';
 import { PersonalAreaTitle } from '../../types/enums';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import * as _ from 'lodash';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import {
+  RoomImageCombination,
+  UserTagResDto,
+} from '../user-tag/dto/user-tag.dto';
+import { SharedTagService } from 'src/shared/shared-tag.service';
 
 @Injectable()
 export class PersonalRoomService {
@@ -27,6 +33,7 @@ export class PersonalRoomService {
     private sharedAreaService: SharedAreaService,
     private sharedUserService: SharedUserService,
     private sharedImageService: SharedImageService,
+    private sharedTagService: SharedTagService,
   ) {}
 
   async getAllRooms(
@@ -41,22 +48,49 @@ export class PersonalRoomService {
       const personalRoomEntities = await this.personalRoomRepository.find({
         where: { user: { id: activeCoreUser.id } },
         relations: {
-          userImages: true,
+          userImages: { user: true },
+          userComments: {
+            user: true,
+          },
+          personalArea: true,
+          userTags: true,
         },
       });
 
-      const personalRoomDtos = personalRoomEntities.map((roomEntity) => {
-        const roomNoUser = removeUser(roomEntity);
-        // reducing amount of images included in room depending on queryParam
-        const imagesSlices = imageCount
-          ? roomNoUser.userImages.slice(0, imageCount)
-          : roomNoUser.userImages;
-        return {
-          ...roomNoUser,
-          userImages: imagesSlices,
-          totalImages: roomNoUser.userImages.length,
-        };
-      });
+      const personalRoomDtos: PersonalRoomResDto[] = personalRoomEntities.map(
+        (roomEntity) => {
+          // reducing amount of images included in room depending on queryParam
+          const imagesSlices = imageCount
+            ? roomEntity.userImages.slice(0, imageCount)
+            : roomEntity.userImages;
+          const roomDto = plainToInstance(
+            PersonalRoomResDto,
+            instanceToPlain(roomEntity),
+            {
+              excludeExtraneousValues: true,
+              groups: ['withArea'],
+            },
+          );
+          return {
+            ...roomDto,
+            userImages: imagesSlices.map((userImageEntity) => {
+              return plainToInstance(
+                UserImageDto,
+                instanceToPlain(userImageEntity),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
+            userTags: roomEntity.userTags.map((userTag) => {
+              return plainToInstance(UserTagResDto, instanceToPlain(userTag), {
+                excludeExtraneousValues: true,
+              });
+            }),
+            totalImages: roomEntity.userImages.length,
+          };
+        },
+      );
       return personalRoomDtos;
     } catch (error) {
       throw new HttpException(
@@ -73,7 +107,7 @@ export class PersonalRoomService {
     currentUser: CoreUserDto,
     roomId: number,
     currentPage: number,
-    filterObject?: ImageFilterQuery,
+    filterObject: ImageFilterQuery = {},
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
     const skip = (currentPage - 1) * imageCount;
@@ -83,19 +117,12 @@ export class PersonalRoomService {
         { guests: true, hosts: true },
       );
 
-      const guestIds = activeCoreUser.guests.map((guest) => guest.id);
       const hostIds = activeCoreUser.hosts.map((host) => host.id);
+      const guestIds = activeCoreUser.hosts.map((guest) => guest.id);
 
       if (!filterObject.userIds || !filterObject.userIds.length) {
-        filterObject.userIds = [...guestIds, ...hostIds, activeCoreUser.id];
+        filterObject.userIds = [...hostIds, ...guestIds, activeCoreUser.id];
       }
-
-      const roomImages = await this.sharedImageService.findRoomImages(
-        roomId,
-        imageCount,
-        skip,
-        filterObject,
-      );
 
       const allRoomImages = await this.sharedImageService.findAllRoomImages(
         roomId,
@@ -116,34 +143,59 @@ export class PersonalRoomService {
         'id',
       );
 
-      if (roomImages) {
+      // filterByUsers
+      const userFilteredImages = allRoomImages.filter((image) => {
+        return filterObject.userIds.includes(image.user.id);
+      });
+
+      // filterByTags
+      const tagFilteredImages = filterObject.tagIds
+        ? userFilteredImages.filter((image) => {
+            return image.userTags.some((tag) =>
+              filterObject.tagIds.includes(tag.id),
+            );
+          })
+        : userFilteredImages;
+
+      if (tagFilteredImages) {
         // create paginationData
-        const total = roomImages.length;
+        const total = tagFilteredImages.length;
         const lastPage = Math.ceil(total / imageCount);
         const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
         const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
-        const countedUserImageDtos = roomImages.map((userImageEntity) => {
-          const imageEntityNoUser = removeUser(userImageEntity);
-          const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
-          return {
-            ...imageEntityNoRooms,
-            isOwner: activeCoreUser.id === userImageEntity.user.id,
-            ownerInitials: getUserInitials(userImageEntity.user),
-            personalRooms: imageEntityNoUser.personalRooms.map(
-              (personalRoom) => {
-                return {
-                  id: personalRoom.id,
-                  iconId: personalRoom.iconId,
-                  title: personalRoom.title,
-                };
+        const countedUserImageDtos = tagFilteredImages
+          .slice(skip, currentPage * imageCount)
+          .map((userImageEntity) => {
+            const filteredTags = userImageEntity.userTags.filter((userTag) => {
+              const combinationsObject = JSON.parse(
+                userTag.roomImageCombinations,
+              );
+              return (combinationsObject as RoomImageCombination[]).some(
+                (combination) => combination.roomId === roomId,
+              );
+            });
+            const filteredComments = userImageEntity.userComments.filter(
+              (userComment) => {
+                return userComment.personalRoom.id === roomId;
               },
-            ),
-            userTags: imageEntityNoUser.userTags.map((userTag) => {
-              const { ...tagNoDates } = userTag;
-              return tagNoDates;
-            }),
-          };
-        });
+            );
+            const roomEntityWithFilteredTags = {
+              ...userImageEntity,
+              userTags: filteredTags,
+              userComments: filteredComments,
+            };
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(roomEntityWithFilteredTags),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
+            return {
+              ...userImageDto,
+              isOwner: activeCoreUser.id === userImageEntity.user.id,
+            };
+          });
         return {
           total,
           currentPage,
@@ -151,7 +203,18 @@ export class PersonalRoomService {
           nextPage,
           prevPage,
           images: countedUserImageDtos,
-          filterOptions: { users: userFilterOptions, tags: tagFilterOptions },
+          filterOptions: {
+            users: userFilterOptions,
+            tags: tagFilterOptions.map((filterTag) => {
+              return plainToInstance(
+                UserTagResDto,
+                instanceToPlain(filterTag),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
+          },
         };
       } else {
         return {} as PaginatedImagesResDto;
@@ -203,7 +266,6 @@ export class PersonalRoomService {
               activeCoreUser,
               personalRoomDto.areaId,
             );
-
             return this.personalRoomRepository.create({
               user: activeCoreUser,
               title: personalRoomDto.title,
@@ -227,12 +289,14 @@ export class PersonalRoomService {
       );
 
       const newRoomDtos = savedPersonalRooms.map((newRoomEntity) => {
-        const roomNoUser = removeUser(newRoomEntity);
-        const { users, owner, ...areaNoUsers } = roomNoUser.personalArea;
-        return {
-          ...roomNoUser,
-          personalArea: areaNoUsers,
-        };
+        return plainToInstance(
+          PersonalRoomResDto,
+          instanceToPlain(newRoomEntity),
+          {
+            excludeExtraneousValues: true,
+            groups: ['withArea'],
+          },
+        );
       });
 
       return newRoomDtos;
@@ -262,9 +326,14 @@ export class PersonalRoomService {
           ...personalRoomEntity,
           ...editData,
         });
-        const roomNoUser = removeUser(savedPersonalRoomEntity);
-
-        return roomNoUser;
+        return plainToInstance(
+          PersonalRoomResDto,
+          instanceToPlain(savedPersonalRoomEntity),
+          {
+            excludeExtraneousValues: true,
+            groups: ['withArea'],
+          },
+        );
       } else {
         throw new HttpException(
           {
@@ -291,6 +360,39 @@ export class PersonalRoomService {
         user.email,
       );
 
+      const roomEntity = await this.personalRoomRepository.findOne({
+        where: { id: roomId },
+        relations: { userTags: { userImages: true, personalRooms: true } },
+      });
+
+      const userTags = roomEntity.userTags.map((userTag) => {
+        const imagesToKeepIds: number[] = [];
+
+        const newRoomCombinations = (
+          JSON.parse(userTag.roomImageCombinations) as RoomImageCombination[]
+        ).filter((combination) => {
+          if (combination.roomId === roomId) {
+            return false;
+          } else {
+            imagesToKeepIds.push(combination.imageId);
+            return true;
+          }
+        });
+
+        const newUserImages = userTag.userImages.filter((image) =>
+          imagesToKeepIds.includes(image.id),
+        );
+
+        const newPersonalRooms = userTag.personalRooms.filter(
+          (personalRoom) => personalRoom.id !== roomId,
+        );
+        userTag.userImages = newUserImages;
+        userTag.personalRooms = newPersonalRooms;
+        userTag.roomImageCombinations = JSON.stringify(newRoomCombinations);
+        return userTag;
+      });
+
+      await this.sharedTagService.editTags(userTags);
       const deleteResult = await this.personalRoomRepository.delete({
         user: { id: activeCoreUser.id },
         id: roomId,

@@ -9,7 +9,10 @@ import {
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
-import { GuestUserResDto } from './dto/guest-user.dto';
+import {
+  GuestUserGuestsResDto,
+  GuestUserHostsResDto,
+} from './dto/guest-user.dto';
 import { GuestUserService } from './guest-user.service';
 
 @ApiBearerAuth()
@@ -25,28 +28,28 @@ export class GuestUserController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user guests',
-    type: [GuestUserResDto],
+    type: [GuestUserGuestsResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'User guests could not be loaded',
   })
   @Get()
-  async getGuests(@User() user: CoreUserDto): Promise<GuestUserResDto[]> {
+  async getGuests(@User() user: CoreUserDto): Promise<GuestUserGuestsResDto[]> {
     return await this.guestUserService.getAllGuests(user);
   }
 
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Returning all user hosts',
-    type: [GuestUserResDto],
+    type: [GuestUserHostsResDto],
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'User hosts could not be loaded',
   })
   @Get('/hosts')
-  async getHosts(@User() user: CoreUserDto): Promise<GuestUserResDto[]> {
+  async getHosts(@User() user: CoreUserDto): Promise<GuestUserHostsResDto[]> {
     return await this.guestUserService.getAllHosts(user);
   }
 

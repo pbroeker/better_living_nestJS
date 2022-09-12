@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -16,7 +17,7 @@ import {
   PendingInvitationResDto,
 } from './dto/invitation-token.dto';
 import { InvitationTokenService } from './invitation-token.service';
-import { GuestUserResDto } from '../guest-user/dto/guest-user.dto';
+import { GuestUserFullResDto } from '../guest-user/dto/guest-user.dto';
 
 @ApiBearerAuth()
 @ApiTags('invitation-token')
@@ -63,7 +64,7 @@ export class InvitationTokenController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Successfully added as guest',
-    type: GuestUserResDto,
+    type: GuestUserFullResDto,
   })
   @ApiResponse({
     status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -73,7 +74,7 @@ export class InvitationTokenController {
   async checkInvitationToken(
     @User() user: CoreUserDto,
     @Body() invitationReqDto: InvitationTokenReqDto,
-  ): Promise<GuestUserResDto> {
+  ): Promise<GuestUserFullResDto> {
     return await this.invitationTokenService.checkInvitationToken(
       user,
       invitationReqDto.invitationToken,
@@ -92,7 +93,7 @@ export class InvitationTokenController {
   @Delete('/:tokenId')
   async deleteInvitationToken(
     @User() user: CoreUserDto,
-    @Param('tokenId') tokenId: number,
+    @Param('tokenId', ParseIntPipe) tokenId: number,
   ): Promise<boolean> {
     return await this.invitationTokenService.deleteInvitationToken(
       user,
