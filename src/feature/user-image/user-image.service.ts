@@ -1,11 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as AWS from 'aws-sdk';
-import * as multer from 'multer';
-import * as multerS3 from 'multer-s3';
 import { SharedRoomService } from '../../shared/shared-room.service';
-import { getUserInitials, removeUser } from '../../utils/features/helpers';
 import { In, Repository } from 'typeorm';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
@@ -16,31 +12,21 @@ import {
   UserImageDto,
 } from './dto/user-image.dto';
 import { UserImage } from './entity/user-image.entity';
-import { RequestHandler } from '@nestjs/common/interfaces';
 import { UserTag } from '../user-tag/entity/userTags.entity';
 import { SharedTagService } from '../../shared/shared-tag.service';
-import { SharedImageService } from 'src/shared/shared-image.service';
+import { SharedImageService } from '../../shared/shared-image.service';
 import * as _ from 'lodash';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserCommentResDto } from '../user-comments/dto/user-comment.dto';
+import {
+  RoomImageCombination,
+  UserTagResDto,
+} from '../user-tag/dto/user-tag.dto';
+import { createRoomImageCombinations } from 'src/utils/features/helpers';
+import * as sharp from 'sharp';
+import { AmazonS3Service } from './aws-s3.service';
 @Injectable()
 export class UserImageService {
-  private readonly AWS_S3_BUCKET_NAME = this.configService.get('BUCKET');
-  private readonly s3 = new AWS.S3();
-  private upload: RequestHandler;
-
-  private createMulter(userId: string) {
-    return multer({
-      limits: { fieldSize: 25 * 1024 * 1024 },
-      storage: multerS3({
-        s3: this.s3,
-        bucket: this.AWS_S3_BUCKET_NAME,
-        acl: 'public-read',
-        key: function (request, file, cb) {
-          cb(null, `${userId}/${Date.now().toString()}-${file.originalname}`);
-        },
-      }),
-    }).array('image', 1);
-  }
-
   constructor(
     @InjectRepository(UserImage)
     private userImageRepository: Repository<UserImage>,
@@ -49,12 +35,8 @@ export class UserImageService {
     private sharedRoomService: SharedRoomService,
     private sharedTagService: SharedTagService,
     private sharedImageService: SharedImageService,
-  ) {
-    AWS.config.update({
-      accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-      secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
-    });
-  }
+    private amazonS3Service: AmazonS3Service,
+  ) {}
 
   async getAllImages(currentUser: CoreUserDto): Promise<UserImageDto[]> {
     try {
@@ -64,37 +46,37 @@ export class UserImageService {
 
       const allUserImages = await this.userImageRepository.find({
         where: { user: activeCoreUser },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          userTags: true,
+          user: true,
+          userComments: {
+            user: true,
+          },
+        },
       });
 
       const allImageIds = allUserImages.map((image) => image.id);
 
       await this.sharedImageService.checkAndAddImageDimensions(allImageIds);
+
       if (allUserImages) {
         const allUserImageDtos: UserImageDto[] = allUserImages.map(
           (userImageEntity) => {
-            const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(userImageEntity),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
             return {
-              ...imageEntityNoRooms,
-              ownerInitials: getUserInitials(userImageEntity.user),
+              ...userImageDto,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              personalRooms: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => {
-                  return {
-                    id: personalRoom.id,
-                    iconId: personalRoom.iconId,
-                    title: personalRoom.title,
-                  };
-                },
-              ),
-              userTags: imageEntityNoRooms.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
-              }),
             };
           },
         );
+
         return allUserImageDtos;
       } else {
         return [];
@@ -113,6 +95,7 @@ export class UserImageService {
   async getUserImage(
     currentUser: CoreUserDto,
     imageId: number,
+    roomId?: number,
   ): Promise<UserImageDto> {
     const activeCoreUser = await this.sharedUserService.findByEmail(
       currentUser.email,
@@ -121,68 +104,106 @@ export class UserImageService {
     try {
       const imageEntity = await this.userImageRepository.findOne({
         where: { id: imageId },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+          userTags: true,
+          userComments: {
+            user: true,
+            personalRoom: true,
+          },
+        },
       });
 
-      const imageDtoNoUser = removeUser(imageEntity);
-      const { personalRooms, ...imageDtoNoRooms } = imageDtoNoUser;
+      const imageDto = plainToInstance(
+        UserImageDto,
+        instanceToPlain(imageEntity),
+        {
+          excludeExtraneousValues: true,
+        },
+      );
+
+      // creating userComments
+      const userCommentDtos = roomId
+        ? imageEntity.userComments
+            .filter((userComment) => {
+              return userComment.personalRoom.id === roomId;
+            })
+            .map((userComment) => {
+              return plainToInstance(
+                UserCommentResDto,
+                instanceToPlain(userComment),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            })
+        : [];
+
+      // creating userTags
+      const userTagDtos = roomId
+        ? imageEntity.userTags
+            .filter((userTag) => {
+              const combinationsObject = JSON.parse(
+                userTag.roomImageCombinations,
+              );
+              return (combinationsObject as RoomImageCombination[]).some(
+                (combination) => combination.roomId === roomId,
+              );
+            })
+            .map((userTag) => {
+              return plainToInstance(UserTagResDto, instanceToPlain(userTag), {
+                excludeExtraneousValues: true,
+              });
+            })
+        : [];
 
       return {
-        ...imageDtoNoRooms,
+        ...imageDto,
         isOwner: activeCoreUser.id === imageEntity.user.id,
-        ownerInitials: getUserInitials(imageEntity.user),
-        personalRooms: imageDtoNoUser.personalRooms.map((personalRoom) => {
-          return {
-            id: personalRoom.id,
-            iconId: personalRoom.iconId,
-            title: personalRoom.title,
-          };
-        }),
-        userTags: imageDtoNoRooms.userTags.map((userTag) => {
-          const { ...tagNoDates } = userTag;
-          return tagNoDates;
-        }),
+        userComments: userCommentDtos,
+        userTags: userTagDtos,
       };
     } catch (error) {
       throw new HttpException(
         {
-          title: 'my_pictures.error.load_images.title',
-          text: 'my_pictures.error.load_images.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.load_images.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.load_images.title',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   async getUserImagesCount(
     currentUser: CoreUserDto,
-    page: number,
+    currentPage: number,
     filterObject?: ImageFilterQuery,
   ): Promise<PaginatedImagesResDto> {
     const imageCount = 10;
-    const skip = (page - 1) * imageCount;
+    const skip = (currentPage - 1) * imageCount;
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         currentUser.email,
         { guests: true, hosts: true },
       );
 
-      const userImages = await this.userImageRepository.findAndCount({
+      const allUserImages = await this.userImageRepository.find({
         where: {
           user: filterObject.userIds
             ? { id: In(filterObject.userIds) }
             : { id: In([activeCoreUser.id]) },
         },
         order: { createdAt: 'DESC' },
-        take: imageCount,
-        skip: skip,
-        relations: ['personalRooms', 'userTags', 'user'],
-      });
-
-      const allUserImages = await this.userImageRepository.find({
-        where: { user: { id: activeCoreUser.id } },
-        order: { createdAt: 'DESC' },
-        relations: ['personalRooms', 'userTags', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+          userTags: true,
+        },
       });
 
       const roomFilterOptions = _.uniqBy(
@@ -197,12 +218,12 @@ export class UserImageService {
 
       // filterByRooms
       const roomFilteredImages = filterObject.roomIds
-        ? userImages[0].filter((image) => {
+        ? allUserImages.filter((image) => {
             return image.personalRooms.some((room) =>
               filterObject.roomIds.includes(room.id),
             );
           })
-        : userImages[0];
+        : allUserImages;
 
       // filterByTags
       const tagFilteredImages = filterObject.tagIds
@@ -212,43 +233,47 @@ export class UserImageService {
             );
           })
         : roomFilteredImages;
+
       if (tagFilteredImages) {
-        const total = userImages[1];
+        const total = tagFilteredImages.length;
         const lastPage = Math.ceil(total / imageCount);
-        const nextPage = page + 1 > lastPage ? null : page + 1;
-        const prevPage = page - 1 < 1 ? null : page - 1;
-        const countedUserImageDtos = tagFilteredImages.map(
-          (userImageEntity) => {
-            const imageEntityNoUser = removeUser(userImageEntity);
-            const { personalRooms, ...imageEntityNoRooms } = imageEntityNoUser;
+        const nextPage = currentPage + 1 > lastPage ? null : currentPage + 1;
+        const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
+
+        const countedUserImageDtos = tagFilteredImages
+          .slice(skip, currentPage * imageCount)
+          .map((userImageEntity) => {
+            const userImageDto = plainToInstance(
+              UserImageDto,
+              instanceToPlain(userImageEntity),
+              {
+                excludeExtraneousValues: true,
+              },
+            );
             return {
-              ...imageEntityNoRooms,
+              ...userImageDto,
               isOwner: activeCoreUser.id === userImageEntity.user.id,
-              ownerInitials: getUserInitials(userImageEntity.user),
-              personalRooms: imageEntityNoUser.personalRooms.map(
-                (personalRoom) => {
-                  return {
-                    id: personalRoom.id,
-                    iconId: personalRoom.iconId,
-                    title: personalRoom.title,
-                  };
-                },
-              ),
-              userTags: imageEntityNoUser.userTags.map((userTag) => {
-                const { ...tagNoDates } = userTag;
-                return tagNoDates;
-              }),
             };
-          },
-        );
+          });
         return {
-          currentPage: page,
+          currentPage: currentPage,
           total: total,
           lastPage: lastPage,
           nextPage: nextPage,
           prevPage: prevPage,
           images: countedUserImageDtos,
-          filterOptions: { rooms: roomFilterOptions, tags: tagFilterOptions },
+          filterOptions: {
+            rooms: roomFilterOptions,
+            tags: tagFilterOptions.map((filterTag) => {
+              return plainToInstance(
+                UserTagResDto,
+                instanceToPlain(filterTag),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
+          },
         };
       } else {
         return {} as PaginatedImagesResDto;
@@ -284,43 +309,69 @@ export class UserImageService {
       height: height,
     });
     const savedImageEntity = await this.userImageRepository.save(imageEntity);
-    const { user, personalRooms, ...imageEntityNoUser } = savedImageEntity;
-    return imageEntityNoUser;
+    return plainToInstance(UserImageDto, instanceToPlain(savedImageEntity), {
+      excludeExtraneousValues: true,
+    });
   }
 
-  async imageUpload(req: any, res: any, user: CoreUserDto) {
+  async imageUpload(imageBuffer: Buffer, fileName: string, user: CoreUserDto) {
     try {
-      this.upload = this.createMulter(String(user.userId));
-      this.upload(req, res, async (error: any) => {
-        if (error) {
-          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-            title: 'my_pictures.error.upload_image.title',
-            text: 'my_pictures.error.upload_image.message',
-          });
-        }
-        if (req.files && req.files.length) {
-          const imagePath = req.files[0].location as string;
-          const imageKey = req.files[0].key as string;
-          const savedUserImageEntity = await this.saveUserImage(
-            imagePath,
-            imageKey,
-            user,
-          );
-          return res.status(201).json(savedUserImageEntity);
-        } else {
-          return res.status(HttpStatus.BAD_REQUEST).json({
-            title: 'my_pictures.error.upload_image.title',
-            text: 'my_pictures.error.upload_image.message',
-          });
-        }
-      });
+      const result = await this.amazonS3Service.uploadImageToS3(
+        imageBuffer,
+        user.userId,
+        fileName,
+      );
+
+      if (result) {
+        const imagePath = result.Location;
+        const imageKey = result.Key;
+        const savedUserImageEntity = await this.saveUserImage(
+          imagePath,
+          imageKey,
+          user,
+        );
+        return savedUserImageEntity;
+      }
     } catch (error) {
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(
+      throw new HttpException(
         {
           title: 'my_pictures.error.upload_image.title',
           text: 'my_pictures.error.upload_image.message',
         },
-        user.userId,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async reorientImage(
+    imageBuffer: Buffer,
+    fileName: string,
+    user: CoreUserDto,
+  ) {
+    try {
+      if (!imageBuffer || !fileName) {
+        throw new HttpException(
+          {
+            title: 'my_pictures.error.upload_image.title',
+            text: 'my_pictures.error.upload_image.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const orientedImage = await sharp(imageBuffer).rotate().toBuffer();
+      return await this.imageUpload(orientedImage, fileName, user);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.upload_image.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.upload_image.message',
+        },
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -334,65 +385,93 @@ export class UserImageService {
         currentUser.email,
       );
 
+      const allUserTags = await this.sharedTagService.findAllOwned(
+        activeCoreUser,
+      );
+
       const imageEntities = await this.userImageRepository.find({
         where: {
-          user: activeCoreUser,
           id: In(editImage.imageIds),
         },
-        relations: ['personalRooms', 'user'],
+        relations: {
+          personalRooms: true,
+          user: true,
+          userTags: { personalRooms: true, userImages: true },
+        },
       });
-
-      // getPresentTagEntities
-      const existingTags: UserTag[] = [];
-      if (editImage.usertagIds.length) {
-        const existingTagEntitites = await this.sharedTagService.findByIds(
-          activeCoreUser,
-          editImage.usertagIds,
-        );
-        existingTags.push(...existingTagEntitites);
-      }
-
-      // createNewTagEntities
-      const newTags: UserTag[] = [];
-      if (editImage.newUsertags.length) {
-        const newUserTags = await this.sharedTagService.createTags(
-          activeCoreUser,
-          editImage.newUsertags,
-        );
-        newTags.push(...newUserTags);
-      }
 
       const roomEntities = await this.sharedRoomService.findAnyByIds(
         editImage.personalRoomIds,
       );
 
+      const roomImageCombinations = createRoomImageCombinations(
+        editImage.personalRoomIds,
+        editImage.imageIds,
+      );
+
+      // createNewTagEntities
+      const newTags: UserTag[] = [];
+      if (editImage.newUsertags.length) {
+        editImage.newUsertags.forEach((newUserTag) => {
+          const existingTitleTag = allUserTags.find(
+            (existingUsertag) => existingUsertag.title === newUserTag,
+          );
+          if (existingTitleTag) {
+            editImage.usertagIds.push(existingTitleTag.id);
+          }
+        });
+
+        const noDoubleUserTags = editImage.newUsertags.filter((newUserTag) => {
+          const doubleTag = allUserTags.find(
+            (existingUsertag) => existingUsertag.title === newUserTag,
+          );
+          if (doubleTag) {
+            editImage.usertagIds.push(doubleTag.id);
+            return false;
+          } else {
+            return true;
+          }
+        });
+
+        const newUserTags = await this.sharedTagService.createTags(
+          activeCoreUser,
+          noDoubleUserTags,
+          roomEntities,
+          roomImageCombinations,
+        );
+        newTags.push(...newUserTags);
+      }
+
       const updatedImages = await Promise.all(
         imageEntities.map(async (imageEntity) => {
+          // Edit existingTags
+          const combinationsToEdit = createRoomImageCombinations(
+            editImage.personalRoomIds,
+            [imageEntity.id],
+          );
+
+          const editedTags = await this.sharedTagService.removeCombinations(
+            imageEntity.userTags,
+            editImage.usertagIds,
+            combinationsToEdit,
+            roomEntities,
+          );
+
+          // Adding rooms and Tags
           imageEntity.personalRooms = roomEntities;
-          imageEntity.userTags = [...existingTags, ...newTags];
+          imageEntity.userTags = [...editedTags, ...newTags];
+
           const savedImageEntity = await this.userImageRepository.save(
             imageEntity,
           );
-          const userTagsNoUser = savedImageEntity.userTags.map((userTag) => {
-            const { user, ...userTagNoUser } = userTag;
-            return userTagNoUser;
-          });
-          const { user, personalRooms, ...imageEntityNoUser } =
-            savedImageEntity;
 
-          return {
-            ...imageEntityNoUser,
-            ownerInitials: getUserInitials(savedImageEntity.user),
-            isOwner: activeCoreUser.id === savedImageEntity.user.id,
-            personalRooms: roomEntities.map((personalRoom) => {
-              return {
-                id: personalRoom.id,
-                iconId: personalRoom.iconId,
-                title: personalRoom.title,
-              };
-            }),
-            userTags: userTagsNoUser,
-          };
+          return plainToInstance(
+            UserImageDto,
+            instanceToPlain(savedImageEntity),
+            {
+              excludeExtraneousValues: true,
+            },
+          );
         }),
       );
 
@@ -419,27 +498,33 @@ export class UserImageService {
           user: activeCoreUser,
           id: imageId,
         },
+        relations: { userTags: { personalRooms: true } },
       });
-      if (imageEntity) {
-        this.s3.deleteObject(
-          {
-            Bucket: this.AWS_S3_BUCKET_NAME,
-            Key: imageEntity.key,
-          },
-          (err) => {
-            if (err) {
-              console.error(err);
-              throw new HttpException(
-                {
-                  title: 'my_pictures.error.delete_images.title',
-                  text: 'my_pictures.error.delete_images.message',
-                },
-                HttpStatus.INTERNAL_SERVER_ERROR,
-              );
-            }
-          },
+
+      await this.amazonS3Service.deleteImageFromS3(imageEntity.key);
+
+      const userTags = imageEntity.userTags.map((userTag) => {
+        const roomsToKeepIds: number[] = [];
+        const newCombinations = (
+          JSON.parse(userTag.roomImageCombinations) as RoomImageCombination[]
+        ).filter((combination) => {
+          if (combination.imageId === imageId) {
+            return false;
+          } else {
+            roomsToKeepIds.push(combination.roomId);
+            return true;
+          }
+        });
+        const newPersonalRooms = userTag.personalRooms.filter((room) =>
+          roomsToKeepIds.includes(room.id),
         );
-      }
+        userTag.personalRooms = newPersonalRooms;
+        userTag.roomImageCombinations = JSON.stringify(newCombinations);
+        return userTag;
+      });
+
+      await this.sharedTagService.editTags(userTags);
+
       await this.userImageRepository.remove(imageEntity);
       return true;
     } catch (error) {

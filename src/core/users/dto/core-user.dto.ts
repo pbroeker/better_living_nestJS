@@ -19,7 +19,7 @@ export class CoreUserDto {
 
   @ApiProperty()
   @IsString()
-  first_name: string;
+  first_name?: string;
 
   @ApiProperty()
   @IsOptional()

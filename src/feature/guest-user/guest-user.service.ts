@@ -1,10 +1,13 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CoreUserDto } from '../../core/users/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { SharedAreaService } from 'src/shared/shared-area.service';
-import { SharedImageService } from 'src/shared/shared-image.service';
-import { GuestUserResDto } from './dto/guest-user.dto';
-import { getUserInitials } from 'src/utils/features/helpers';
+import { SharedAreaService } from '../../shared/shared-area.service';
+import { SharedImageService } from '../../shared/shared-image.service';
+import {
+  GuestUserGuestsResDto,
+  GuestUserHostsResDto,
+} from './dto/guest-user.dto';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class GuestUserService {
@@ -14,7 +17,7 @@ export class GuestUserService {
     private sharedAreaService: SharedAreaService,
   ) {}
 
-  async getAllHosts(user: CoreUserDto): Promise<GuestUserResDto[]> {
+  async getAllHosts(user: CoreUserDto): Promise<GuestUserHostsResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
@@ -23,23 +26,15 @@ export class GuestUserService {
         },
       );
 
-      const hostUserDtos: GuestUserResDto[] = activeCoreUser.hosts.map(
-        (host) => {
-          const {
-            user_password,
-            currentHashedRefreshToken,
-            guests,
-            hosts,
-            ...hostNoPW
-          } = host;
-          return {
-            ...hostNoPW,
-            guestIds: host.guests.map((guest) => guest.id),
-            userInitials: getUserInitials(host),
-            host_email: host.user_email,
-          };
-        },
-      );
+      const hostUserDtos = activeCoreUser.hosts.map((hostEntity) => {
+        return plainToInstance(
+          GuestUserHostsResDto,
+          instanceToPlain(hostEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
       return hostUserDtos;
     } catch (error) {
       throw new HttpException(
@@ -52,7 +47,7 @@ export class GuestUserService {
     }
   }
 
-  async getAllGuests(user: CoreUserDto): Promise<GuestUserResDto[]> {
+  async getAllGuests(user: CoreUserDto): Promise<GuestUserGuestsResDto[]> {
     try {
       const activeCoreUser = await this.sharedUserService.findByEmail(
         user.email,
@@ -61,24 +56,15 @@ export class GuestUserService {
         },
       );
 
-      const guestUserDtos: GuestUserResDto[] = activeCoreUser.guests.map(
-        (guest) => {
-          const {
-            user_password,
-            currentHashedRefreshToken,
-            hosts,
-            guests,
-            ...guestNoPW
-          } = guest;
-
-          return {
-            ...guestNoPW,
-            hostIds: guest.hosts.map((guest) => guest.id),
-            userInitials: getUserInitials(guest),
-            guest_email: guest.user_email,
-          };
-        },
-      );
+      const guestUserDtos = activeCoreUser.guests.map((guestEntity) => {
+        return plainToInstance(
+          GuestUserGuestsResDto,
+          instanceToPlain(guestEntity),
+          {
+            excludeExtraneousValues: true,
+          },
+        );
+      });
       return guestUserDtos;
     } catch (error) {
       throw new HttpException(
@@ -136,7 +122,6 @@ export class GuestUserService {
 
       return updatedUser ? true : false;
     } catch (error) {
-      console.log('error: ', error);
       throw new HttpException(
         {
           title: 'user-guest.error.delete_guest.title',

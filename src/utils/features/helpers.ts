@@ -1,3 +1,4 @@
+import { RoomImageCombination } from 'src/feature/user-tag/dto/user-tag.dto';
 import { CoreUser } from '../../core/users/entity/user.entity';
 
 interface HasUser {
@@ -31,4 +32,19 @@ export const getUserInitials = (user: CoreUser): string => {
       .charAt(1)
       .toUpperCase()}`;
   }
+};
+
+export const createRoomImageCombinations = (
+  roomIds: number[],
+  imageIds: number[],
+) => {
+  return roomIds.flatMap((roomId) =>
+    imageIds.map((imageId) => {
+      const combination: RoomImageCombination = {
+        roomId: roomId,
+        imageId: imageId,
+      };
+      return combination;
+    }),
+  );
 };
