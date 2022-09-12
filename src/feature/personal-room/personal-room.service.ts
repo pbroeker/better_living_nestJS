@@ -203,7 +203,18 @@ export class PersonalRoomService {
           nextPage,
           prevPage,
           images: countedUserImageDtos,
-          filterOptions: { users: userFilterOptions, tags: tagFilterOptions },
+          filterOptions: {
+            users: userFilterOptions,
+            tags: tagFilterOptions.map((filterTag) => {
+              return plainToInstance(
+                UserTagResDto,
+                instanceToPlain(filterTag),
+                {
+                  excludeExtraneousValues: true,
+                },
+              );
+            }),
+          },
         };
       } else {
         return {} as PaginatedImagesResDto;

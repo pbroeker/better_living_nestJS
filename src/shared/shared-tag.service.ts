@@ -25,6 +25,15 @@ export class SharedTagService {
     });
   }
 
+  async findAllOwned(currentUser: CoreUser): Promise<UserTag[]> {
+    return await this.userTagRepository.find({
+      where: { user: currentUser },
+      relations: {
+        user: true,
+      },
+    });
+  }
+
   async findOwnedByIds(
     currentUser: CoreUser,
     ids: number[],

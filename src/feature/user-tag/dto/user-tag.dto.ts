@@ -78,7 +78,7 @@ export class UserTagResDto implements Readonly<UserTagResDto> {
   personalRooms?: PersonalRoomResDto[];
 
   @ApiProperty({ type: [RoomImageCombination] })
-  @Expose()
+  @Expose({ groups: ['getCompleteTag'] })
   @IsOptional()
   @IsArray()
   @Transform(({ value }: { value: string }) => {
