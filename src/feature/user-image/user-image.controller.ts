@@ -82,12 +82,11 @@ export class UserImageController {
     @User() user: CoreUserDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    const test = await this.imageService.reorientImage(
+    return await this.imageService.reorientImage(
       file.buffer,
       file.originalname,
       user,
     );
-    return test;
   }
 
   @ApiResponse({

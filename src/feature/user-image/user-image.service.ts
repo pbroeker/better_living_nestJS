@@ -167,10 +167,14 @@ export class UserImageService {
     } catch (error) {
       throw new HttpException(
         {
-          title: 'my_pictures.error.load_images.title',
-          text: 'my_pictures.error.load_images.message',
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.load_images.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.load_images.title',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -317,40 +321,25 @@ export class UserImageService {
         user.userId,
         fileName,
       );
-      return result as any;
-      //   this.upload = this.createMulter(String(user.userId));
-      //   this.upload(req, res, async (error: any) => {
-      //     if (error) {
-      //       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      //         title: 'my_pictures.error.upload_image.title',
-      //         text: 'my_pictures.error.upload_image.message',
-      //       });
-      //     }
-      //     if (req.files && req.files.length) {
-      //       const imagePath = req.files[0].location as string;
-      //       const imageKey = req.files[0].key as string;
-      //       const savedUserImageEntity = await this.saveUserImage(
-      //         imagePath,
-      //         imageKey,
-      //         user,
-      //       );
-      //       return res.status(201).json(savedUserImageEntity);
-      //     } else {
-      //       return res.status(HttpStatus.BAD_REQUEST).json({
-      //         title: 'my_pictures.error.upload_image.title',
-      //         text: 'my_pictures.error.upload_image.message',
-      //       });
-      //     }
-      //   });
+
+      if (result) {
+        const imagePath = result.Location;
+        const imageKey = result.Key;
+        const savedUserImageEntity = await this.saveUserImage(
+          imagePath,
+          imageKey,
+          user,
+        );
+        return savedUserImageEntity;
+      }
     } catch (error) {
-      return error;
-      // return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(
-      //   {
-      //     title: 'my_pictures.error.upload_image.title',
-      //     text: 'my_pictures.error.upload_image.message',
-      //   },
-      //   user.userId,
-      // );
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.upload_image.title',
+          text: 'my_pictures.error.upload_image.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -359,8 +348,32 @@ export class UserImageService {
     fileName: string,
     user: CoreUserDto,
   ) {
-    const orientedImage = await sharp(imageBuffer).rotate().toBuffer();
-    return await this.imageUpload(orientedImage, fileName, user);
+    try {
+      if (!imageBuffer || !fileName) {
+        throw new HttpException(
+          {
+            title: 'my_pictures.error.upload_image.title',
+            text: 'my_pictures.error.upload_image.message',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const orientedImage = await sharp(imageBuffer).rotate().toBuffer();
+      return await this.imageUpload(orientedImage, fileName, user);
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: error.response?.title
+            ? error.response.title
+            : 'my_pictures.error.upload_image.title',
+          text: error.response?.text
+            ? error.response.text
+            : 'my_pictures.error.upload_image.message',
+        },
+        error.status ? error.status : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async updateImage(

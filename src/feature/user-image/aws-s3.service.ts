@@ -43,29 +43,25 @@ export class AmazonS3Service {
       accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
       secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
     });
-    const uploadResult = await s3
-      .upload(
-        {
+    try {
+      const uploadResult = await s3
+        .upload({
           ACL: 'public-read',
           Bucket: this.configService.get('BUCKET'),
           Body: dataBuffer,
           Key: `${userId}/${Date.now().toString()}-${originalname}`,
-        },
-        (err, data) => {
-          if (err) {
-            throw new HttpException(
-              {
-                title: 'my_pictures.error.upload_image.title',
-                text: 'my_pictures.error.upload_image.message',
-              },
-              HttpStatus.INTERNAL_SERVER_ERROR,
-            );
-          }
-          return data;
-        },
-      )
-      .promise();
+        })
+        .promise();
 
-    return uploadResult;
+      return uploadResult;
+    } catch (error) {
+      throw new HttpException(
+        {
+          title: 'my_pictures.error.upload_image.title',
+          text: 'my_pictures.error.upload_image.message',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
