@@ -4,6 +4,7 @@ import { CoreUser } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedAuthService } from '../../shared/shared-auth.service';
 import { RegisterUserReqDto } from '../auth/dto/login-user.dto';
+import { CoreUserDto } from './dto/core-user.dto';
 @Injectable()
 export class UserService {
   constructor(
@@ -38,5 +39,9 @@ export class UserService {
 
     const savedUserEntity = await this.userRepository.save(userEntity);
     return savedUserEntity;
+  }
+
+  deleteUser(currentUser: CoreUserDto) {
+    return false;
   }
 }
