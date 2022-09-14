@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 import sizeOf from 'image-size';

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
 

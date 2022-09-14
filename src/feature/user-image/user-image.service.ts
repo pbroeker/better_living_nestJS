@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { In, Repository } from 'typeorm';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
   EditImageDto,

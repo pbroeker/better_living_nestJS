@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { UserImage } from '../../user-image/entity/user-image.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';

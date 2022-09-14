@@ -9,7 +9,7 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { getUserInitials } from '../../../utils/features/helpers';
 
 Exclude();

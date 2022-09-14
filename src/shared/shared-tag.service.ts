@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 import { RoomImageCombination } from 'src/feature/user-tag/dto/user-tag.dto';
 import { FindOptionsRelations, Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { UserTag } from '../feature/user-tag/entity/userTags.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 import * as _ from 'lodash';

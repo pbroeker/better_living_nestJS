@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { SharedAuthService } from './shared-auth.service';
 import { SharedUserService } from './shared-user.service';
 import { SharedAreaService } from './shared-area.service';

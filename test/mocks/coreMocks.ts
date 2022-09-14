@@ -5,7 +5,7 @@ import {
 import {
   CoreUserDto,
   CoreUserWithRefreshTokenDto,
-} from 'src/core/users/dto/core-user.dto';
+} from 'src/core/user/dto/core-user.dto';
 import { ImageFilterQuery } from 'src/feature/user-image/dto/user-image.dto';
 
 export const mockCoreUserDto: CoreUserDto = {

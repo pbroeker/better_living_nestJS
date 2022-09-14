@@ -1,4 +1,4 @@
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';

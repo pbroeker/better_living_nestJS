@@ -1,5 +1,5 @@
 import { IsNotEmpty } from 'class-validator';
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';

@@ -1,10 +1,10 @@
 import { UserImage } from '../../../feature/user-image/entity/user-image.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';
-import { PersonalArea } from './../../../feature/personal-areas/entity/personalArea.entity';
+import { PersonalArea } from '../../../feature/personal-areas/entity/personalArea.entity';
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
-import { PersonalRoom } from './../../../feature/personal-room/entity/personalRoom.entity';
-import { UserTag } from './../../../feature/user-tag/entity/userTags.entity';
-import { InvitationToken } from './../../../feature/invitation-token/entity/invitation-token.entity';
+import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
+import { UserTag } from '../../../feature/user-tag/entity/userTags.entity';
+import { InvitationToken } from '../../../feature/invitation-token/entity/invitation-token.entity';
 import { UserComment } from 'src/feature/user-comments/entity/userComment.entity';
 
 @Entity({ name: 'core-user' })

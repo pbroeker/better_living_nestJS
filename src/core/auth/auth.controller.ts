@@ -11,7 +11,7 @@ import { User } from '../../utils/customDecorators/user.decorator';
 import {
   CoreUserDto,
   CoreUserWithRefreshTokenDto,
-} from '../users/dto/core-user.dto';
+} from '../user/dto/core-user.dto';
 import { RtGuard } from './guards';
 
 @ApiTags('authentification')

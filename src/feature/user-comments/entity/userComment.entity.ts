@@ -1,4 +1,4 @@
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { UserImage } from '../../user-image/entity/user-image.entity';
 import { PersonalRoom } from '../../../feature/personal-room/entity/personalRoom.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';

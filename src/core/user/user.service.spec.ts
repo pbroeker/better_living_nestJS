@@ -3,7 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RegisterUserReqDto } from '../auth/dto/login-user.dto';
 import { CoreUser } from './entity/user.entity';
-import { UserService } from './users.service';
+import { UserService } from './user.service';
 import { SharedAuthService } from '../../shared/shared-auth.service';
 import { ConfigService } from '@nestjs/config';
 import { HttpException } from '@nestjs/common';

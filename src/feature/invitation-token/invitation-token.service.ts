@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUser } from '../../core/users/entity/user.entity';
+import { CoreUser } from '../../core/user/entity/user.entity';
 import { SharedAreaService } from '../../shared/shared-area.service';
 import { Repository } from 'typeorm';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import {
   InvitationTokenResDto,
