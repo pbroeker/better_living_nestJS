@@ -178,4 +178,19 @@ export class SharedTagService {
 
     return savedNewTags;
   }
+
+  async deleteTags(usertags: UserTag[]) {
+    if (usertags.length) {
+      const cleanedTags = usertags.map((userTag) => {
+        userTag.personalRooms = [];
+        userTag.userImages = [];
+        return userTag;
+      });
+      const savedTags = await this.userTagRepository.save(cleanedTags);
+
+      return await this.userTagRepository.remove(savedTags);
+    } else {
+      return [];
+    }
+  }
 }

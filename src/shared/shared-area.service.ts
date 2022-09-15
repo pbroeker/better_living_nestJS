@@ -69,4 +69,19 @@ export class SharedAreaService {
 
     return await this.personalAreaRepository.save(updatedPersonalAreas);
   }
+
+  async deleteAreas(personalAreas: PersonalArea[]) {
+    if (personalAreas.length) {
+      const cleanedAreas = personalAreas.map((personalArea) => {
+        personalArea.personalRooms = [];
+        personalArea.users = [];
+        return personalArea;
+      });
+      const savedAreas = await this.personalAreaRepository.save(cleanedAreas);
+
+      return await this.personalAreaRepository.remove(savedAreas);
+    } else {
+      return [];
+    }
+  }
 }
