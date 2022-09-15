@@ -38,24 +38,30 @@ export class CoreUser extends IdentifiableEntity {
   @JoinTable()
   personalAreas: PersonalArea[];
 
-  @OneToMany(() => UserImage, (image) => image.user)
+  @OneToMany(() => UserImage, (image) => image.user, { cascade: true })
   images: UserImage[];
 
-  @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.user)
+  @OneToMany(() => PersonalRoom, (personalRoom) => personalRoom.user, {
+    cascade: true,
+  })
   personalRooms: PersonalRoom[];
 
   @Column({ default: null })
   currentHashedRefreshToken?: string | null;
 
-  @OneToMany(() => PersonalArea, (personalArea) => personalArea.owner)
+  @OneToMany(() => PersonalArea, (personalArea) => personalArea.owner, {
+    cascade: true,
+  })
   ownedAreas: PersonalArea[];
 
-  @OneToMany(() => UserTag, (userTag) => userTag.user)
+  @OneToMany(() => UserTag, (userTag) => userTag.user, { cascade: true })
   userTags: UserTag[];
 
-  @OneToMany(() => UserComment, (userComment) => userComment.user)
+  @OneToMany(() => UserComment, (userComment) => userComment.user, {
+    cascade: true,
+  })
   userComment: UserComment[];
 
-  @OneToMany(() => InvitationToken, (token) => token.inviter)
+  @OneToMany(() => InvitationToken, (token) => token.inviter, { cascade: true })
   invitationTokens: InvitationToken[];
 }

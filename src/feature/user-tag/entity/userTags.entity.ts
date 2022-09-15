@@ -13,17 +13,18 @@ export class UserTag extends IdentifiableEntity {
   @Column({ default: '' })
   title: string;
 
-  @Exclude()
-  @ManyToOne(() => CoreUser, (user) => user.userTags, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => CoreUser, (user) => user.userTags, { onDelete: 'CASCADE' })
   user: CoreUser;
 
-  @ManyToMany(() => UserImage, (userImage) => userImage.userTags)
+  @ManyToMany(() => UserImage, (userImage) => userImage.userTags, {
+    onDelete: 'NO ACTION',
+  })
   @JoinTable()
   userImages: UserImage[];
 
-  @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userTags)
+  @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userTags, {
+    onDelete: 'NO ACTION',
+  })
   @JoinTable()
   personalRooms: PersonalRoom[];
 }

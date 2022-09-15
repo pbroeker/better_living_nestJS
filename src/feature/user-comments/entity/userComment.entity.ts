@@ -15,12 +15,12 @@ export class UserComment extends EntityWithDates {
   user: CoreUser;
 
   @ManyToOne(() => UserImage, (userImage) => userImage.userComments, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   userImage: UserImage;
 
   @ManyToOne(() => PersonalRoom, (personalRoom) => personalRoom.userComments, {
-    onDelete: 'CASCADE',
+    onDelete: 'SET NULL',
   })
   personalRoom: PersonalRoom;
 }
