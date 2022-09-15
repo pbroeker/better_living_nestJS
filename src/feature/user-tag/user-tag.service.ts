@@ -113,11 +113,8 @@ export class UserTagService {
 
   async deleteTag(user: CoreUserDto, tagId: number): Promise<boolean> {
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        user.email,
-      );
       const deleteResult = await this.userTagRepository.delete({
-        user: { id: activeCoreUser.id },
+        user: { id: user.userId },
         id: tagId,
       });
       return deleteResult.affected > 0;

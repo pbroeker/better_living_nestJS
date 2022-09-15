@@ -252,7 +252,7 @@ export class PersonalAreaService {
 
       const areaEntity = await this.personalAreaRepository.findOne({
         where: { owner: activeCoreUser, id: areaId },
-        relations: ['personalRooms', 'users'],
+        relations: { personalRooms: true, users: true },
       });
 
       // prevent deletion of unassigned area

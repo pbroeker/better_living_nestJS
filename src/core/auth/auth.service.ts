@@ -75,7 +75,7 @@ export class AuthService {
           user.user_password,
         );
         if (passwordMatches) {
-          const { user_password, user_email, id, ...userNoPW } = user;
+          const { user_password, user_email, ...userNoPW } = user;
           const tokens = await this.getTokens(user.id, user.user_email);
 
           await this.sharedUserService.setCurrentRefreshToken(

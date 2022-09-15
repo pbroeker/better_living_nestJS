@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SharedRoomService } from '../../shared/shared-room.service';
 import { In, Repository } from 'typeorm';
@@ -24,13 +23,12 @@ import {
 } from '../user-tag/dto/user-tag.dto';
 import { createRoomImageCombinations } from 'src/utils/features/helpers';
 import * as sharp from 'sharp';
-import { AmazonS3Service } from './aws-s3.service';
+import { AmazonS3Service } from 'src/shared/aws-s3.service';
 @Injectable()
 export class UserImageService {
   constructor(
     @InjectRepository(UserImage)
     private userImageRepository: Repository<UserImage>,
-    private configService: ConfigService,
     private sharedUserService: SharedUserService,
     private sharedRoomService: SharedRoomService,
     private sharedTagService: SharedTagService,
