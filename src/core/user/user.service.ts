@@ -160,9 +160,9 @@ export class UserService {
         activeCoreUser.userComment,
       );
 
-      const deleteResult = await this.userRepository.remove(activeCoreUser);
+      await this.userRepository.remove(activeCoreUser);
 
-      return deleteResult as CoreUser;
+      return true;
     } catch (error) {
       throw new HttpException(
         {
