@@ -453,6 +453,7 @@ export class UserImageService {
             editImage.usertagIds,
             combinationsToEdit,
             roomEntities,
+            imageEntity.id,
           );
 
           // Adding rooms and Tags

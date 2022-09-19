@@ -121,6 +121,7 @@ export class SharedTagService {
     newUserTagIds: number[],
     combinationsToEdit: RoomImageCombination[],
     newRoomEntities: PersonalRoom[],
+    imageId: number,
   ): Promise<UserTag[]> {
     const oldTagIds = userTags.map((userTag) => userTag.id);
     const tagIdsToRemove = _.difference(oldTagIds, newUserTagIds);
@@ -137,7 +138,7 @@ export class SharedTagService {
           oldCombinations,
           combinationsToEdit,
           _.isEqual,
-        );
+        ) as RoomImageCombination[];
 
         const newRoomCombinations = newCombinations.map(
           (combination: RoomImageCombination) => combination.roomId,
@@ -151,13 +152,23 @@ export class SharedTagService {
         userTag.roomImageCombinations = JSON.stringify(newCombinations);
         return userTag;
       });
-    await this.userTagRepository.save(tagsToRemove);
+    const removedTags = await this.userTagRepository.save(tagsToRemove);
+    const removedButAttachedTags = removedTags.filter((removedTag) => {
+      const parsedCombinationImageIds = (
+        JSON.parse(removedTag.roomImageCombinations) as RoomImageCombination[]
+      ).map((combination) => combination.imageId);
+      if (parsedCombinationImageIds.includes(imageId)) {
+        return true;
+      } else {
+        return false;
+      }
+    });
 
     // edit used tags
     const existingTagEntitites = await this.findAnyByIds(newUserTagIds, {
       personalRooms: true,
+      userImages: true,
     });
-
     existingTagEntitites.map((userTag) => {
       const oldCombinations = JSON.parse(
         userTag.roomImageCombinations,
@@ -176,7 +187,7 @@ export class SharedTagService {
       existingTagEntitites,
     );
 
-    return savedNewTags;
+    return [...savedNewTags, ...removedButAttachedTags];
   }
 
   async deleteTags(usertags: UserTag[]) {
