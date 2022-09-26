@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PersonalAreaTitle } from '../types/enums';
 import { FindOptionsRelations, Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { PersonalArea } from '../feature/personal-areas/entity/personalArea.entity';
 @Injectable()
 export class SharedAreaService {
@@ -68,5 +68,20 @@ export class SharedAreaService {
     });
 
     return await this.personalAreaRepository.save(updatedPersonalAreas);
+  }
+
+  async deleteAreas(personalAreas: PersonalArea[]) {
+    if (personalAreas.length) {
+      const cleanedAreas = personalAreas.map((personalArea) => {
+        personalArea.personalRooms = [];
+        personalArea.users = [];
+        return personalArea;
+      });
+      const savedAreas = await this.personalAreaRepository.save(cleanedAreas);
+
+      return await this.personalAreaRepository.remove(savedAreas);
+    } else {
+      return [];
+    }
   }
 }

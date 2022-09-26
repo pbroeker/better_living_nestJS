@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { Repository, FindOptionsWhere, FindOptionsRelations } from 'typeorm';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { PersonalRoom } from '../feature/personal-room/entity/personalRoom.entity';
 import { PersonalArea } from 'src/feature/personal-areas/entity/personalArea.entity';
 
@@ -12,12 +12,12 @@ export class SharedRoomService {
     private personalRoomRepository: Repository<PersonalRoom>,
   ) {}
 
-  async findAll(
-    currentUser: CoreUser,
-    relations = [],
+  async findAllOwned(
+    currentUserId: number,
+    relations: FindOptionsRelations<PersonalRoom> = {},
   ): Promise<PersonalRoom[]> {
     return await this.personalRoomRepository.find({
-      where: { user: currentUser },
+      where: { user: { id: currentUserId } },
       relations,
       order: { title: 'ASC' },
     });
@@ -86,5 +86,23 @@ export class SharedRoomService {
         ids: [...ids],
       })
       .getMany();
+  }
+
+  async deleteRooms(personalRooms: PersonalRoom[]) {
+    if (personalRooms.length) {
+      const cleanedPersonalRooms = personalRooms.map((personalRoom) => {
+        personalRoom.personalArea = undefined;
+        personalRoom.userComments = [];
+        personalRoom.userImages = [];
+        personalRoom.userTags = [];
+        return personalRoom;
+      });
+      const savedPersonalRooms = await this.personalRoomRepository.save(
+        cleanedPersonalRooms,
+      );
+      return await this.personalRoomRepository.remove(savedPersonalRooms);
+    } else {
+      return [];
+    }
   }
 }

@@ -1,4 +1,4 @@
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';
 import { Column, Entity, ManyToMany, ManyToOne, OneToMany } from 'typeorm';
 import { PersonalRoom } from '../../personal-room/entity/personalRoom.entity';
@@ -19,7 +19,9 @@ export class UserImage extends EntityWithDates {
   @Column({ nullable: true })
   width: number;
 
-  @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userImages)
+  @ManyToMany(() => PersonalRoom, (personalRoom) => personalRoom.userImages, {
+    onDelete: 'NO ACTION',
+  })
   personalRooms: PersonalRoom[];
 
   @ManyToMany(() => UserTag, (userTag) => userTag.userImages, {
@@ -27,7 +29,9 @@ export class UserImage extends EntityWithDates {
   })
   userTags: UserTag[];
 
-  @OneToMany(() => UserComment, (userComment) => userComment.userImage)
+  @OneToMany(() => UserComment, (userComment) => userComment.userImage, {
+    onDelete: 'NO ACTION',
+  })
   userComments: UserComment[];
 
   @ManyToOne(() => CoreUser, (user) => user.images, {

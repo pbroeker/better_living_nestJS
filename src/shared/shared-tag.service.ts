@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PersonalRoom } from 'src/feature/personal-room/entity/personalRoom.entity';
 import { RoomImageCombination } from 'src/feature/user-tag/dto/user-tag.dto';
 import { FindOptionsRelations, Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { UserTag } from '../feature/user-tag/entity/userTags.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 import * as _ from 'lodash';
@@ -121,6 +121,7 @@ export class SharedTagService {
     newUserTagIds: number[],
     combinationsToEdit: RoomImageCombination[],
     newRoomEntities: PersonalRoom[],
+    imageId: number,
   ): Promise<UserTag[]> {
     const oldTagIds = userTags.map((userTag) => userTag.id);
     const tagIdsToRemove = _.difference(oldTagIds, newUserTagIds);
@@ -137,7 +138,7 @@ export class SharedTagService {
           oldCombinations,
           combinationsToEdit,
           _.isEqual,
-        );
+        ) as RoomImageCombination[];
 
         const newRoomCombinations = newCombinations.map(
           (combination: RoomImageCombination) => combination.roomId,
@@ -151,13 +152,23 @@ export class SharedTagService {
         userTag.roomImageCombinations = JSON.stringify(newCombinations);
         return userTag;
       });
-    await this.userTagRepository.save(tagsToRemove);
+    const removedTags = await this.userTagRepository.save(tagsToRemove);
+    const removedButAttachedTags = removedTags.filter((removedTag) => {
+      const parsedCombinationImageIds = (
+        JSON.parse(removedTag.roomImageCombinations) as RoomImageCombination[]
+      ).map((combination) => combination.imageId);
+      if (parsedCombinationImageIds.includes(imageId)) {
+        return true;
+      } else {
+        return false;
+      }
+    });
 
     // edit used tags
     const existingTagEntitites = await this.findAnyByIds(newUserTagIds, {
       personalRooms: true,
+      userImages: true,
     });
-
     existingTagEntitites.map((userTag) => {
       const oldCombinations = JSON.parse(
         userTag.roomImageCombinations,
@@ -176,6 +187,21 @@ export class SharedTagService {
       existingTagEntitites,
     );
 
-    return savedNewTags;
+    return [...savedNewTags, ...removedButAttachedTags];
+  }
+
+  async deleteTags(usertags: UserTag[]) {
+    if (usertags.length) {
+      const cleanedTags = usertags.map((userTag) => {
+        userTag.personalRooms = [];
+        userTag.userImages = [];
+        return userTag;
+      });
+      const savedTags = await this.userTagRepository.save(cleanedTags);
+
+      return await this.userTagRepository.remove(savedTags);
+    } else {
+      return [];
+    }
   }
 }
