@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { Repository } from 'typeorm';
 import {
   PersonalAreaReqDto,
@@ -252,7 +252,7 @@ export class PersonalAreaService {
 
       const areaEntity = await this.personalAreaRepository.findOne({
         where: { owner: activeCoreUser, id: areaId },
-        relations: ['personalRooms', 'users'],
+        relations: { personalRooms: true, users: true },
       });
 
       // prevent deletion of unassigned area
@@ -276,7 +276,7 @@ export class PersonalAreaService {
 
         const unassignedArea = await this.personalAreaRepository.findOne({
           where: { owner: activeCoreUser, title: PersonalAreaTitle.DEFAULT },
-          relations: ['personalRooms'],
+          relations: { personalRooms: true },
         });
 
         unassignedArea.personalRooms = [

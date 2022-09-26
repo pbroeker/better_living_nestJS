@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { plainToClass } from 'class-transformer';
 import { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { CoreUserWithRefreshTokenDto } from 'src/core/users/dto/core-user.dto';
+import { CoreUserWithRefreshTokenDto } from 'src/core/user/dto/core-user.dto';
 import { SharedUserService } from '../../../shared/shared-user.service';
 import { TokenPayloadWithRt } from '../../../types/token';
 

@@ -1,5 +1,5 @@
 import { RoomImageCombination } from 'src/feature/user-tag/dto/user-tag.dto';
-import { CoreUser } from '../../core/users/entity/user.entity';
+import { CoreUser } from '../../core/user/entity/user.entity';
 
 interface HasUser {
   user: CoreUser;

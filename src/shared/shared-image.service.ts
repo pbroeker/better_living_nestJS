@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { CoreUser } from '../core/users/entity/user.entity';
+import { FindOptionsRelations, In, Repository } from 'typeorm';
+import { CoreUser } from '../core/user/entity/user.entity';
 import { UserImage } from '../feature/user-image/entity/user-image.entity';
 import { createIdFindOptions } from '../utils/features/helpers';
 import sizeOf from 'image-size';
@@ -30,7 +30,7 @@ export class SharedImageService {
 
   async findAllOwned(
     currentUser: CoreUser,
-    relations: string[] = [],
+    relations: FindOptionsRelations<UserImage> = {},
   ): Promise<UserImage[]> {
     return await this.userImageRepository.find({
       where: { user: currentUser },
@@ -55,7 +55,7 @@ export class SharedImageService {
   }
 
   async removeRoomsFromImages(user: CoreUser, roomIds: number[]) {
-    const userImages = await this.findAllOwned(user, ['personalRooms']);
+    const userImages = await this.findAllOwned(user, { personalRooms: true });
     const updatedGuestImages = userImages.map((guestImage) => {
       guestImage.personalRooms = guestImage.personalRooms.filter(
         (personalRoom) => !roomIds.includes(personalRoom.id),
@@ -114,5 +114,20 @@ export class SharedImageService {
     }
 
     return await this.userImageRepository.find({ where: { id: In(ids) } });
+  }
+
+  async deleteImages(userImages: UserImage[] = []) {
+    if (userImages.length) {
+      const cleanedImages = userImages.map((userImage) => {
+        userImage.userComments = [];
+        userImage.personalRooms = [];
+        userImage.userTags = [];
+        return userImage;
+      });
+      const savedImages = await this.userImageRepository.save(cleanedImages);
+      return await this.userImageRepository.remove(savedImages);
+    } else {
+      return [];
+    }
   }
 }

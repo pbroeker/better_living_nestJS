@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { Repository } from 'typeorm';
@@ -113,11 +113,8 @@ export class UserTagService {
 
   async deleteTag(user: CoreUserDto, tagId: number): Promise<boolean> {
     try {
-      const activeCoreUser = await this.sharedUserService.findByEmail(
-        user.email,
-      );
       const deleteResult = await this.userTagRepository.delete({
-        user: { id: activeCoreUser.id },
+        user: { id: user.userId },
         id: tagId,
       });
       return deleteResult.affected > 0;
