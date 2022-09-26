@@ -1,14 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { MockFunctionMetadata, ModuleMocker } from 'jest-mock';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { SharedAreaService } from '../../shared/shared-area.service';
 import { SharedImageService } from '../../shared/shared-image.service';
 import { SharedUserService } from '../../shared/shared-user.service';
 import { Repository } from 'typeorm';
 import { PersonalRoom } from './entity/personalRoom.entity';
 import { PersonalRoomService } from './personal-room.service';
-import { CoreUser } from 'src/core/users/entity/user.entity';
+import { CoreUser } from 'src/core/user/entity/user.entity';
 import { PersonalArea } from '../personal-areas/entity/personalArea.entity';
 import {
   PersonalRoomReqDto,

@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 import { Column, Entity, ManyToOne, Generated } from 'typeorm';
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { EntityWithDates } from '../../../shared/generic.entity';
 
 @Entity({ name: 'invitation-token' })

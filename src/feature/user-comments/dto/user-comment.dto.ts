@@ -73,7 +73,9 @@ export class UserCommentResDto {
   @IsNotEmpty()
   @IsString()
   @Transform(({ obj }: { obj: UserComment }) => {
-    return `${obj.user.first_name} ${obj.user.last_name}`;
+    return `${obj.user.first_name} ${
+      obj.user.last_name ? obj.user.last_name : ''
+    }`;
   })
   ownerName: string;
 

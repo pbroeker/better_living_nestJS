@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CoreUserDto } from '../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../core/user/dto/core-user.dto';
 import { User } from '../../utils/customDecorators/user.decorator';
 import { UserCommentReqDto, UserCommentResDto } from './dto/user-comment.dto';
 import { UserCommentService } from './user-comment.service';

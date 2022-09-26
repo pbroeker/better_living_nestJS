@@ -1,4 +1,4 @@
-import { CoreUser } from '../../../core/users/entity/user.entity';
+import { CoreUser } from '../../../core/user/entity/user.entity';
 import { PersonalArea } from '../../personal-areas/entity/personalArea.entity';
 import { UserImage } from '../../user-image/entity/user-image.entity';
 import { IdentifiableEntity } from '../../../shared/generic.entity';

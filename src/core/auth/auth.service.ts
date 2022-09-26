@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { SharedUserService } from '../../shared/shared-user.service';
-import { UserService } from '../users/users.service';
+import { UserService } from '../user/user.service';
 import { LoginUserResDto, RegisterUserReqDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -75,7 +75,7 @@ export class AuthService {
           user.user_password,
         );
         if (passwordMatches) {
-          const { user_password, user_email, id, ...userNoPW } = user;
+          const { user_password, user_email, ...userNoPW } = user;
           const tokens = await this.getTokens(user.id, user.user_email);
 
           await this.sharedUserService.setCurrentRefreshToken(

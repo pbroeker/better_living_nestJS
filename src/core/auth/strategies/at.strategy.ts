@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { plainToClass } from 'class-transformer';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { CoreUserDto } from '../../../core/users/dto/core-user.dto';
+import { CoreUserDto } from '../../user/dto/core-user.dto';
 import { SharedUserService } from '../../../shared/shared-user.service';
 import { TokenPayload } from '../../../types/token';
 
