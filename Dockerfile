@@ -1,4 +1,4 @@
-FROM node:17-alpine
+FROM node:16.13-alpine3.15
 
 ENV NODE_ENV=dev
 WORKDIR /app

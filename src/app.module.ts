@@ -7,13 +7,14 @@ import { SharedModule } from './shared/shared.module';
 import { WellKnownMiddleware } from './utils/customMiddleware/wellknownMiddleware';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import * as path from 'path';
-import { AdminEditingModule } from './admin/editing/editing.module';
+// Only in use for database-modifications
+// import { AdminEditingModule } from './admin/editing/editing.module';
 @Module({
   imports: [
     CoreModule,
     FeatureModule,
     SharedModule,
-    AdminEditingModule,
+    // AdminEditingModule,
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, 'assets'),
       exclude: ['/api*'],
