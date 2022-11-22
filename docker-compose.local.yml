@@ -3,7 +3,7 @@ services:
   db:
     container_name: siegenia-db
     hostname: dev|siegenia-db
-    image: postgres
+    image: postgres:14-alpine
     restart: always
     logging:
       driver: none
