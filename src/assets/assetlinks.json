@@ -2,7 +2,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.siegenia.homeinspirator.debug",
+    "package_name": "com.better-living.homeinspirator.debug",
     "sha256_cert_fingerprints":
     ["6D:6B:FA:20:6E:48:28:BC:61:50:84:02:78:5E:24:4C:BF:60:A4:EB:DB:80:B5:22:EB:2D:9D:98:9D:72:B4:3D"]
   }
@@ -11,7 +11,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.siegenia.homeinspirator.rctest",
+    "package_name": "com.better-living.homeinspirator.rctest",
     "sha256_cert_fingerprints":
     ["6D:6B:FA:20:6E:48:28:BC:61:50:84:02:78:5E:24:4C:BF:60:A4:EB:DB:80:B5:22:EB:2D:9D:98:9D:72:B4:3D"]
   }
@@ -20,7 +20,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.siegenia.homeinspirator.rclive",
+    "package_name": "com.better-living.homeinspirator.rclive",
     "sha256_cert_fingerprints":
     ["6D:6B:FA:20:6E:48:28:BC:61:50:84:02:78:5E:24:4C:BF:60:A4:EB:DB:80:B5:22:EB:2D:9D:98:9D:72:B4:3D"]
   }
@@ -29,7 +29,7 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.siegenia.homeinspirator",
+    "package_name": "com.better-living.homeinspirator",
     "sha256_cert_fingerprints":
     ["6D:6B:FA:20:6E:48:28:BC:61:50:84:02:78:5E:24:4C:BF:60:A4:EB:DB:80:B5:22:EB:2D:9D:98:9D:72:B4:3D"]
   }

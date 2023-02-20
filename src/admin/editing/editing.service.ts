@@ -9,7 +9,7 @@ export class AdminEditingService {
 
   async addRoomsToTags(adminAccessDto: AdminAccessDto): Promise<boolean> {
     try {
-      if (adminAccessDto.password === 'mswag_siegenia_14916') {
+      if (adminAccessDto.password === 'mswag_betterliving_14916') {
         const tagEntities = await this.sharedTagService.findAll();
 
         const editedTagEntites = await Promise.all(

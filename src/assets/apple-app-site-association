@@ -3,19 +3,19 @@
         "apps": [],
         "details": [
             {
-                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.Debug",
+                "appID": "9CXHZ79P5N.com.better-living.HomeInspirator.Debug",
                 "paths": [ "*" ]
             },
             {
-                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.RC-Test",
+                "appID": "9CXHZ79P5N.com.better-living.HomeInspirator.RC-Test",
                 "paths": [ "*" ]
             },
             {
-                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator.RC-Live",
+                "appID": "9CXHZ79P5N.com.better-living.HomeInspirator.RC-Live",
                 "paths": [ "*" ]
             },
             {
-                "appID": "9CXHZ79P5N.com.siegenia.HomeInspirator",
+                "appID": "9CXHZ79P5N.com.better-living.HomeInspirator",
                 "paths": [ "*" ]
             }
         ]

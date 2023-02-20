@@ -1,5 +1,5 @@
 {
-  "name": "siegenia-backend",
+  "name": "better-living-backend",
   "version": "1.0.0",
   "description": "",
   "author": "",
@@ -20,9 +20,9 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "env:dev": "./scripts/switchEnv.sh dev",
-    "create-docker-image-prod": "docker build --platform linux/amd64 -t siegenia-api-prod -f Dockerfile.prod .",
-    "compress-docker-image-prod": "docker save -o siegenia-api-prod.tar siegenia-api-prod",
-    "upload-compressed-docker-image-prod": "scp -rp siegenia-api-prod.tar root@staging.mobile-software.ag:/root/projects/siegenia-api/siegenia-prod",
+    "create-docker-image-prod": "docker build --platform linux/amd64 -t better-living-api-prod -f Dockerfile.prod .",
+    "compress-docker-image-prod": "docker save -o better-living-api-prod.tar better-living-api-prod",
+    "upload-compressed-docker-image-prod": "scp -rp better-living-api-prod.tar root@staging.mobile-software.ag:/root/projects/better-living-api/better-living-prod",
     "deploy:api": "yarn run create-docker-image-prod && yarn run compress-docker-image-prod && yarn run upload-compressed-docker-image-prod"
   },
   "dependencies": {
