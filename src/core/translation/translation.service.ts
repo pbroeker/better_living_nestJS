@@ -20,7 +20,7 @@ export class TranslationService {
   private readonly bitBucketAuthApi =
     'https://bitbucket.org/site/oauth2/access_token';
   private readonly bitBucketRepoApi =
-    'https://api.bitbucket.org/2.0/repositories/mswag/siegenia-translations/src/master';
+    'https://api.bitbucket.org/2.0/repositories/mswag/better-living-translations/src/master';
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,

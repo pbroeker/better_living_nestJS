@@ -1,8 +1,8 @@
 version: '3.7'
 services:
   db:
-    container_name: siegenia-db
-    hostname: dev|siegenia-db
+    container_name: better-living-db
+    hostname: dev|better-living-db
     image: postgres:14-alpine
     restart: always
     logging:
@@ -16,9 +16,9 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
   nestjs:
-    container_name: siegenia-api
-    hostname: dev|siegenia-api
-    image: siegenia-api
+    container_name: better-living-api
+    hostname: dev|better-living-api
+    image: better-living-api
     build: 
       context: .
       dockerfile: ./Dockerfile
@@ -41,7 +41,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     restart: always
-    container_name: siegenia-pgadmin4
+    container_name: better-living-pgadmin4
     logging:
       driver: none
     environment: 

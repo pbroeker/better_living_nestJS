@@ -1,4 +1,4 @@
-# Siegenia Backend
+# Betterliving Backend
 
 ## Installation
 
@@ -57,7 +57,7 @@ localhost:8080
 6. Now you can see your database/tables etc.
 
 ## Deployment Staging
-For now the backend will be deployed on our staging server. For this we created a new directory under */projects/siegenia-api/siegenia-prod*.
+For now the backend will be deployed on our staging server. For this we created a new directory under */projects/better-living-api/better-living-prod*.
 Make sure you have your ssh-key stored on the staging server as you otherwise won't be able to copy the files there.
 
 1. Create a build from the branch which you want to deploy
@@ -77,21 +77,21 @@ $ ssh root@staging.mobile-software.ag
 
 4. Load the uploaded image into docker
 ```bash
-//In projects/siegenia-api/siegenia-prod 
-$ docker load -i siegenia-api-prod.tar
+//In projects/better-living-api/better-living-prod 
+$ docker load -i better-living-api-prod.tar
 ```
 
 5. Remove old container and create new with latest image
 ```bash
-$ docker stop siegenia-api-prod
-$ docker rm siegenia-api-prod
+$ docker stop better-living-api-prod
+$ docker rm better-living-api-prod
 $ docker-compose up -d
 ```
 
 6. Check functionality: Sometimes the link-files from assets are not correctly copied
 ```bash
 //Get into the newly build server
-$ docker exec -it siegenia-api-prod bash
+$ docker exec -it better-living-api-prod bash
 //Check that all files are in the dist/assets
 $ cd dist/assets
 ```
@@ -100,7 +100,7 @@ $ cd dist/assets
 ## Staging DB
 - In order to connect to the staging db you have to open the docker container:
   ```bash
-  $ docker exec -it siegenia-db bash
+  $ docker exec -it better-living-db bash
   ```
 - Login with your database user:
   ```bash
@@ -108,7 +108,7 @@ $ cd dist/assets
   ```
 - Connect with your database:
   ```bash
-  $ \c siegenia-db
+  $ \c better-living-db
   ```
 - Show all tables:
   ```bash

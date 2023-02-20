@@ -18,7 +18,7 @@ async function bootstrap() {
 
   // Swagger
   const config = new DocumentBuilder()
-    .setTitle('Siegenia API')
+    .setTitle('Better Living API')
     .setVersion('1.0')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
     .build();
